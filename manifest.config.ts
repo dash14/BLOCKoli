@@ -17,6 +17,7 @@ export default defineManifest(async (env) => ({
       : "CRXJS Power Tools",
   version: `${major}.${minor}.${patch}.${label}`,
   version_name: version,
+  default_locale: "en",
   action: { default_popup: "popup.html" },
   options_page: "options.html"
 }));

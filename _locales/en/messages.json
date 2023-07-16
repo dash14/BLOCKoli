@@ -1,0 +1,11 @@
+{
+  "Options": {
+    "message": "Options"
+  },
+  "GeneralSettings": {
+    "message": "General settings"
+  },
+  "RuleSettings": {
+    "message": "Rule settings"
+  }
+}
