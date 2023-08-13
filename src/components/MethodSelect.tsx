@@ -59,6 +59,8 @@ export default function MethodSelect(props: Props) {
     if (hasAll) {
       values = values.length === METHODS.length ? [__ALL__] : [...METHODS];
       valuesToNotify = []; // All methods
+    } else if (values.length === 0) {
+      values = [__ALL__]
     }
     setMethods(values);
     props.onChanged?.(valuesToNotify);

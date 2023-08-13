@@ -6,17 +6,28 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { prism } from "react-syntax-highlighter/dist/esm/styles/prism";
+import ImportIcon from "@mui/icons-material/Publish";
+import ExportIcon from "@mui/icons-material/FileDownload";
 
 import { useI18n } from "../hooks/useI18n";
 import { useState } from "react";
 import MethodSelect from "@/components/MethodSelect";
 import { IconButton } from "@mui/material";
+import { RuleSet } from "@/common/types";
 
 function Options() {
   const i18n = useI18n();
-  const [timeToReapply, setTimeToReapply] = useState(5);
+
+  const [autoStart, setAutoStart] = useState(true);
+  const handleChangeAutoStart = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setAutoStart(event.target.checked);
+    console.log("setAutoStart", event.target.checked);
+  };
+
+  const [timeToReapply, setTimeToReapply] = useState(300);
+
   const handleChangeTimeToReapply = (event: SelectChangeEvent<number>) => {
     const value = event.target.value;
     setTimeToReapply(value as number);
@@ -24,11 +35,10 @@ function Options() {
 
   const [methods, setMethods] = useState([] as string[]);
   const handleChangeMethods = (methods: string[]) => {
-    console.log("handle", methods);
     setMethods(methods);
   };
 
-  const editingRuleSets = [
+  const editingRuleSets: RuleSet[] = [
     {
       name: "Rule 1",
       blockRules: [{ url: "https://*.example.com/*", methods: [] }],
@@ -48,19 +58,27 @@ function Options() {
       <section aria-labelledby="GeneralSettingsTitle">
         <h2 id="GeneralSettingsTitle">{i18n["GeneralSettings"]}</h2>
         <FormControlLabel
-          control={<Checkbox defaultChecked size="small" />}
+          control={
+            <Checkbox
+              defaultChecked
+              size="small"
+              onChange={handleChangeAutoStart}
+            />
+          }
           label={i18n["AutoStart"]}
         />
         <div>
           <Select
             value={timeToReapply}
             onChange={handleChangeTimeToReapply}
+            disabled={!autoStart}
             size="small"
           >
-            <MenuItem value={5}>5 minutes later</MenuItem>
-            <MenuItem value={10}>10 minutes later</MenuItem>
-            <MenuItem value={30}>30 minutes later</MenuItem>
-            <MenuItem value={60}>1 hour later</MenuItem>
+            <MenuItem value={60}>1 minute later</MenuItem>
+            <MenuItem value={300}>5 minutes later</MenuItem>
+            <MenuItem value={600}>10 minutes later</MenuItem>
+            <MenuItem value={1800}>30 minutes later</MenuItem>
+            <MenuItem value={3600}>1 hour later</MenuItem>
           </Select>
         </div>
       </section>
@@ -69,6 +87,7 @@ function Options() {
         <h2 id="RuleSettingsTitle">{i18n["RuleSettings"]}</h2>
         <div>
           <Button
+            startIcon={<ImportIcon />}
             variant="outlined"
             size="small"
             sx={{ textTransform: "capitalize" }}
@@ -76,6 +95,7 @@ function Options() {
             Import
           </Button>
           <Button
+            startIcon={<ExportIcon />}
             variant="outlined"
             size="small"
             sx={{ textTransform: "capitalize" }}
