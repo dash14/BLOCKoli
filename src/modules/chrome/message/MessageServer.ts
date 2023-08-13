@@ -1,9 +1,9 @@
 import { Broadcaster } from "@/modules/services/interfaces/core";
 import {
   Message,
-  MessageBroadcast,
-  MessageRequest,
-  MessageResponse,
+  BroadcastMessage,
+  RequestMessage,
+  ResponseMessage,
 } from "./types";
 
 export class MessageServer<T> implements Broadcaster<T> {
@@ -26,7 +26,7 @@ export class MessageServer<T> implements Broadcaster<T> {
     return (
       message: Message,
       sender: chrome.runtime.MessageSender,
-      sendResponse: (message: MessageResponse) => void
+      sendResponse: (message: ResponseMessage) => void
     ): boolean => {
       if (message.type !== "request") {
         sendResponse({
@@ -54,7 +54,7 @@ export class MessageServer<T> implements Broadcaster<T> {
           : "from the extension"
       );
 
-      const request = message as MessageRequest;
+      const request = message as RequestMessage;
 
       const service = serviceObject as Record<
         string,
@@ -117,7 +117,7 @@ export class MessageServer<T> implements Broadcaster<T> {
     event: K,
     message: T[K]
   ): Promise<void> {
-    const broadcast: MessageBroadcast = {
+    const broadcast: BroadcastMessage = {
       type: "broadcast",
       service: this.service,
       event,

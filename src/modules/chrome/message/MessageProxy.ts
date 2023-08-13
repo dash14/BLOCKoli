@@ -1,10 +1,10 @@
 import { EventDispatchable } from "@/modules/services/interfaces/core";
 import {
   Message,
-  MessageBroadcast,
+  BroadcastMessage,
   MessageProxy,
-  MessageRequest,
-  MessageResponse,
+  RequestMessage,
+  ResponseMessage,
 } from "./types";
 
 class EventListeners {
@@ -42,7 +42,7 @@ class BroadcastListeners<E> implements EventDispatchable<E> {
     chrome.runtime.onMessage.addListener(
       (request: Message, _sender, sendResponse) => {
         if (request.type !== "broadcast") return;
-        const broadcast = request as MessageBroadcast;
+        const broadcast = request as BroadcastMessage;
         if (broadcast.service !== service) return;
         this.listeners.dispatch(broadcast.event, broadcast.message);
         sendResponse(true);
@@ -68,7 +68,7 @@ export class MessageProxyFactory {
 
         // default implementation
         return async (...args: unknown[]) => {
-          const request: MessageRequest = {
+          const request: RequestMessage = {
             type: "request",
             service,
             method: prop.toString(),
@@ -76,7 +76,7 @@ export class MessageProxyFactory {
           };
           const response = (await chrome.runtime.sendMessage(
             request
-          )) as MessageResponse;
+          )) as ResponseMessage;
           console.log("response:", response);
           if (!response) {
             throw new Error("No response from service worker");
