@@ -1,3 +1,7 @@
+import { ServiceBase } from "./core";
+
+export const ServiceId = "RequestBlock";
+
 export interface RuleSet {
   id: string;
 }
@@ -6,12 +10,12 @@ export interface RequestBlockServiceConfiguration {
   ruleSet: RuleSet[];
 }
 
-export type RequestBlockServiceEvents = {
+export type Events = {
   changeState: "enable" | "disable";
   updateConfig: RequestBlockServiceConfiguration;
 };
 
-export interface RequestBlockService {
+export interface Service extends ServiceBase {
   enable(): Promise<void>;
   disable(): Promise<void>;
   isEnabled(): Promise<boolean>;

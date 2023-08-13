@@ -1,4 +1,4 @@
-import { Broadcaster } from "@/modules/services/interfaces/core";
+import { Broadcaster, EventsBase } from "@/modules/services/interfaces/core";
 import {
   Message,
   BroadcastMessage,
@@ -6,12 +6,12 @@ import {
   ResponseMessage,
 } from "./types";
 
-export class MessageServer<T> implements Broadcaster<T> {
-  private service: string;
+export class MessageServer<T extends EventsBase> implements Broadcaster<T> {
+  private serviceId: string;
   private isStarted = false;
 
-  constructor(service: string) {
-    this.service = service;
+  constructor(serviceId: string) {
+    this.serviceId = serviceId;
   }
 
   public start(serviceObject: unknown) {
@@ -20,6 +20,16 @@ export class MessageServer<T> implements Broadcaster<T> {
     chrome.runtime.onMessage.addListener(
       this.buildMessageListener(serviceObject)
     );
+  }
+
+  public async broadcast(event: keyof T, message: T[keyof T]): Promise<void> {
+    const broadcast: BroadcastMessage<T> = {
+      type: "broadcast",
+      service: this.serviceId,
+      event,
+      message,
+    };
+    await chrome.runtime.sendMessage(broadcast);
   }
 
   private buildMessageListener(serviceObject: unknown) {
@@ -111,18 +121,5 @@ export class MessageServer<T> implements Broadcaster<T> {
 
       return false;
     };
-  }
-
-  async broadcast<K extends keyof T & string>(
-    event: K,
-    message: T[K]
-  ): Promise<void> {
-    const broadcast: BroadcastMessage = {
-      type: "broadcast",
-      service: this.service,
-      event,
-      message,
-    };
-    await chrome.runtime.sendMessage(broadcast);
   }
 }

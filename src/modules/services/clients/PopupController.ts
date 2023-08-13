@@ -1,21 +1,18 @@
 import { MessageProxyFactory } from "@/modules/chrome/message/MessageProxy";
-import {
-  RequestBlockService,
-  RequestBlockServiceEvents,
-} from "../interfaces/RequestBlockService";
+import * as RequestBlock from "../interfaces/RequestBlockService";
 import { MessageProxy } from "@/modules/chrome/message/types";
 
 export class PopupController {
   private requestBlockService: MessageProxy<
-    RequestBlockService,
-    RequestBlockServiceEvents
+    RequestBlock.Service,
+    RequestBlock.Events
   >;
 
   constructor() {
     this.requestBlockService = new MessageProxyFactory().create<
-      RequestBlockService,
-      RequestBlockServiceEvents
-    >("RequestBlock");
+      RequestBlock.Service,
+      RequestBlock.Events
+    >(RequestBlock.ServiceId);
 
     this.requestBlockService.addEventListener("changeState", (state) => {
       console.log("Receive broadcast!", state);

@@ -1,4 +1,8 @@
-import { EventDispatchable } from "@/modules/services/interfaces/core";
+import {
+  EventDispatchable,
+  EventsBase,
+  ServiceBase,
+} from "@/modules/services/interfaces/core";
 import {
   Message,
   BroadcastMessage,
@@ -7,11 +11,11 @@ import {
   ResponseMessage,
 } from "./types";
 
-class EventListeners {
-  private handlerMap: Map<string, Set<(...args: unknown[]) => unknown>> =
+class EventListeners<T extends EventsBase> {
+  private handlerMap: Map<keyof T, Set<(value: T[keyof T]) => void>> =
     new Map();
 
-  public add(event: string, handler: (...args: unknown[]) => unknown) {
+  public add(event: keyof T, handler: (value: T[keyof T]) => void) {
     let handlers = this.handlerMap.get(event);
     if (!handlers) {
       handlers = new Set();
@@ -20,45 +24,47 @@ class EventListeners {
     handlers.add(handler);
   }
 
-  public remove(event: string, handler: (...args: unknown[]) => unknown) {
+  public remove(event: keyof T, handler: (value: T[keyof T]) => void) {
     const handlers = this.handlerMap.get(event);
     if (handlers) {
       handlers.delete(handler);
     }
   }
 
-  public dispatch(event: string, message: unknown): unknown[] {
+  public dispatch(event: keyof T, value: T[keyof T]): void[] {
     const handlers = this.handlerMap.get(event);
     return Array.from(handlers?.values() ?? []).map((handler) =>
-      handler.call(null, message)
+      handler.call(null, value)
     );
   }
 }
 
-class BroadcastListeners<E> implements EventDispatchable<E> {
-  private listeners = new EventListeners();
+class BroadcastListeners<T extends EventsBase> implements EventDispatchable<T> {
+  private listeners = new EventListeners<T>();
 
   constructor(service: string) {
     chrome.runtime.onMessage.addListener(
-      (request: Message, _sender, sendResponse) => {
-        if (request.type !== "broadcast") return;
-        const broadcast = request as BroadcastMessage;
+      (message: Message, _sender, sendResponse) => {
+        if (message.type !== "broadcast") return;
+        const broadcast = message as BroadcastMessage<T>;
         if (broadcast.service !== service) return;
         this.listeners.dispatch(broadcast.event, broadcast.message);
         sendResponse(true);
       }
     );
   }
-  addEventListener<K extends keyof E>(
+  addEventListener<K extends keyof T>(
     type: K,
-    handler: (value: E[K]) => void
+    handler: (value: T[K]) => void
   ): void {
-    this.listeners.add(type as string, handler as any);
+    this.listeners.add(type, handler as (value: T[keyof T]) => void);
   }
 }
 
 export class MessageProxyFactory {
-  public create<T, E>(service: string): MessageProxy<T, E> {
+  public create<T extends ServiceBase, E extends EventsBase>(
+    service: string
+  ): MessageProxy<T, E> {
     const baseObject = new BroadcastListeners<E>(service);
     return new Proxy(baseObject, {
       get: (target, prop) => {

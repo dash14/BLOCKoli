@@ -1,4 +1,7 @@
-import { EventDispatchable } from "@/modules/services/interfaces/core";
+import {
+  EventDispatchable,
+  EventsBase,
+} from "@/modules/services/interfaces/core";
 
 export interface Message {
   type: "request" | "response" | "broadcast";
@@ -25,11 +28,11 @@ interface ErrorResponseMessage extends Message {
 
 export type ResponseMessage = SuccessResponseMessage | ErrorResponseMessage;
 
-export interface BroadcastMessage extends Message {
+export interface BroadcastMessage<T extends EventsBase> extends Message {
   type: "broadcast";
   service: string;
-  event: string;
-  message: unknown;
+  event: keyof T;
+  message: T[keyof T];
 }
 
 export type MessageProxy<T, E> = T & EventDispatchable<E>;

@@ -1,15 +1,10 @@
-import {
-  RequestBlockService,
-  RequestBlockServiceEvents,
-} from "../interfaces/RequestBlockService";
-import { Broadcaster } from "../interfaces/core";
+import * as RequestBlock from "@/modules/services/interfaces/RequestBlockService";
+import { Service } from "@/modules/services/interfaces/core";
 
-export class RequestBlockServiceImpl implements RequestBlockService {
-  private broadcaster: Broadcaster<RequestBlockServiceEvents>;
-  constructor(broadcaster: Broadcaster<RequestBlockServiceEvents>) {
-    this.broadcaster = broadcaster;
-  }
-
+export class RequestBlockServiceImpl
+  extends Service<RequestBlock.Events>
+  implements RequestBlock.Service
+{
   async enable(): Promise<void> {
     console.log("RequestBlockServiceImpl#enable()");
     this.broadcaster.broadcast("changeState", "enable");
