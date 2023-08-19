@@ -22,7 +22,7 @@ export abstract class ServiceBase<E extends Events = object> {
     this.emitter = emitter;
   }
 
-  public abstract start(): void;
+  public abstract start(): Promise<void>;
 }
 
 export type EventsOf<T> = T extends ServiceBase<infer E> ? E : never;

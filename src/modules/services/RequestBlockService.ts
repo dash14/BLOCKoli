@@ -1,18 +1,12 @@
 import { ServiceBase } from "@/modules/core/service";
+import { State } from "@/modules/core/state";
+import { RuleSets } from "@/modules/core/rules";
 
 export const ServiceId = "RequestBlock";
 
-export interface RuleSet {
-  id: string;
-}
-
-export interface RequestBlockServiceConfiguration {
-  ruleSet: RuleSet[];
-}
-
 export type Events = {
-  changeState: "enable" | "disable";
-  updateConfig: RequestBlockServiceConfiguration;
+  changeState: State;
+  updateRuleSets: RuleSets;
 };
 
 export interface Service extends ServiceBase {
