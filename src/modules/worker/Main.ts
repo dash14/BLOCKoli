@@ -4,10 +4,10 @@ import { RequestBlockServiceImpl } from "@/modules/services/RequestBlockServiceI
 
 export class Main {
   public run() {
-    const requestBlockServer = new MessageServer<RequestBlock.Events>(
+    const server = new MessageServer<RequestBlockServiceImpl>(
       RequestBlock.ServiceId
     );
-    const requestBlockService = new RequestBlockServiceImpl(requestBlockServer);
-    requestBlockServer.start(requestBlockService);
+    const requestBlockService = new RequestBlockServiceImpl(server);
+    server.start(requestBlockService);
   }
 }

@@ -1,4 +1,4 @@
-import { EventEmitter, EventsBase } from "@/modules/core/service";
+import { EventEmitter, EventsOf, ServiceBase } from "@/modules/core/service";
 import {
   Message,
   BroadcastMessage,
@@ -6,7 +6,9 @@ import {
   ResponseMessage,
 } from "./types";
 
-export class MessageServer<T extends EventsBase> implements EventEmitter<T> {
+export class MessageServer<T extends ServiceBase>
+  implements EventEmitter<EventsOf<T>>
+{
   private serviceId: string;
   private isStarted = false;
 
@@ -14,16 +16,20 @@ export class MessageServer<T extends EventsBase> implements EventEmitter<T> {
     this.serviceId = serviceId;
   }
 
-  public start(serviceObject: unknown) {
+  public start(serviceObject: ServiceBase) {
     if (this.isStarted) return;
     this.isStarted = true;
     chrome.runtime.onMessage.addListener(
       this.buildMessageListener(serviceObject)
     );
+    serviceObject.start();
   }
 
-  public async broadcast(event: keyof T, message: T[keyof T]): Promise<void> {
-    const broadcast: BroadcastMessage<T> = {
+  public async emit(
+    event: keyof EventsOf<T>,
+    message: EventsOf<T>[keyof EventsOf<T>]
+  ): Promise<void> {
+    const broadcast: BroadcastMessage<EventsOf<T>> = {
       type: "broadcast",
       service: this.serviceId,
       event,

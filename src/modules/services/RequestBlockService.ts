@@ -1,4 +1,4 @@
-import { ServiceBase } from "../core/service";
+import { ServiceBase } from "@/modules/core/service";
 
 export const ServiceId = "RequestBlock";
 

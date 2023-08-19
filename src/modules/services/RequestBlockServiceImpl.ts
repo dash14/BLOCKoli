@@ -1,13 +1,21 @@
 import * as RequestBlock from "@/modules/services/RequestBlockService";
-import { Service } from "@/modules/core/service";
+import { EventEmitter, ServiceBase } from "@/modules/core/service";
 
 export class RequestBlockServiceImpl
-  extends Service<RequestBlock.Events>
+  extends ServiceBase<RequestBlock.Events>
   implements RequestBlock.Service
 {
+  constructor(emitter: EventEmitter<RequestBlock.Events>) {
+    super(emitter);
+  }
+
+  public start(): void {
+    console.log("RequestBlockServiceImpl#start()");
+  }
+
   async enable(): Promise<void> {
     console.log("RequestBlockServiceImpl#enable()");
-    this.broadcaster.broadcast("changeState", "enable");
+    this.emitter.emit("changeState", "enable");
   }
   async disable(): Promise<void> {
     console.log("RequestBlockServiceImpl#enable()");

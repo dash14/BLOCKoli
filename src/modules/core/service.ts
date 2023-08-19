@@ -1,6 +1,6 @@
-export type EventsBase = object;
+export type Events = object;
 
-export type ServiceBase = object;
+export type Service = object;
 
 export interface EventDispatchable<T> {
   addEventListener<K extends keyof T>(
@@ -9,16 +9,20 @@ export interface EventDispatchable<T> {
   ): void;
 }
 
-export type ServiceClient<T extends ServiceBase, E extends EventsBase> = T &
+export type ServiceClient<T extends Service, E extends Events> = T &
   EventDispatchable<E>;
 
-export interface EventEmitter<T extends EventsBase> {
-  broadcast<K extends keyof T>(event: K, message: T[K]): Promise<void>;
+export interface EventEmitter<T extends Events> {
+  emit<K extends keyof T>(event: K, message: T[K]): Promise<void>;
 }
 
-export class Service<E extends EventsBase = object> {
-  protected broadcaster: EventEmitter<E>;
-  constructor(broadcaster: EventEmitter<E>) {
-    this.broadcaster = broadcaster;
+export abstract class ServiceBase<E extends Events = object> {
+  protected emitter: EventEmitter<E>;
+  constructor(emitter: EventEmitter<E>) {
+    this.emitter = emitter;
   }
+
+  public abstract start(): void;
 }
+
+export type EventsOf<T> = T extends ServiceBase<infer E> ? E : never;
