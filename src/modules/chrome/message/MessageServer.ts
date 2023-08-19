@@ -1,4 +1,4 @@
-import { Broadcaster, EventsBase } from "@/modules/services/interfaces/core";
+import { EventEmitter, EventsBase } from "@/modules/core/service";
 import {
   Message,
   BroadcastMessage,
@@ -6,7 +6,7 @@ import {
   ResponseMessage,
 } from "./types";
 
-export class MessageServer<T extends EventsBase> implements Broadcaster<T> {
+export class MessageServer<T extends EventsBase> implements EventEmitter<T> {
   private serviceId: string;
   private isStarted = false;
 

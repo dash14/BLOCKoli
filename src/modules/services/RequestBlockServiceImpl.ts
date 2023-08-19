@@ -1,5 +1,5 @@
-import * as RequestBlock from "@/modules/services/interfaces/RequestBlockService";
-import { Service } from "@/modules/services/interfaces/core";
+import * as RequestBlock from "@/modules/services/RequestBlockService";
+import { Service } from "@/modules/core/service";
 
 export class RequestBlockServiceImpl
   extends Service<RequestBlock.Events>

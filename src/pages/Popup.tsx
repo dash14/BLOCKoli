@@ -1,4 +1,4 @@
-import { PopupController } from "@/modules/services/clients/PopupController";
+import { PopupController } from "@/modules/clients/PopupController";
 import { css } from "@emotion/react";
 import Button from "@mui/material/Button";
 

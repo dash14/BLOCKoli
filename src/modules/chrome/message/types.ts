@@ -1,7 +1,4 @@
-import {
-  EventDispatchable,
-  EventsBase,
-} from "@/modules/services/interfaces/core";
+import { EventDispatchable, EventsBase } from "@/modules/core/service";
 
 export interface Message {
   type: "request" | "response" | "broadcast";

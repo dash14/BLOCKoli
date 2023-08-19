@@ -2,7 +2,7 @@ import {
   EventDispatchable,
   EventsBase,
   ServiceBase,
-} from "@/modules/services/interfaces/core";
+} from "@/modules/core/service";
 import {
   Message,
   BroadcastMessage,

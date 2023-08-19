@@ -1,8 +1,8 @@
 import { MessageServer } from "@/modules/chrome/message/MessageServer";
-import * as RequestBlock from "../interfaces/RequestBlockService";
-import { RequestBlockServiceImpl } from "./RequestBlockServiceImpl";
+import * as RequestBlock from "@/modules/services/RequestBlockService";
+import { RequestBlockServiceImpl } from "@/modules/services/RequestBlockServiceImpl";
 
-export class MainController {
+export class Main {
   public run() {
     const requestBlockServer = new MessageServer<RequestBlock.Events>(
       RequestBlock.ServiceId

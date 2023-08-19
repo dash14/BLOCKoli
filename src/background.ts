@@ -1,4 +1,4 @@
-import { MainController } from "./modules/services/workers/MainController";
+import { Main } from "./modules/worker/Main";
 
-const controller = new MainController();
+const controller = new Main();
 controller.run();

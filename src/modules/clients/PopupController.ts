@@ -1,5 +1,5 @@
 import { MessageProxyFactory } from "@/modules/chrome/message/MessageProxy";
-import * as RequestBlock from "../interfaces/RequestBlockService";
+import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { MessageProxy } from "@/modules/chrome/message/types";
 
 export class PopupController {
