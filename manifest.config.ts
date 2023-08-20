@@ -11,10 +11,7 @@ const [major, minor, patch, label = "0"] = version
 
 export default defineManifest(async (env) => ({
   manifest_version: 3,
-  name:
-    env.mode === "staging"
-      ? "[INTERNAL] CRXJS Power Tools"
-      : "CRXJS Power Tools",
+  name: env.mode === "staging" ? "[INTERNAL] BLOCKoli" : "BLOCKoli",
   version: `${major}.${minor}.${patch}.${label}`,
   version_name: version,
   default_locale: "en",
@@ -24,4 +21,5 @@ export default defineManifest(async (env) => ({
   },
   action: { default_popup: "popup.html" },
   options_page: "options.html",
+  permissions: ["declarativeNetRequest", "storage"],
 }));
