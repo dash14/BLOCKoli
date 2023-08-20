@@ -1,8 +1,4 @@
-import {
-  EventDispatchable,
-  EventsBase,
-  ServiceBase,
-} from "@/modules/core/service";
+import { EventDispatchable, Events, ServiceBase } from "@/modules/core/service";
 import {
   Message,
   BroadcastMessage,
@@ -11,7 +7,7 @@ import {
   ResponseMessage,
 } from "./types";
 
-class EventListeners<T extends EventsBase> {
+class EventListeners<T extends Events> {
   private handlerMap: Map<keyof T, Set<(value: T[keyof T]) => void>> =
     new Map();
 
@@ -39,7 +35,7 @@ class EventListeners<T extends EventsBase> {
   }
 }
 
-class BroadcastListeners<T extends EventsBase> implements EventDispatchable<T> {
+class BroadcastListeners<T extends Events> implements EventDispatchable<T> {
   private listeners = new EventListeners<T>();
 
   constructor(service: string) {
@@ -62,13 +58,14 @@ class BroadcastListeners<T extends EventsBase> implements EventDispatchable<T> {
 }
 
 export class MessageProxyFactory {
-  public create<T extends ServiceBase, E extends EventsBase>(
+  public create<T extends ServiceBase, E extends Events>(
     service: string
   ): MessageProxy<T, E> {
     const baseObject = new BroadcastListeners<E>(service);
     return new Proxy(baseObject, {
       get: (target, prop) => {
         if (prop in target) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           return (target as any)[prop];
         }
 
