@@ -1,9 +1,9 @@
-import { RuleSets } from "@/modules/core/rules";
+import { Rules } from "@/modules/core/rules";
 import { State } from "@/modules/core/state";
 
 export interface ServiceConfigurationStore {
   saveState(state: State): Promise<void>;
   loadState(): Promise<State>;
-  saveRules(ruleSets: RuleSets): Promise<void>;
-  loadRules(): Promise<RuleSets>;
+  saveRules(ruleSets: Rules): Promise<void>;
+  loadRules(): Promise<Rules>;
 }
