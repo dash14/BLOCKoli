@@ -24,39 +24,50 @@ export class RequestBlockServiceImpl
     const state = await this.store.loadState();
     console.log("RequestBlockServiceImpl#start(), state:", state);
     if (state === "enable") {
-      await this.enable();
+      await this.run();
     }
   }
 
-  async enable(): Promise<void> {
+  public async enable(): Promise<void> {
     console.log("RequestBlockServiceImpl#enable()");
     const state = await this.store.loadState();
     if (state === "enable") return;
 
-    // TODO: enable
+    this.run();
 
     await this.store.saveState("enable");
     this.emitter.emit("changeState", "enable");
   }
 
-  async disable(): Promise<void> {
+  public async disable(): Promise<void> {
     console.log("RequestBlockServiceImpl#enable()");
     const state = await this.store.loadState();
     if (state === "disable") return;
 
-    // TODO: disable
+    // clear rules
+    await this.chrome.removeAllDynamicRules();
 
     await this.store.saveState("disable");
     this.emitter.emit("changeState", "disable");
   }
 
-  async isEnabled(): Promise<boolean> {
+  public async isEnabled(): Promise<boolean> {
     console.log("RequestBlockServiceImpl#isEnabled()");
     return (await this.store.loadState()) === "enable";
   }
 
-  async update(): Promise<void> {
+  public async update(): Promise<void> {
     console.log("RequestBlockServiceImpl#update()");
     throw new Error("Method not implemented.");
+  }
+
+  private async run(): Promise<void> {
+    // clear rules
+    await this.chrome.removeAllDynamicRules();
+
+    const rules = await this.store.loadRules();
+    if (rules.length === 0) return;
+
+    this.chrome.updateDynamicRules({ addRules: rules });
   }
 }

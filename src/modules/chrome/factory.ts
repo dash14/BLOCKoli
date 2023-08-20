@@ -1,13 +1,13 @@
-import { ChromeApiDeclarativeNetRequest } from "./api";
+import { ChromeApiDeclarativeNetRequest, ChromeApiStorage } from "./api";
+import { ChromeApiDeclarativeNetRequestImpl } from "./declarativeNetRequest";
+import { ChromeApiStorageImpl } from "./storage";
 
 export class ChromeApiFactory {
+  public storage(): ChromeApiStorage {
+    return new ChromeApiStorageImpl(chrome.storage.sync);
+  }
+
   public declarativeNetRequest(): ChromeApiDeclarativeNetRequest {
-    return {
-      async updateDynamicRules(
-        options: chrome.declarativeNetRequest.UpdateRuleOptions
-      ) {
-        return chrome.declarativeNetRequest.updateDynamicRules(options);
-      },
-    };
+    return new ChromeApiDeclarativeNetRequestImpl();
   }
 }

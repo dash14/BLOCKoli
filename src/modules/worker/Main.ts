@@ -11,17 +11,17 @@ export class Main {
       RequestBlock.ServiceId
     );
 
-    // Store
-    const store = new ServiceConfigurationStoreImpl();
-
     // Chrome API
-    const chrome = new ChromeApiFactory().declarativeNetRequest();
+    const chrome = new ChromeApiFactory();
+
+    // Store
+    const store = new ServiceConfigurationStoreImpl(chrome.storage());
 
     // Request Block Service
     const requestBlockService = new RequestBlockServiceImpl(
       server,
       store,
-      chrome
+      chrome.declarativeNetRequest()
     );
 
     // Start
