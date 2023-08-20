@@ -6,10 +6,12 @@ export class ServiceConfigurationStoreImpl
   implements ServiceConfigurationStore
 {
   async saveState(state: State): Promise<void> {
-    console.log("ServiceConfigurationStoreImpl#saveState");
+    await chrome.storage.sync.set({ state });
   }
 
   async loadState(): Promise<State> {
+    const loaded = await chrome.storage.sync.get(["state"]);
+    return loaded.state ?? "disable";
   }
 
   async saveRules(ruleSets: Rules): Promise<void> {

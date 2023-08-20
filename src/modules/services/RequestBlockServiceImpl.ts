@@ -21,20 +21,40 @@ export class RequestBlockServiceImpl
   }
 
   public async start(): Promise<void> {
+    const state = await this.store.loadState();
+    console.log("RequestBlockServiceImpl#start(), state:", state);
+    if (state === "enable") {
+      await this.enable();
+    }
   }
 
   async enable(): Promise<void> {
     console.log("RequestBlockServiceImpl#enable()");
+    const state = await this.store.loadState();
+    if (state === "enable") return;
+
+    // TODO: enable
+
+    await this.store.saveState("enable");
     this.emitter.emit("changeState", "enable");
   }
+
   async disable(): Promise<void> {
     console.log("RequestBlockServiceImpl#enable()");
-    throw new Error("Method not implemented.");
+    const state = await this.store.loadState();
+    if (state === "disable") return;
+
+    // TODO: disable
+
+    await this.store.saveState("disable");
+    this.emitter.emit("changeState", "disable");
   }
+
   async isEnabled(): Promise<boolean> {
     console.log("RequestBlockServiceImpl#isEnabled()");
-    return true;
+    return (await this.store.loadState()) === "enable";
   }
+
   async update(): Promise<void> {
     console.log("RequestBlockServiceImpl#update()");
     throw new Error("Method not implemented.");
