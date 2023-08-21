@@ -32,5 +32,6 @@ export interface BroadcastMessage<T extends Events> extends Message {
   message: T[keyof T];
 }
 
-export type MessageProxy<T extends ServiceBase, E extends Events> = T &
-  EventDispatchable<E>;
+export type MessageProxy<T> = T extends ServiceBase<infer E>
+  ? T & EventDispatchable<E>
+  : never;

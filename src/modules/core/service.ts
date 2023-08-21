@@ -7,6 +7,7 @@ export interface EventDispatchable<T> {
     type: K,
     handler: (value: T[K]) => void
   ): void;
+  removeAllEventListeners(): void;
 }
 
 export type ServiceClient<T extends Service, E extends Events> = T &

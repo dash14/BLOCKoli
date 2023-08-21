@@ -9,7 +9,7 @@ export type Events = {
   updateRules: Rules;
 };
 
-export interface Service extends ServiceBase {
+export interface Service extends ServiceBase<Events> {
   enable(): Promise<void>;
   disable(): Promise<void>;
   isEnabled(): Promise<boolean>;

@@ -40,7 +40,7 @@ export class RequestBlockServiceImpl
   }
 
   public async disable(): Promise<void> {
-    console.log("RequestBlockServiceImpl#enable()");
+    console.log("RequestBlockServiceImpl#disable()");
     const state = await this.store.loadState();
     if (state === "disable") return;
 
