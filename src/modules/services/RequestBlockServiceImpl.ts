@@ -2,6 +2,9 @@ import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { EventEmitter, ServiceBase } from "@/modules/core/service";
 import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import { ChromeApiDeclarativeNetRequest } from "@/modules/chrome/api";
+import logging from "@/modules/utils/logging";
+
+const log = logging.getLogger("RequestBlock");
 
 export class RequestBlockServiceImpl
   extends ServiceBase<RequestBlock.Events>
@@ -22,16 +25,17 @@ export class RequestBlockServiceImpl
 
   public async start(): Promise<void> {
     const state = await this.store.loadState();
-    console.log("RequestBlockServiceImpl#start(), state:", state);
     if (state === "enable") {
+      log.debug("start");
       await this.run();
     }
   }
 
   public async enable(): Promise<void> {
-    console.log("RequestBlockServiceImpl#enable()");
     const state = await this.store.loadState();
     if (state === "enable") return;
+
+    log.debug("enable");
 
     this.run();
 
@@ -40,9 +44,10 @@ export class RequestBlockServiceImpl
   }
 
   public async disable(): Promise<void> {
-    console.log("RequestBlockServiceImpl#disable()");
     const state = await this.store.loadState();
     if (state === "disable") return;
+
+    log.debug("disable");
 
     // clear rules
     await this.chrome.removeAllDynamicRules();
@@ -52,12 +57,11 @@ export class RequestBlockServiceImpl
   }
 
   public async isEnabled(): Promise<boolean> {
-    console.log("RequestBlockServiceImpl#isEnabled()");
     return (await this.store.loadState()) === "enable";
   }
 
   public async update(): Promise<void> {
-    console.log("RequestBlockServiceImpl#update()");
+    log.debug("update");
     throw new Error("Method not implemented.");
   }
 

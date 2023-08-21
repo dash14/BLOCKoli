@@ -11,6 +11,9 @@ import {
   RequestMessage,
   ResponseMessage,
 } from "./types";
+import logging from "@/modules/utils/logging";
+
+const log = logging.getLogger("popup");
 
 class EventListeners<T extends Events> {
   private handlerMap: Map<keyof T, Set<(value: T[keyof T]) => void>> =
@@ -114,7 +117,9 @@ export class MessageProxyFactory {
           const response = (await chrome.runtime.sendMessage(
             request
           )) as ResponseMessage;
-          console.log("response:", response);
+
+          log.debug("response", response);
+
           if (!response) {
             throw new Error("No response from service worker");
           }

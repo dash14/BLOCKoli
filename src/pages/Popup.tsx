@@ -1,8 +1,11 @@
 import { PopupController } from "@/modules/clients/PopupController";
 import { State } from "@/modules/core/state";
+import logging from "@/modules/utils/logging";
 import { css } from "@emotion/react";
 import Button from "@mui/material/Button";
 import { useEffect, useState } from "react";
+
+const log = logging.getLogger("react(popup)");
 
 const controller = new PopupController();
 
@@ -14,9 +17,11 @@ function Popup() {
   const [buttonText, setButtonText] = useState("");
 
   useEffect(function () {
+    log.debug("initialize");
     controller.initialize(setState);
 
     return function () {
+      log.debug("destroy");
       controller.destroy();
     };
   }, []);
