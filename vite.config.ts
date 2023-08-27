@@ -21,6 +21,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ["loglevel", "loglevel-plugin-prefix"],
+    include: ["@chakra-ui/react", "loglevel", "loglevel-plugin-prefix"],
   },
 });

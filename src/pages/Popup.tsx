@@ -4,7 +4,7 @@ import { PopupController } from "@/modules/clients/PopupController";
 import { State } from "@/modules/core/state";
 import logging from "@/modules/utils/logging";
 import { css } from "@emotion/react";
-import Button from "@mui/material/Button";
+import { Button } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
 const log = logging.getLogger("react(popup)");
@@ -47,12 +47,8 @@ function Popup() {
   return (
     <div css={page}>
       <h1>Popup</h1>
-      <Button variant="contained" onClick={toggleEnable}>
-        {buttonText}
-      </Button>
-      <Button variant="outlined" onClick={updateMatchedRules}>
-        Get matched rules
-      </Button>
+      <Button onClick={toggleEnable}>{buttonText}</Button>
+      <Button onClick={updateMatchedRules}>Get matched rules</Button>
       {JSON.stringify(rules)}
     </div>
   );

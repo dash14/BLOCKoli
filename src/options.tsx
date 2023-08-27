@@ -1,10 +1,20 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import Options from './pages/Options'
-import './index.css'
+import { ChakraProvider, extendTheme } from "@chakra-ui/react";
+import ReactDOM from "react-dom/client";
+import Options from "./pages/Options";
+import "./index.css";
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
+const theme = extendTheme({
+  components: {
+    Button: {
+      defaultProps: {
+        colorScheme: "blue",
+      },
+    },
+  },
+});
+
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+  <ChakraProvider theme={theme}>
     <Options />
-  </React.StrictMode>,
-)
+  </ChakraProvider>
+);
