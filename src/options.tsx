@@ -10,6 +10,12 @@ const theme = extendTheme({
         colorScheme: "blue",
       },
     },
+    Switch: {
+      defaultProps: {
+        colorScheme: "blue",
+        size: "lg",
+      },
+    },
   },
 });
 
