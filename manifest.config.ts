@@ -21,5 +21,5 @@ export default defineManifest(async (env) => ({
   },
   action: { default_popup: "popup.html" },
   options_page: "options.html",
-  permissions: ["declarativeNetRequest", "storage"],
+  permissions: ["declarativeNetRequest", "activeTab", "storage"],
 }));

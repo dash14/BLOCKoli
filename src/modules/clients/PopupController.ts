@@ -3,19 +3,25 @@ import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { MessageProxy } from "@/modules/chrome/message/types";
 import { State } from "@/modules/core/state";
 import logging from "@/modules/utils/logging";
+import {
+  ChromeApiDeclarativeNetRequest,
+  MatchedRuleInfo,
+} from "@/modules/chrome/api";
 
 const log = logging.getLogger("popup");
 
 export class PopupController {
   private requestBlockService: MessageProxy<RequestBlock.Service>;
+  private chrome: ChromeApiDeclarativeNetRequest;
   private initialized = false;
 
-  constructor() {
+  constructor(chrome: ChromeApiDeclarativeNetRequest) {
     log.debug("create");
     this.requestBlockService =
       new MessageProxyFactory().create<RequestBlock.Service>(
         RequestBlock.ServiceId
       );
+    this.chrome = chrome;
   }
 
   public async initialize(setState: (state: State) => void) {
@@ -47,5 +53,9 @@ export class PopupController {
       log.debug("request to enable");
       await this.requestBlockService.enable();
     }
+  }
+
+  public async getMatchedRulesInActiveTab(): Promise<MatchedRuleInfo[]> {
+    return await this.chrome.getMatchedRulesInActiveTab();
   }
 }

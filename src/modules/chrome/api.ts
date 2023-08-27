@@ -22,8 +22,19 @@ export interface UpdateRuleOptions {
   removeRuleIds?: number[] | undefined;
 }
 
+export interface MatchedRule {
+  ruleId: number;
+}
+
+export interface MatchedRuleInfo {
+  rule: MatchedRule;
+  tabId: number;
+  timeStamp: number;
+}
+
 export interface ChromeApiDeclarativeNetRequest {
   updateDynamicRules(options: UpdateRuleOptions): Promise<void>;
   getDynamicRules(): Promise<Rules>;
   removeAllDynamicRules(): Promise<void>;
+  getMatchedRulesInActiveTab(): Promise<MatchedRuleInfo[]>;
 }

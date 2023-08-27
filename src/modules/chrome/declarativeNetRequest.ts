@@ -1,5 +1,9 @@
 import { Rules } from "@/modules/core/rules";
-import { ChromeApiDeclarativeNetRequest, UpdateRuleOptions } from "./api";
+import {
+  ChromeApiDeclarativeNetRequest,
+  MatchedRuleInfo,
+  UpdateRuleOptions,
+} from "./api";
 
 export class ChromeApiDeclarativeNetRequestImpl
   implements ChromeApiDeclarativeNetRequest
@@ -19,5 +23,20 @@ export class ChromeApiDeclarativeNetRequestImpl
     const rules = await chrome.declarativeNetRequest.getDynamicRules();
     const removeRuleIds = rules.map((r) => r.id);
     await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds });
+  }
+
+  async getMatchedRulesInActiveTab(): Promise<MatchedRuleInfo[]> {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs.length === 0) {
+      return [];
+    }
+    const tab = tabs[0];
+    if (tab.url?.includes("chrome://")) {
+      return [];
+    }
+    const rules = await chrome.declarativeNetRequest.getMatchedRules({
+      tabId: tab.id,
+    });
+    return rules.rulesMatchedInfo;
   }
 }

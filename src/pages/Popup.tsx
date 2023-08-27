@@ -1,3 +1,5 @@
+import { MatchedRuleInfo } from "@/modules/chrome/api";
+import { ChromeApiFactory } from "@/modules/chrome/factory";
 import { PopupController } from "@/modules/clients/PopupController";
 import { State } from "@/modules/core/state";
 import logging from "@/modules/utils/logging";
@@ -7,7 +9,9 @@ import { useEffect, useState } from "react";
 
 const log = logging.getLogger("react(popup)");
 
-const controller = new PopupController();
+const controller = new PopupController(
+  new ChromeApiFactory().declarativeNetRequest()
+);
 
 const page = css`
   margin: 40px;
@@ -15,10 +19,12 @@ const page = css`
 
 function Popup() {
   const [buttonText, setButtonText] = useState("");
+  const [rules, setRules] = useState<MatchedRuleInfo[]>([]);
 
   useEffect(function () {
     log.debug("initialize");
     controller.initialize(setState);
+    updateMatchedRules();
 
     return function () {
       log.debug("destroy");
@@ -34,12 +40,20 @@ function Popup() {
     controller.toggleEnable();
   }
 
+  async function updateMatchedRules() {
+    setRules(await controller.getMatchedRulesInActiveTab());
+  }
+
   return (
     <div css={page}>
       <h1>Popup</h1>
       <Button variant="contained" onClick={toggleEnable}>
         {buttonText}
       </Button>
+      <Button variant="outlined" onClick={updateMatchedRules}>
+        Get matched rules
+      </Button>
+      {JSON.stringify(rules)}
     </div>
   );
 }
