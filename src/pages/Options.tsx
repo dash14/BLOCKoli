@@ -1,12 +1,4 @@
-import {
-  Container,
-  Box,
-  Grid,
-  GridItem,
-  Switch,
-  InputRightElement,
-  Button,
-} from "@chakra-ui/react";
+import { Container, Box, Grid, GridItem, Switch, Flex } from "@chakra-ui/react";
 import {
   Accordion,
   AccordionItem,
@@ -14,10 +6,9 @@ import {
   AccordionPanel,
   AccordionIcon,
 } from "@chakra-ui/react";
-import { Input, InputGroup } from "@chakra-ui/react";
-import { CheckIcon } from "@chakra-ui/icons";
 import { Stack, Radio, RadioGroup } from "@chakra-ui/react";
 import { useI18n } from "../hooks/useI18n";
+import { EditableTitle } from "@/components/EditableTitle";
 
 function Options() {
   const i18n = useI18n();
@@ -44,16 +35,9 @@ function Options() {
           <Accordion defaultIndex={[0]} allowMultiple>
             <AccordionItem>
               <h3>
-                <AccordionButton>
-                  <Box as="span" flex="1" textAlign="left">
-                    <InputGroup onClick={(e) => e.preventDefault()}>
-                      <Input size="md" htmlSize={10} value="RuleSet 1" />
-                      <InputRightElement>
-                        <Button variant="ghost" size="sm">
-                          <CheckIcon color="green.500" />
-                        </Button>
-                      </InputRightElement>
-                    </InputGroup>
+                <AccordionButton as="div" cursor="pointer">
+                  <Box flex="1">
+                    <EditableTitle cursor="pointer" />
                   </Box>
                   <AccordionIcon />
                 </AccordionButton>
