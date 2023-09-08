@@ -1,4 +1,9 @@
-import { REQUEST_METHODS, Rule, RuleActionType } from "@/modules/core/rules";
+import {
+  REQUEST_METHODS,
+  RequestMethodType,
+  Rule,
+  RuleActionType,
+} from "@/modules/core/rules";
 import { CloseIcon, EditIcon } from "@chakra-ui/icons";
 import {
   Box,
@@ -11,29 +16,21 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { Select } from "chakra-react-select";
 import cloneDeep from "lodash-es/cloneDeep";
-import { ComponentProps, useState } from "react";
+import { MultipleSelect } from "./MultipleSelect";
+import { useState } from "react";
 
 type Props = {
   rule: Rule;
   onChange: (rule: Rule) => void;
 };
 
-const requestMethodProps: ComponentProps<typeof Select> = {
-  placeholder: "(ALL)",
-  // @ts-ignore
-  selectedOptionStyle: "check",
-  options: REQUEST_METHODS.map((r) => ({
+const requestMethodOptions = REQUEST_METHODS.map((r) => {
+  return {
     label: r.toUpperCase(),
     value: r,
-  })),
-  menuPortalTarget: document.body,
-  classNamePrefix: "chakra-react-select",
-  hideSelectedOptions: false,
-  isMulti: true,
-  closeMenuOnSelect: false,
-};
+  };
+});
 
 export const RuleEditor: React.FC<Props> = ({
   rule: initialRule,
@@ -55,6 +52,12 @@ export const RuleEditor: React.FC<Props> = ({
   function updateAction(value: RuleActionType) {
     const newRule = cloneDeep(rule);
     newRule.action.type = value;
+    setRuleObject(newRule);
+  }
+
+  function updateRequestMethods(value: string[]) {
+    const newRule = cloneDeep(rule);
+    newRule.condition.requestMethods = value as RequestMethodType[];
     setRuleObject(newRule);
   }
 
@@ -113,7 +116,12 @@ export const RuleEditor: React.FC<Props> = ({
         >
           <GridItem>Request Method</GridItem>
           <GridItem>
-            <Select {...requestMethodProps} />
+            <MultipleSelect
+              placeholder="(ALL)"
+              options={requestMethodOptions}
+              value={rule.condition.requestMethods}
+              onChange={updateRequestMethods}
+            />
           </GridItem>
           <GridItem>Initiator Domain</GridItem>
           <GridItem>

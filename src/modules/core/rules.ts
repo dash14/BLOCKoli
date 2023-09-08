@@ -21,6 +21,16 @@ export enum RequestMethod {
   PUT = "put",
 }
 
+export type RequestMethodType =
+  | "connect"
+  | "delete"
+  | "get"
+  | "head"
+  | "options"
+  | "patch"
+  | "post"
+  | "put";
+
 export const REQUEST_METHODS = [
   RequestMethod.GET,
   RequestMethod.POST,
@@ -60,7 +70,7 @@ export interface RuleCondition {
 
   /**
    * List of HTTP request methods which the rule can match. */
-  requestMethods?: RequestMethod[];
+  requestMethods?: RequestMethodType[];
 
   /**
    * List of resource types which the rule can match.
