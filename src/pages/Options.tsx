@@ -1,4 +1,4 @@
-import { Container, Box, Grid, GridItem, Switch, Flex } from "@chakra-ui/react";
+import { Container, Box, Grid, GridItem, Switch } from "@chakra-ui/react";
 import {
   Accordion,
   AccordionItem,
@@ -6,12 +6,29 @@ import {
   AccordionPanel,
   AccordionIcon,
 } from "@chakra-ui/react";
-import { Stack, Radio, RadioGroup } from "@chakra-ui/react";
+import cloneDeep from "lodash-es/cloneDeep";
 import { useI18n } from "../hooks/useI18n";
 import { EditableTitle } from "@/components/EditableTitle";
+import { RuleEditor } from "@/components/RuleEditor";
+import { Rule, RuleActionType } from "@/modules/core/rules";
+import { useState } from "react";
+
+const ruleTemplate: Rule = {
+  action: {
+    type: RuleActionType.BLOCK,
+  },
+  condition: {},
+};
 
 function Options() {
   const i18n = useI18n();
+
+  const [rules, setRules] = useState([cloneDeep(ruleTemplate)]);
+
+  const updateRule = (rule: Rule, index: number) => {
+    setRules(rules.map((r, i) => (i === index ? rule : r)));
+  };
+
   return (
     <>
       <Container maxW="960px">
@@ -25,13 +42,13 @@ function Options() {
           <h1>{i18n["Options"]}</h1>
 
           <Grid templateColumns="repeat(2, 1fr)" width="fit-content" gap={20}>
-            <GridItem>ルールを適用する</GridItem>
+            <GridItem>Apply Rules</GridItem>
             <GridItem>
               <Switch />
             </GridItem>
           </Grid>
 
-          <h2>ルールセットの一覧</h2>
+          <h2>Rule Sets</h2>
           <Accordion defaultIndex={[0]} allowMultiple>
             <AccordionItem>
               <h3>
@@ -43,23 +60,10 @@ function Options() {
                 </AccordionButton>
               </h3>
               <AccordionPanel pb={4}>
-                <Box>
-                  <h4>アクション</h4>
-                  <Box marginLeft="20px">
-                    <RadioGroup>
-                      <Stack direction="row">
-                        <Radio value="block" colorScheme="red">
-                          block
-                        </Radio>
-                        <Radio value="allow" colorScheme="green">
-                          allow
-                        </Radio>
-                      </Stack>
-                    </RadioGroup>
-                  </Box>
-                  <h4>条件</h4>
-                  <Box marginLeft="20px"></Box>
-                </Box>
+                <RuleEditor
+                  rule={rules[0]}
+                  onChange={(rule) => updateRule(rule, 0)}
+                />
               </AccordionPanel>
             </AccordionItem>
           </Accordion>

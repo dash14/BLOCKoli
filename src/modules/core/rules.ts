@@ -21,6 +21,17 @@ export enum RequestMethod {
   PUT = "put",
 }
 
+export const REQUEST_METHODS = [
+  RequestMethod.GET,
+  RequestMethod.POST,
+  RequestMethod.PATCH,
+  RequestMethod.PUT,
+  RequestMethod.DELETE,
+  RequestMethod.CONNECT,
+  RequestMethod.HEAD,
+  RequestMethod.OPTIONS,
+];
+
 /** This describes the resource type of the network request. */
 export enum ResourceType {
   MAIN_FRAME = "main_frame",

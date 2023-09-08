@@ -17,6 +17,7 @@
     "@chakra-ui/react": "^2.8.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "chakra-react-select": "^4.7.0",
     "framer-motion": "^10.16.1",
     "loglevel": "^1.8.1",
     "loglevel-plugin-prefix": "^0.8.4",
@@ -26,6 +27,7 @@
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0-beta.18",
     "@types/chrome": "^0.0.241",
+    "@types/lodash-es": "^4.17.9",
     "@types/node": "^20.4.2",
     "@types/react": "^18.0.37",
     "@types/react-dom": "^18.0.11",
@@ -35,6 +37,7 @@
     "eslint": "^8.38.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.3.4",
+    "lodash-es": "^4.17.21",
     "typescript": "^5.0.2",
     "vite": "^4.3.9",
     "vite-tsconfig-paths": "^4.2.0",

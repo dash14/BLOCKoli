@@ -3,7 +3,17 @@ import ReactDOM from "react-dom/client";
 import Options from "./pages/Options";
 import "./index.css";
 
+const styles = {
+  global: {
+    ".chakra-react-select__menu-portal": {
+      zIndex: "100",
+      marginTop: "-30px",
+    },
+  },
+};
+
 const theme = extendTheme({
+  styles,
   components: {
     Button: {
       defaultProps: {
@@ -14,6 +24,11 @@ const theme = extendTheme({
       defaultProps: {
         colorScheme: "blue",
         size: "lg",
+      },
+    },
+    Input: {
+      defaultProps: {
+        size: "sm",
       },
     },
   },
