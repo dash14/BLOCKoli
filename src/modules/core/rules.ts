@@ -21,16 +21,6 @@ export enum RequestMethod {
   PUT = "put",
 }
 
-export type RequestMethodType =
-  | "connect"
-  | "delete"
-  | "get"
-  | "head"
-  | "options"
-  | "patch"
-  | "post"
-  | "put";
-
 export const REQUEST_METHODS = [
   RequestMethod.GET,
   RequestMethod.POST,
@@ -59,6 +49,22 @@ export enum ResourceType {
   OTHER = "other",
 }
 
+export const RESOURCE_TYPES = [
+  ResourceType.MAIN_FRAME,
+  ResourceType.SUB_FRAME,
+  ResourceType.STYLESHEET,
+  ResourceType.SCRIPT,
+  ResourceType.IMAGE,
+  ResourceType.FONT,
+  ResourceType.OBJECT,
+  ResourceType.XMLHTTPREQUEST,
+  ResourceType.PING,
+  ResourceType.CSP_REPORT,
+  ResourceType.MEDIA,
+  ResourceType.WEBSOCKET,
+  ResourceType.OTHER,
+];
+
 export interface RuleCondition {
   /**
    * The rule will only match network requests originating from the list of initiatorDomains.
@@ -70,7 +76,7 @@ export interface RuleCondition {
 
   /**
    * List of HTTP request methods which the rule can match. */
-  requestMethods?: RequestMethodType[];
+  requestMethods?: RequestMethod[];
 
   /**
    * List of resource types which the rule can match.

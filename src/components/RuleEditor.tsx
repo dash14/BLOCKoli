@@ -1,6 +1,8 @@
 import {
   REQUEST_METHODS,
-  RequestMethodType,
+  RESOURCE_TYPES,
+  RequestMethod,
+  ResourceType,
   Rule,
   RuleActionType,
 } from "@/modules/core/rules";
@@ -25,12 +27,20 @@ type Props = {
   onChange: (rule: Rule) => void;
 };
 
-const requestMethodOptions = REQUEST_METHODS.map((r) => {
-  return {
-    label: r.toUpperCase(),
-    value: r,
-  };
-});
+const requestMethodOptions = makeOptions(REQUEST_METHODS, (v) =>
+  v.toUpperCase()
+);
+const resourceTypeOptions = makeOptions(RESOURCE_TYPES);
+
+function makeOptions(
+  values: string[],
+  labeler: (v: string) => string = (v) => v
+) {
+  return values.map((v) => ({
+    label: labeler(v),
+    value: v,
+  }));
+}
 
 export const RuleEditor: React.FC<Props> = ({
   rule: initialRule,
@@ -57,7 +67,13 @@ export const RuleEditor: React.FC<Props> = ({
 
   function updateRequestMethods(value: string[]) {
     const newRule = cloneDeep(rule);
-    newRule.condition.requestMethods = value as RequestMethodType[];
+    newRule.condition.requestMethods = value as RequestMethod[];
+    setRuleObject(newRule);
+  }
+
+  function updateResourceTypes(value: string[]) {
+    const newRule = cloneDeep(rule);
+    newRule.condition.resourceTypes = value as ResourceType[];
     setRuleObject(newRule);
   }
 
@@ -133,7 +149,14 @@ export const RuleEditor: React.FC<Props> = ({
             Using Regular Expressions. See here for available formats
           </GridItem>
           <GridItem>Resource Type</GridItem>
-          <GridItem>Component</GridItem>
+          <GridItem>
+            <MultipleSelect
+              placeholder="(ALL)"
+              options={resourceTypeOptions}
+              value={rule.condition.resourceTypes}
+              onChange={updateResourceTypes}
+            />
+          </GridItem>
         </Grid>
       </Box>
       {isEditing && (
