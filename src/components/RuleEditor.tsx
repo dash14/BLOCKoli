@@ -57,6 +57,9 @@ export const RuleEditor: React.FC<Props> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [rule, setRuleObject] = useState(initialRule);
+  const [domains, setDomains] = useState(
+    rule.condition.initiatorDomains?.join(",") ?? ""
+  );
 
   function save() {
     onChange(rule);
@@ -98,6 +101,18 @@ export const RuleEditor: React.FC<Props> = ({
     newRule.condition.urlFilter = text;
     setRuleObject(newRule);
     // TODO: regex pattern check
+  }
+
+  function updateInitiatorDomains(text: string) {
+    setDomains(text);
+    const domains = text
+      .split(",")
+      .map((text) => text.trim())
+      .filter(Boolean);
+
+    const newRule = cloneDeep(rule);
+    newRule.condition.initiatorDomains = domains;
+    setRuleObject(newRule);
   }
 
   return (
@@ -180,6 +195,7 @@ export const RuleEditor: React.FC<Props> = ({
                 <Input
                   value={rule.condition.urlFilter}
                   onChange={(e) => updateUrlFilter(e.target.value)}
+                  width={400}
                   variant="outline"
                   placeholder={
                     rule.condition.isRegexFilter
@@ -226,7 +242,26 @@ export const RuleEditor: React.FC<Props> = ({
           <GridItem>Initiator Domains</GridItem>
           <GridItem>
             <HStack>
-              <Input variant="outline" placeholder="www.example.com, ..." />
+              {isEditing ? (
+                <Input
+                  value={domains}
+                  onChange={(e) => updateInitiatorDomains(e.target.value)}
+                  variant="outline"
+                  placeholder="www.example.com, ..."
+                  width={400}
+                />
+              ) : (
+                <HStack>
+                  {rule.condition.initiatorDomains ? (
+                    (rule.condition.initiatorDomains ?? []).map((domain) => (
+                      <Tag>{domain}</Tag>
+                    ))
+                  ) : (
+                    <Tag>(Not specified)</Tag>
+                  )}
+                </HStack>
+              )}
+
               <HintPopover title="Initiator Domains" width={400}>
                 The rule will only match network requests originating from the
                 list of initiator domains. If the list is empty, the rule is
@@ -252,9 +287,12 @@ export const RuleEditor: React.FC<Props> = ({
                 </UnorderedList>
               </HintPopover>
             </HStack>
-            <Text fontSize={12}>
-              Specify the origination of the request as a comma-separated list.
-            </Text>
+            {isEditing && (
+              <Text fontSize={12}>
+                Specify the origination of the request as a comma-separated
+                list.
+              </Text>
+            )}
           </GridItem>
 
           <GridItem>Resource Types</GridItem>
