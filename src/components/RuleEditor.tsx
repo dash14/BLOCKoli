@@ -21,6 +21,7 @@ import {
 import cloneDeep from "lodash-es/cloneDeep";
 import { MultipleSelect } from "./MultipleSelect";
 import { useState } from "react";
+import { Tags } from "./Tags";
 
 type Props = {
   rule: Rule;
@@ -131,14 +132,25 @@ export const RuleEditor: React.FC<Props> = ({
           gap="3"
         >
           <GridItem>Request Method</GridItem>
-          <GridItem>
-            <MultipleSelect
-              placeholder="(ALL)"
-              options={requestMethodOptions}
-              value={rule.condition.requestMethods}
-              onChange={updateRequestMethods}
-            />
-          </GridItem>
+          {isEditing ? (
+            <GridItem width={400}>
+              <MultipleSelect
+                placeholder="(ALL)"
+                options={requestMethodOptions}
+                value={rule.condition.requestMethods}
+                onChange={updateRequestMethods}
+              />
+            </GridItem>
+          ) : (
+            <GridItem>
+              <Tags
+                empty="(ALL)"
+                options={requestMethodOptions}
+                values={rule.condition.requestMethods}
+              />
+            </GridItem>
+          )}
+
           <GridItem>Initiator Domain</GridItem>
           <GridItem>
             Multiple entries may be specified by separating them with ",".
@@ -149,14 +161,24 @@ export const RuleEditor: React.FC<Props> = ({
             Using Regular Expressions. See here for available formats
           </GridItem>
           <GridItem>Resource Type</GridItem>
-          <GridItem>
-            <MultipleSelect
-              placeholder="(ALL)"
-              options={resourceTypeOptions}
-              value={rule.condition.resourceTypes}
-              onChange={updateResourceTypes}
-            />
-          </GridItem>
+          {isEditing ? (
+            <GridItem width={400}>
+              <MultipleSelect
+                placeholder="(ALL)"
+                options={resourceTypeOptions}
+                value={rule.condition.resourceTypes}
+                onChange={updateResourceTypes}
+              />
+            </GridItem>
+          ) : (
+            <GridItem>
+              <Tags
+                empty="(ALL)"
+                options={resourceTypeOptions}
+                values={rule.condition.resourceTypes}
+              />
+            </GridItem>
+          )}
         </Grid>
       </Box>
       {isEditing && (
