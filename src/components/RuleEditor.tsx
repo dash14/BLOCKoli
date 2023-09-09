@@ -11,6 +11,7 @@ import {
   Box,
   Button,
   ButtonGroup,
+  Checkbox,
   Grid,
   GridItem,
   HStack,
@@ -19,6 +20,7 @@ import {
   Radio,
   RadioGroup,
   Stack,
+  Tag,
   Text,
   UnorderedList,
 } from "@chakra-ui/react";
@@ -27,6 +29,7 @@ import { MultipleSelect } from "./MultipleSelect";
 import { useState } from "react";
 import { Tags } from "./Tags";
 import { HintPopover } from "./HintPopover";
+import { ExternalLink } from "./ExternalLink";
 
 type Props = {
   rule: Rule;
@@ -81,6 +84,20 @@ export const RuleEditor: React.FC<Props> = ({
     const newRule = cloneDeep(rule);
     newRule.condition.resourceTypes = value as ResourceType[];
     setRuleObject(newRule);
+  }
+
+  function updateIsRegexFilter(checked: boolean) {
+    const newRule = cloneDeep(rule);
+    newRule.condition.isRegexFilter = checked;
+    setRuleObject(newRule);
+    // TODO: regex pattern check
+  }
+
+  function updateUrlFilter(text: string) {
+    const newRule = cloneDeep(rule);
+    newRule.condition.urlFilter = text;
+    setRuleObject(newRule);
+    // TODO: regex pattern check
   }
 
   return (
@@ -158,7 +175,52 @@ export const RuleEditor: React.FC<Props> = ({
 
           <GridItem>URL Filter</GridItem>
           <GridItem>
-            Using Regular Expressions. See here for available formats
+            {isEditing ? (
+              <HStack>
+                <Input
+                  value={rule.condition.urlFilter}
+                  onChange={(e) => updateUrlFilter(e.target.value)}
+                  variant="outline"
+                  placeholder={
+                    rule.condition.isRegexFilter
+                      ? "^https?://www\\.example\\.com/api/"
+                      : "||www.example.com"
+                  }
+                />
+
+                <Box whiteSpace="nowrap">
+                  <Checkbox
+                    defaultChecked={rule.condition.isRegexFilter}
+                    checked={rule.condition.isRegexFilter}
+                    onChange={(e) => updateIsRegexFilter(e.target.checked)}
+                  >
+                    Use regular expressions
+                  </Checkbox>
+                </Box>
+              </HStack>
+            ) : (
+              <Box>
+                {rule.condition.urlFilter ? (
+                  <>
+                    <Tag>{rule.condition.urlFilter}</Tag>
+                    {rule.condition.isRegexFilter ? " (regex)" : ""}
+                  </>
+                ) : (
+                  <Tag>(Not specified)</Tag>
+                )}
+              </Box>
+            )}
+            For available formats, see{" "}
+            {rule.condition.isRegexFilter ? (
+              <ExternalLink href="https://developer.chrome.com/docs/extensions/reference/declarativeNetRequest/#property-RuleCondition-regexFilter">
+                API reference (regexFilter)
+              </ExternalLink>
+            ) : (
+              <ExternalLink href="https://developer.chrome.com/docs/extensions/reference/declarativeNetRequest/#filter-matching-charactgers">
+                API reference (urlFilter)
+              </ExternalLink>
+            )}
+            .
           </GridItem>
 
           <GridItem>Initiator Domains</GridItem>

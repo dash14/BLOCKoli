@@ -71,11 +71,19 @@ export interface RuleCondition {
    */
   initiatorDomains?: string[] | undefined;
 
-  /** Regular expression to match against the network request url. */
-  regexFilter?: string | undefined;
+  /**
+   * The pattern which is matched against the network request url.
+   */
+  urlFilter?: string | undefined;
 
   /**
-   * List of HTTP request methods which the rule can match. */
+   * Whether to use regular expressions in the urlFilter.
+   */
+  isRegexFilter?: boolean | undefined;
+
+  /**
+   * List of HTTP request methods which the rule can match.
+   */
   requestMethods?: RequestMethod[];
 
   /**
