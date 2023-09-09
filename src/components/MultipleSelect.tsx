@@ -10,6 +10,7 @@ type Props = {
   value?: string[];
   onChange?: (values: string[]) => void;
 };
+
 export const MultipleSelect: React.FC<Props> = ({
   placeholder,
   options,
@@ -23,7 +24,12 @@ export const MultipleSelect: React.FC<Props> = ({
       .filter(Boolean) as MultiValue<Option>) ?? [];
 
   const onChangeValue = (newValue: MultiValue<Option>) => {
-    onChange?.(newValue.map((v) => v.value));
+    // sort by order of options
+    const values = newValue.map((v) => v.value);
+    const sorted = options
+      .filter((o) => values.includes(o.value))
+      .map((v) => v.value);
+    onChange?.(sorted);
   };
 
   const props: SelectComponentProps = {
