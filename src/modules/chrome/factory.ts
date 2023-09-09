@@ -3,6 +3,10 @@ import { ChromeApiDeclarativeNetRequestImpl } from "./declarativeNetRequest";
 import { ChromeApiStorageImpl } from "./storage";
 
 export class ChromeApiFactory {
+  public isExtension(): boolean {
+    return !!chrome.declarativeNetRequest;
+  }
+
   public storage(): ChromeApiStorage {
     return new ChromeApiStorageImpl(chrome.storage.sync);
   }

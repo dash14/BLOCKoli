@@ -30,10 +30,17 @@ import { useState } from "react";
 import { Tags } from "./Tags";
 import { HintPopover } from "./HintPopover";
 import { ExternalLink } from "./ExternalLink";
+import { IsRegexSupportedResult } from "@/modules/chrome/api";
+
+export type RegexValidator = (
+  regex: string,
+  isCaseSensitive: boolean
+) => Promise<IsRegexSupportedResult>;
 
 type Props = {
   rule: Rule;
   onChange: (rule: Rule) => void;
+  regexValidator: RegexValidator;
 };
 
 const requestMethodOptions = makeOptions(REQUEST_METHODS, (v) =>
@@ -54,12 +61,15 @@ function makeOptions(
 export const RuleEditor: React.FC<Props> = ({
   rule: initialRule,
   onChange,
+  regexValidator,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [rule, setRuleObject] = useState(initialRule);
   const [domains, setDomains] = useState(
     rule.condition.initiatorDomains?.join(",") ?? ""
   );
+  const [isValid, setIsValid] = useState(false);
+  const [regexInvalidReason, setRegexInvalidReason] = useState("");
 
   function save() {
     onChange(rule);
@@ -75,32 +85,35 @@ export const RuleEditor: React.FC<Props> = ({
     const newRule = cloneDeep(rule);
     newRule.action.type = value;
     setRuleObject(newRule);
+    validate(newRule);
   }
 
   function updateRequestMethods(value: string[]) {
     const newRule = cloneDeep(rule);
     newRule.condition.requestMethods = value as RequestMethod[];
     setRuleObject(newRule);
+    validate(newRule);
   }
 
   function updateResourceTypes(value: string[]) {
     const newRule = cloneDeep(rule);
     newRule.condition.resourceTypes = value as ResourceType[];
     setRuleObject(newRule);
+    validate(newRule);
   }
 
   function updateIsRegexFilter(checked: boolean) {
     const newRule = cloneDeep(rule);
     newRule.condition.isRegexFilter = checked;
     setRuleObject(newRule);
-    // TODO: regex pattern check
+    validate(newRule);
   }
 
-  function updateUrlFilter(text: string) {
+  async function updateUrlFilter(text: string) {
     const newRule = cloneDeep(rule);
     newRule.condition.urlFilter = text;
     setRuleObject(newRule);
-    // TODO: regex pattern check
+    validate(newRule);
   }
 
   function updateInitiatorDomains(text: string) {
@@ -113,6 +126,28 @@ export const RuleEditor: React.FC<Props> = ({
     const newRule = cloneDeep(rule);
     newRule.condition.initiatorDomains = domains;
     setRuleObject(newRule);
+    validate(newRule);
+  }
+
+  async function validate(newRule: Rule) {
+    // regex pattern check
+    setRegexInvalidReason("");
+    if (newRule.condition.isRegexFilter && newRule.condition.urlFilter) {
+      const result = await regexValidator(newRule.condition.urlFilter, false);
+      if (!result.isSupported) {
+        setRegexInvalidReason(result.reason ?? "Not supported regex");
+        setIsValid(false);
+        return;
+      }
+    }
+
+    // At least one value required
+    setIsValid(
+      !!newRule.condition.requestMethods?.length ||
+        !!newRule.condition.initiatorDomains?.length ||
+        !!newRule.condition.urlFilter ||
+        !!newRule.condition.resourceTypes?.length
+    );
   }
 
   return (
@@ -193,7 +228,7 @@ export const RuleEditor: React.FC<Props> = ({
             {isEditing ? (
               <HStack>
                 <Input
-                  value={rule.condition.urlFilter}
+                  value={rule.condition.urlFilter ?? ""}
                   onChange={(e) => updateUrlFilter(e.target.value)}
                   width={400}
                   variant="outline"
@@ -225,6 +260,9 @@ export const RuleEditor: React.FC<Props> = ({
                   <Tag>(Not specified)</Tag>
                 )}
               </Box>
+            )}
+            {regexInvalidReason && (
+              <Text color="red">{regexInvalidReason}</Text>
             )}
             For available formats, see{" "}
             {rule.condition.isRegexFilter ? (
@@ -318,7 +356,7 @@ export const RuleEditor: React.FC<Props> = ({
       </Box>
       {isEditing && (
         <ButtonGroup size="sm">
-          <Button leftIcon={<EditIcon />} onClick={save}>
+          <Button leftIcon={<EditIcon />} onClick={save} isDisabled={!isValid}>
             Save
           </Button>
           <Button variant="outline" leftIcon={<CloseIcon />} onClick={cancel}>

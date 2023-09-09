@@ -32,9 +32,25 @@ export interface MatchedRuleInfo {
   timeStamp: number;
 }
 
+export interface RegexOptions {
+  isCaseSensitive?: boolean | undefined;
+  regex: string;
+}
+
+export enum UnsupportedRegexReason {
+  SYNTAX_ERROR = "syntaxError",
+  MEMORY_LIMIT_EXCEEDED = "memoryLimitExceeded",
+}
+
+export interface IsRegexSupportedResult {
+  isSupported: boolean;
+  reason?: UnsupportedRegexReason | undefined;
+}
+
 export interface ChromeApiDeclarativeNetRequest {
   updateDynamicRules(options: UpdateRuleOptions): Promise<void>;
   getDynamicRules(): Promise<Rules>;
   removeAllDynamicRules(): Promise<void>;
   getMatchedRulesInActiveTab(): Promise<MatchedRuleInfo[]>;
+  isRegexSupported(options: RegexOptions): Promise<IsRegexSupportedResult>;
 }

@@ -1,7 +1,9 @@
 import { Rules } from "@/modules/core/rules";
 import {
   ChromeApiDeclarativeNetRequest,
+  IsRegexSupportedResult,
   MatchedRuleInfo,
+  RegexOptions,
   UpdateRuleOptions,
 } from "./api";
 
@@ -38,5 +40,14 @@ export class ChromeApiDeclarativeNetRequestImpl
       tabId: tab.id,
     });
     return rules.rulesMatchedInfo;
+  }
+
+  async isRegexSupported(
+    options: RegexOptions
+  ): Promise<IsRegexSupportedResult> {
+    return await chrome.declarativeNetRequest.isRegexSupported({
+      ...options,
+      requireCapturing: false,
+    });
   }
 }

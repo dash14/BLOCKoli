@@ -9,9 +9,11 @@ import {
 import cloneDeep from "lodash-es/cloneDeep";
 import { useI18n } from "../hooks/useI18n";
 import { EditableTitle } from "@/components/EditableTitle";
-import { RuleEditor } from "@/components/RuleEditor";
+import { RegexValidator, RuleEditor } from "@/components/RuleEditor";
 import { Rule, RuleActionType } from "@/modules/core/rules";
 import { useState } from "react";
+import { ChromeApiFactory } from "@/modules/chrome/factory";
+import { UnsupportedRegexReason } from "@/modules/chrome/api";
 
 const ruleTemplate: Rule = {
   action: {
@@ -19,6 +21,24 @@ const ruleTemplate: Rule = {
   },
   condition: {},
 };
+
+const chrome = new ChromeApiFactory();
+const regexValidator: RegexValidator = chrome.isExtension()
+  ? async (regex: string, isCaseSensitive: boolean) =>
+      chrome
+        .declarativeNetRequest()
+        .isRegexSupported({ regex, isCaseSensitive })
+  : async (regex: string, isCaseSensitive: boolean) => {
+      try {
+        new RegExp(regex, isCaseSensitive ? "i" : "");
+        return { isSupported: true };
+      } catch (e) {
+        return {
+          isSupported: false,
+          reason: UnsupportedRegexReason.SYNTAX_ERROR,
+        };
+      }
+    };
 
 function Options() {
   const i18n = useI18n();
@@ -57,6 +77,7 @@ function Options() {
                 <RuleEditor
                   rule={rules[0]}
                   onChange={(rule) => updateRule(rule, 0)}
+                  regexValidator={regexValidator}
                 />
               </AccordionPanel>
             </AccordionItem>
