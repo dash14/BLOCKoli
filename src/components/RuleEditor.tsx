@@ -6,7 +6,12 @@ import {
   Rule,
   RuleActionType,
 } from "@/modules/core/rules";
-import { CloseIcon, EditIcon } from "@chakra-ui/icons";
+import {
+  CheckCircleIcon,
+  EditIcon,
+  NotAllowedIcon,
+  SmallCloseIcon,
+} from "@chakra-ui/icons";
 import {
   Box,
   Button,
@@ -15,6 +20,7 @@ import {
   Grid,
   GridItem,
   HStack,
+  Heading,
   Input,
   ListItem,
   Radio,
@@ -31,6 +37,7 @@ import { Tags } from "./Tags";
 import { HintPopover } from "./HintPopover";
 import { ExternalLink } from "./ExternalLink";
 import { IsRegexSupportedResult } from "@/modules/chrome/api";
+import { RuleBox } from "./RuleBox";
 
 export type RegexValidator = (
   regex: string,
@@ -151,22 +158,27 @@ export const RuleEditor: React.FC<Props> = ({
   }
 
   return (
-    <Box position="relative">
-      {!isEditing && (
-        <Button
-          variant="ghost"
-          position="absolute"
-          size="sm"
-          leftIcon={<EditIcon />}
-          top={1}
-          right={1}
-          onClick={() => setIsEditing(!isEditing)}
-        >
-          Edit
-        </Button>
-      )}
-      <Box aria-labelledby="title-action">
-        <h4 id="title-action">Action</h4>
+    <RuleBox isEditing={isEditing}>
+      <Box position="absolute" top={1} right={1}>
+        {isEditing ? (
+          <Tag size="sm" backgroundColor="blue.500" color="white">
+            Editing
+          </Tag>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            leftIcon={<EditIcon />}
+            onClick={() => setIsEditing(!isEditing)}
+          >
+            Edit
+          </Button>
+        )}
+      </Box>
+      <Box>
+        <Heading as="h4" size="sm" marginBottom={2}>
+          Action
+        </Heading>
         <Box marginLeft="20px">
           {isEditing ? (
             <RadioGroup value={rule.action.type} onChange={updateAction}>
@@ -180,28 +192,27 @@ export const RuleEditor: React.FC<Props> = ({
               </Stack>
             </RadioGroup>
           ) : (
-            <>
-              <Text
-                as="span"
-                marginRight={1}
-                color={
-                  rule.action.type === RuleActionType.BLOCK ? "red" : "green"
-                }
-              >
-                &#9679;
-              </Text>
-              {rule.action.type}
-            </>
+            <HStack gap={1}>
+              {rule.action.type === RuleActionType.BLOCK ? (
+                <NotAllowedIcon color="red" />
+              ) : (
+                <CheckCircleIcon color="green" />
+              )}
+              <Text as="span">{rule.action.type}</Text>
+            </HStack>
           )}
         </Box>
       </Box>
-      <Box aria-labelledby="title-condition">
-        <h4 id="title-condition">Condition</h4>
+
+      <Box marginTop={4} marginBottom={4}>
+        <Heading as="h4" size="sm" marginBottom={2}>
+          Condition
+        </Heading>
         <Grid
           marginLeft="20px"
           templateColumns="repeat(2, 1fr)"
           gridTemplateColumns="auto 1fr"
-          gap="3"
+          gap="5"
         >
           <GridItem>Request Methods</GridItem>
           {isEditing ? (
@@ -245,7 +256,7 @@ export const RuleEditor: React.FC<Props> = ({
                     checked={rule.condition.isRegexFilter}
                     onChange={(e) => updateIsRegexFilter(e.target.checked)}
                   >
-                    Use regular expressions
+                    Use regex
                   </Checkbox>
                 </Box>
               </HStack>
@@ -359,11 +370,15 @@ export const RuleEditor: React.FC<Props> = ({
           <Button leftIcon={<EditIcon />} onClick={save} isDisabled={!isValid}>
             Save
           </Button>
-          <Button variant="outline" leftIcon={<CloseIcon />} onClick={cancel}>
+          <Button
+            variant="outline"
+            leftIcon={<SmallCloseIcon />}
+            onClick={cancel}
+          >
             Cancel
           </Button>
         </ButtonGroup>
       )}
-    </Box>
+    </RuleBox>
   );
 };

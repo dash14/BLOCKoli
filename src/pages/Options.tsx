@@ -1,4 +1,11 @@
-import { Container, Box, Grid, GridItem, Switch } from "@chakra-ui/react";
+import {
+  Container,
+  Box,
+  Switch,
+  Heading,
+  HStack,
+  Text,
+} from "@chakra-ui/react";
 import {
   Accordion,
   AccordionItem,
@@ -53,27 +60,29 @@ function Options() {
     <>
       <Container maxW="960px">
         <Box borderWidth="1px" borderRadius="lg" marginY="6" padding="8">
-          <h1>{i18n["Options"]}</h1>
+          <Heading as="h1" fontSize={28}>
+            {i18n["Options"]}
+          </Heading>
 
-          <Grid templateColumns="repeat(2, 1fr)" width="fit-content" gap={20}>
-            <GridItem>Apply Rules</GridItem>
-            <GridItem>
-              <Switch />
-            </GridItem>
-          </Grid>
+          <HStack marginY={10}>
+            <Text fontSize={18} marginRight={10}>
+              Apply Rules
+            </Text>
+            <Switch />
+          </HStack>
 
-          <h2>Rule Sets</h2>
+          <Heading as="h2" fontSize={18} fontWeight="normal" marginBottom={4}>
+            Rule Sets:
+          </Heading>
           <Accordion defaultIndex={[0]} allowMultiple>
             <AccordionItem>
-              <h3>
-                <AccordionButton as="div" cursor="pointer">
-                  <Box flex="1">
-                    <EditableTitle cursor="pointer" />
-                  </Box>
-                  <AccordionIcon />
-                </AccordionButton>
-              </h3>
-              <AccordionPanel pb={4}>
+              <AccordionButton as="div" cursor="pointer" paddingLeft={2}>
+                <Box flex="1">
+                  <EditableTitle cursor="pointer" />
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel paddingX={6}>
                 <RuleEditor
                   rule={rules[0]}
                   onChange={(rule) => updateRule(rule, 0)}

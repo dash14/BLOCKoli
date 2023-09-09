@@ -6,7 +6,7 @@ import "./index.css";
 const styles = {
   global: {
     html: {
-      fontSize: "14px",
+      fontSize: "16px",
     },
     ".chakra-react-select__menu-portal": {
       zIndex: "100",
