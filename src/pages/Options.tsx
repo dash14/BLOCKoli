@@ -32,13 +32,7 @@ function Options() {
   return (
     <>
       <Container maxW="960px">
-        <Box
-          borderWidth="1px"
-          borderRadius="lg"
-          overflow="hidden"
-          marginY="6"
-          padding="8"
-        >
+        <Box borderWidth="1px" borderRadius="lg" marginY="6" padding="8">
           <h1>{i18n["Options"]}</h1>
 
           <Grid templateColumns="repeat(2, 1fr)" width="fit-content" gap={20}>

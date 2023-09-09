@@ -9,6 +9,9 @@ const styles = {
       zIndex: "100",
       marginTop: "-30px",
     },
+    ".chakra-collapse": {
+      overflow: "visible !important",
+    },
   },
 };
 

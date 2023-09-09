@@ -13,15 +13,20 @@ import {
   ButtonGroup,
   Grid,
   GridItem,
+  HStack,
+  Input,
+  ListItem,
   Radio,
   RadioGroup,
   Stack,
   Text,
+  UnorderedList,
 } from "@chakra-ui/react";
 import cloneDeep from "lodash-es/cloneDeep";
 import { MultipleSelect } from "./MultipleSelect";
 import { useState } from "react";
 import { Tags } from "./Tags";
+import { HintPopover } from "./HintPopover";
 
 type Props = {
   rule: Rule;
@@ -131,7 +136,7 @@ export const RuleEditor: React.FC<Props> = ({
           gridTemplateColumns="auto 1fr"
           gap="3"
         >
-          <GridItem>Request Method</GridItem>
+          <GridItem>Request Methods</GridItem>
           {isEditing ? (
             <GridItem width={400}>
               <MultipleSelect
@@ -151,16 +156,46 @@ export const RuleEditor: React.FC<Props> = ({
             </GridItem>
           )}
 
-          <GridItem>Initiator Domain</GridItem>
-          <GridItem>
-            Multiple entries may be specified by separating them with ",".
-          </GridItem>
-
           <GridItem>URL Filter</GridItem>
           <GridItem>
             Using Regular Expressions. See here for available formats
           </GridItem>
-          <GridItem>Resource Type</GridItem>
+
+          <GridItem>Initiator Domains</GridItem>
+          <GridItem>
+            <HStack>
+              <Input variant="outline" placeholder="www.example.com, ..." />
+              <HintPopover title="Initiator Domains" width={400}>
+                The rule will only match network requests originating from the
+                list of initiator domains. If the list is empty, the rule is
+                applied to requests from all domains.
+                <Box>Note:</Box>
+                <UnorderedList marginLeft={5}>
+                  <ListItem>
+                    Sub-domains like "a.example.com" are also allowed.
+                  </ListItem>
+                  <ListItem>
+                    The entries must consist of only ascii characters.
+                  </ListItem>
+                  <ListItem>
+                    Use punycode encoding for internationalized domains.
+                  </ListItem>
+                  <ListItem>
+                    This matches against the request initiator and not the
+                    request url.
+                  </ListItem>
+                  <ListItem>
+                    Sub-domains of the listed domains are also matched.
+                  </ListItem>
+                </UnorderedList>
+              </HintPopover>
+            </HStack>
+            <Text fontSize={12}>
+              Specify the origination of the request as a comma-separated list.
+            </Text>
+          </GridItem>
+
+          <GridItem>Resource Types</GridItem>
           {isEditing ? (
             <GridItem width={400}>
               <MultipleSelect
