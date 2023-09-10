@@ -55,10 +55,11 @@ export const RulesEditor: React.FC<Props> = ({
     }
   }
 
-  const transitionCss = css(`
+  const listTransitionCss = css(`
     display: flex;
     flex-direction: column;
     align-items: normal;
+    margin-bottom: 16px;
     gap: 16px;
 
     .item-enter {
@@ -68,7 +69,7 @@ export const RulesEditor: React.FC<Props> = ({
     .item-enter-active {
       opacity: 1;
       max-height: 1000px;
-      transition: all 250ms ease-in;
+      transition: all 250ms linear;
     }
     .item-exit {
       opacity: 1;
@@ -77,31 +78,56 @@ export const RulesEditor: React.FC<Props> = ({
     .item-exit-active {
       opacity: 0;
       max-height: 0;
-      transition: all 250ms ease-in;
+      transition: all 250ms linear;
+    }
+  `);
+
+  const addButtonTransition = css(`
+    &.fade-enter {
+      opacity: 0;
+    }
+    &.fade-enter-active {
+      opacity: 1;
+      transition: all 250ms linear;
+    }
+    &.fade-exit {
+      opacity: 1;
+    }
+    &.fade-exit-active {
+      opacity: 0;
+      transition: all 250ms linear;
     }
   `);
 
   return (
-    <TransitionGroup className="rule-list" css={transitionCss}>
-      {rules.map((rule, ruleIndex) => (
-        <CSSTransition
-          key={ruleIndex}
-          timeout={250}
-          className="item"
-          classNames="item"
-        >
-          <RuleEditor
+    <>
+      <TransitionGroup className="rule-list" css={listTransitionCss}>
+        {rules.map((rule, ruleIndex) => (
+          <CSSTransition
             key={ruleIndex}
-            rule={rule ?? newRuleTemplate}
-            isEditing={isEditingList[ruleIndex] ?? false}
-            onChange={(rule) => updateRule(rule, ruleIndex)}
-            onCancel={() => cancelEdit(ruleIndex)}
-            onEditingChange={(e) => editingListOp.updateAt(ruleIndex, e)}
-            ruleValidator={ruleValidator}
-          />
-        </CSSTransition>
-      ))}
-      {isAllowAdd(rules) && (
+            timeout={250}
+            className="item"
+            classNames="item"
+          >
+            <RuleEditor
+              key={ruleIndex}
+              rule={rule ?? newRuleTemplate}
+              isEditing={isEditingList[ruleIndex] ?? false}
+              onChange={(rule) => updateRule(rule, ruleIndex)}
+              onCancel={() => cancelEdit(ruleIndex)}
+              onEditingChange={(e) => editingListOp.updateAt(ruleIndex, e)}
+              ruleValidator={ruleValidator}
+            />
+          </CSSTransition>
+        ))}
+      </TransitionGroup>
+      <CSSTransition
+        in={isAllowAdd(rules)}
+        timeout={250}
+        classNames="fade"
+        unmountOnExit
+        css={addButtonTransition}
+      >
         <RuleBox>
           <Button
             variant="outline"
@@ -112,7 +138,7 @@ export const RulesEditor: React.FC<Props> = ({
             Add Rule
           </Button>
         </RuleBox>
-      )}
-    </TransitionGroup>
+      </CSSTransition>
+    </>
   );
 };
