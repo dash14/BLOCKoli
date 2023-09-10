@@ -43,6 +43,7 @@ type Props = {
   rule: Rule;
   isEditing: boolean;
   onChange: (rule: Rule) => void;
+  onCancel: () => void;
   onEditingChange: (isEditing: boolean) => void;
   ruleValidator: RuleValidator;
 };
@@ -66,6 +67,7 @@ export const RuleEditor: React.FC<Props> = ({
   rule: initialRule,
   isEditing,
   onChange,
+  onCancel,
   onEditingChange,
   ruleValidator,
 }) => {
@@ -83,6 +85,7 @@ export const RuleEditor: React.FC<Props> = ({
 
   function cancel() {
     setRuleObject(initialRule);
+    onCancel();
     onEditingChange(false);
   }
 
