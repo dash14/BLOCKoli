@@ -12,11 +12,13 @@ import { MouseEventHandler } from "react";
 
 type Props = {
   defaultValue?: string;
+  onChange: (text: string) => void;
 } & ChakraProps;
 
 export const EditableTitle: React.FC<Props> = ({
   defaultValue = "RuleSet",
   fontSize = "large",
+  onChange,
   ...props
 }) => {
   function Preview() {
@@ -84,6 +86,7 @@ export const EditableTitle: React.FC<Props> = ({
       defaultValue={defaultValue}
       isPreviewFocusable={false}
       fontSize={fontSize}
+      onSubmit={(e) => onChange(e)}
       {...props}
     >
       <Flex direction="row" alignItems="center" position="relative" flex={1}>

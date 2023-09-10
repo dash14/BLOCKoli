@@ -76,6 +76,13 @@ export const RuleSetsEditor: React.FC<Props> = ({
     }
   };
 
+  function updateRuleSetTitle(title: string, index: number) {
+    const ruleSet = { ...ruleSets[index], name: title } as RuleSet;
+    const newRuleSets = replaceAt(ruleSets, index, ruleSet);
+    setRuleSets(newRuleSets);
+    onChange(newRuleSets);
+  }
+
   return (
     <>
       <SlideTransitionGroup style={listTransitionCss}>
@@ -88,6 +95,9 @@ export const RuleSetsEditor: React.FC<Props> = ({
                     <EditableTitle
                       defaultValue={ruleSet.name}
                       cursor="pointer"
+                      onChange={(title) =>
+                        updateRuleSetTitle(title, ruleSetIndex)
+                      }
                     />
                   </Box>
                   <AccordionIcon />
