@@ -5,23 +5,10 @@ import {
   Heading,
   HStack,
   Text,
-  Button,
 } from "@chakra-ui/react";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
-} from "@chakra-ui/react";
+
 import { useI18n } from "../hooks/useI18n";
-import { EditableTitle } from "@/components/EditableTitle";
-import {
-  Rule,
-  RuleSet,
-  RuleSets,
-  newRuleSetTemplate,
-} from "@/modules/core/rules";
+import { RuleSets } from "@/modules/core/rules";
 import { useEffect, useState } from "react";
 import { ChromeApiFactory } from "@/modules/chrome/factory";
 import { UnsupportedRegexReason } from "@/modules/chrome/api";
@@ -29,12 +16,7 @@ import {
   OptionController,
   RegexValidator,
 } from "@/modules/clients/OptionController";
-import { RulesEditor } from "@/components/RulesEditor";
-import { AddIcon } from "@chakra-ui/icons";
-import cloneDeep from "lodash-es/cloneDeep";
-import { CSSTransition } from "react-transition-group";
-import { css } from "@emotion/react";
-import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
+import { RuleSetsEditor } from "@/components/RuleSetsEditor";
 
 // Regex Validator
 const chrome = new ChromeApiFactory();
@@ -63,53 +45,14 @@ function Options() {
   const i18n = useI18n();
 
   const [ruleSets, setRuleSets] = useState<RuleSets>([]);
-  const [accordionOpenStates, setAccordionOpenStates] = useState<number[][]>(
-    []
-  );
 
   useEffect(() => {
-    controller.getRuleSets().then((ruleSets) => {
-      setRuleSets(ruleSets);
-      // // Open an accordion if there is only one rule set.
-      // if (ruleSets.length === 1) {
-      //   setAccordionOpenStates([[0]]);
-      // } else {
-      //   // close all.
-      //   setAccordionOpenStates(ruleSets.map(() => []));
-      // }
-    });
+    controller.getRuleSets().then(setRuleSets);
   }, []);
 
-  const updateRules = (rules: Rule[], ruleSetIndex: number) => {
-    if (rules.length === 0) {
-      // add -> cancel
-      setRuleSets(ruleSets.filter((_, i) => i !== ruleSetIndex));
-    } else {
-      setRuleSets(
-        ruleSets.map((ruleSet, i) => {
-          if (i === ruleSetIndex) {
-            return { ...ruleSet, rules } as RuleSet;
-          } else {
-            return ruleSet;
-          }
-        })
-      );
-    }
-  };
-
-  function addRuleSet() {
-    setRuleSets([...ruleSets, cloneDeep(newRuleSetTemplate)]);
-    // open new accordion
-    setAccordionOpenStates([...accordionOpenStates, [0]]);
+  function updateRuleSet(ruleSets: RuleSets) {
+    setRuleSets(ruleSets);
   }
-
-  const listTransitionCss = css(`
-    display: flex;
-    flex-direction: column;
-    align-items: normal;
-    margin-bottom: 16px;
-    gap: 16px;
-  `);
 
   return (
     <>
@@ -130,46 +73,13 @@ function Options() {
             Rule Sets:
           </Heading>
 
-          <SlideTransitionGroup style={listTransitionCss}>
-            {ruleSets.map((ruleSet, ruleSetIndex) => (
-              <CSSTransition
-                key={ruleSetIndex}
-                timeout={250}
-                classNames="slide"
-              >
-                <Accordion defaultIndex={[0]} allowMultiple>
-                  <AccordionItem key={ruleSetIndex} borderWidth="1px">
-                    <AccordionButton as="div" cursor="pointer" paddingLeft={2}>
-                      <Box flex="1">
-                        <EditableTitle
-                          defaultValue={ruleSet.name}
-                          cursor="pointer"
-                        />
-                      </Box>
-                      <AccordionIcon />
-                    </AccordionButton>
-                    <AccordionPanel paddingX={6}>
-                      <RulesEditor
-                        rules={ruleSet.rules}
-                        onChange={(rules) => updateRules(rules, ruleSetIndex)}
-                        ruleValidator={(r) => controller.validateRule(r)}
-                      />
-                    </AccordionPanel>
-                  </AccordionItem>
-                </Accordion>
-              </CSSTransition>
-            ))}
-          </SlideTransitionGroup>
-          <Box marginTop={4}>
-            <Button
-              leftIcon={<AddIcon />}
-              variant="outline"
-              size="sm"
-              onClick={addRuleSet}
-            >
-              Add Rule Set
-            </Button>
-          </Box>
+          {ruleSets.length > 0 && (
+            <RuleSetsEditor
+              ruleSets={ruleSets}
+              onChange={updateRuleSet}
+              ruleValidator={(e) => controller.validateRule(e)}
+            />
+          )}
         </Box>
       </Container>
     </>

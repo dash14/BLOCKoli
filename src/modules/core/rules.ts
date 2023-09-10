@@ -111,8 +111,11 @@ export interface RuleSet {
 
 export type RuleSets = RuleSet[];
 
+export const RULE_ID_EDITING = -1;
+export const RULE_ID_UNSAVED = 0;
+
 export const newRuleTemplate: RuleWithId = {
-  id: 0,
+  id: RULE_ID_EDITING,
   action: {
     type: RuleActionType.BLOCK,
   },
@@ -120,6 +123,6 @@ export const newRuleTemplate: RuleWithId = {
 };
 
 export const newRuleSetTemplate: RuleSet = {
-  name: "My Rule",
+  name: "My Rule Set",
   rules: [newRuleTemplate],
 };
