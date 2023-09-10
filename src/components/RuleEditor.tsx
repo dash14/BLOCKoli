@@ -79,14 +79,14 @@ export const RuleEditor: React.FC<Props> = ({
   const [regexInvalidReason, setRegexInvalidReason] = useState("");
 
   function save() {
-    onChange(rule);
     onEditingChange(false);
+    onChange(rule);
   }
 
   function cancel() {
+    onEditingChange(false);
     setRuleObject(initialRule);
     onCancel();
-    onEditingChange(false);
   }
 
   function updateAction(value: RuleActionType) {

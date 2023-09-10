@@ -110,3 +110,16 @@ export interface RuleSet {
 }
 
 export type RuleSets = RuleSet[];
+
+export const newRuleTemplate: RuleWithId = {
+  id: 0,
+  action: {
+    type: RuleActionType.BLOCK,
+  },
+  condition: {},
+};
+
+export const newRuleSetTemplate: RuleSet = {
+  name: "My Rule",
+  rules: [newRuleTemplate],
+};

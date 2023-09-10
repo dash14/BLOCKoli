@@ -2,7 +2,7 @@ import { MessageProxyFactory } from "@/modules/chrome/message/MessageProxy";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { MessageProxy } from "@/modules/chrome/message/types";
 import logging from "@/modules/utils/logging";
-import { Rule, RuleActionType, RuleSets, RuleWithId } from "../core/rules";
+import { Rule, RuleSets, newRuleTemplate } from "../core/rules";
 import { ValidationResult } from "../core/validation";
 import { IsRegexSupportedResult } from "../chrome/api";
 import cloneDeep from "lodash-es/cloneDeep";
@@ -12,14 +12,6 @@ export type RegexValidator = (
   regex: string,
   isCaseSensitive: boolean
 ) => Promise<IsRegexSupportedResult>;
-
-const ruleTemplate: RuleWithId = {
-  id: 0,
-  action: {
-    type: RuleActionType.BLOCK,
-  },
-  condition: {},
-};
 
 export class OptionController {
   private requestBlockService: MessageProxy<RequestBlock.Service>;
@@ -38,7 +30,7 @@ export class OptionController {
     return [
       {
         name: "My RuleSet 1",
-        rules: [{ ...cloneDeep(ruleTemplate), id: 1 }],
+        rules: [{ ...cloneDeep(newRuleTemplate), id: 1 }],
       },
     ];
   }

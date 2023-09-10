@@ -21,7 +21,7 @@ export const Tags: React.FC<Props> = ({ empty, options, values }) => {
   return (
     <HStack>
       {labels.map((label) => (
-        <Tag>{label}</Tag>
+        <Tag key={label}>{label}</Tag>
       ))}
     </HStack>
   );

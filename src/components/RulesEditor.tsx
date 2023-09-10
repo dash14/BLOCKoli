@@ -1,13 +1,14 @@
-import { Rule, RuleActionType, RuleWithId } from "@/modules/core/rules";
+import { Rule, RuleWithId, newRuleTemplate } from "@/modules/core/rules";
 import { RuleValidator } from "@/modules/core/validation";
 import { RuleEditor } from "./RuleEditor";
-import { useList } from "@uidotdev/usehooks";
 import { RuleBox } from "./RuleBox";
 import { Button } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import cloneDeep from "lodash-es/cloneDeep";
-import { CSSTransition, TransitionGroup } from "react-transition-group";
+import { CSSTransition } from "react-transition-group";
 import { css } from "@emotion/react";
+import { SlideTransitionGroup } from "./transition/SlideTransitionGroup";
+import { useEffect, useState } from "react";
 
 type Props = {
   rules: RuleWithId[];
@@ -15,43 +16,58 @@ type Props = {
   ruleValidator: RuleValidator;
 };
 
-const newRuleTemplate: RuleWithId = {
-  id: 0,
-  action: {
-    type: RuleActionType.BLOCK,
-  },
-  condition: {},
-};
-
 export const RulesEditor: React.FC<Props> = ({
   rules: originalRules,
   onChange,
   ruleValidator,
 }) => {
-  const [rules, ruleListOp] = useList<RuleWithId>(originalRules);
-  const [isEditingList, editingListOp] = useList<boolean>(
+  const [rules, setRules] = useState<RuleWithId[]>(originalRules);
+  const [isEditingList, setIsEditingList] = useState<boolean[]>(
     originalRules.map(() => false)
   );
+  const [isAllowAdd, setIsAllowAdd] = useState(true);
 
-  function isAllowAdd(rules: RuleWithId[]) {
-    return rules.filter((r) => r.id === 0).length === 0;
-  }
+  useEffect(() => {
+    if (rules.length === 1 && rules[0].id === 0) {
+      setIsEditingList([true]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    setIsAllowAdd(rules.filter((r) => r.id === 0).length === 0);
+  }, [rules]);
 
   function updateRule(rule: Rule, index: number) {
-    ruleListOp.updateAt(index, rule as RuleWithId);
-    onChange(rules);
+    const newRules = rules.map((r, i) =>
+      i === index ? (rule as RuleWithId) : r
+    );
+    setRules(newRules);
+    onChange(newRules);
+  }
+
+  function updateEditing(isEditing: boolean, index: number) {
+    const newIsEditingList = isEditingList.map((e, i) =>
+      i === index ? isEditing : e
+    );
+    setIsEditingList(newIsEditingList);
   }
 
   function addRule() {
-    ruleListOp.push(cloneDeep(newRuleTemplate));
-    editingListOp.push(true);
+    const newRules = [...rules, cloneDeep(newRuleTemplate)];
+    setRules(newRules);
+    setIsEditingList([...isEditingList, true]);
   }
 
   function cancelEdit(ruleIndex: number) {
     if (rules[ruleIndex].id === 0) {
       // new rule
-      ruleListOp.removeAt(ruleIndex);
-      editingListOp.removeAt(ruleIndex);
+      const newRules = rules.filter((_, i) => i !== ruleIndex);
+      setRules(newRules);
+      setIsEditingList(isEditingList.filter((_, i) => i !== ruleIndex));
+      if (newRules.length === 0) {
+        onChange(newRules); // Notify that it is empty.
+      }
     }
   }
 
@@ -61,25 +77,6 @@ export const RulesEditor: React.FC<Props> = ({
     align-items: normal;
     margin-bottom: 16px;
     gap: 16px;
-
-    .item-enter {
-      opacity: 0;
-      max-height: 0;
-    }
-    .item-enter-active {
-      opacity: 1;
-      max-height: 1000px;
-      transition: all 250ms linear;
-    }
-    .item-exit {
-      opacity: 1;
-      max-height: 1000px;
-    }
-    .item-exit-active {
-      opacity: 0;
-      max-height: 0;
-      transition: all 250ms linear;
-    }
   `);
 
   const addButtonTransition = css(`
@@ -101,28 +98,22 @@ export const RulesEditor: React.FC<Props> = ({
 
   return (
     <>
-      <TransitionGroup className="rule-list" css={listTransitionCss}>
+      <SlideTransitionGroup style={listTransitionCss}>
         {rules.map((rule, ruleIndex) => (
-          <CSSTransition
-            key={ruleIndex}
-            timeout={250}
-            className="item"
-            classNames="item"
-          >
+          <CSSTransition key={ruleIndex} timeout={250} classNames="slide">
             <RuleEditor
-              key={ruleIndex}
               rule={rule ?? newRuleTemplate}
               isEditing={isEditingList[ruleIndex] ?? false}
               onChange={(rule) => updateRule(rule, ruleIndex)}
               onCancel={() => cancelEdit(ruleIndex)}
-              onEditingChange={(e) => editingListOp.updateAt(ruleIndex, e)}
+              onEditingChange={(e) => updateEditing(e, ruleIndex)}
               ruleValidator={ruleValidator}
             />
           </CSSTransition>
         ))}
-      </TransitionGroup>
+      </SlideTransitionGroup>
       <CSSTransition
-        in={isAllowAdd(rules)}
+        in={isAllowAdd}
         timeout={250}
         classNames="fade"
         unmountOnExit
