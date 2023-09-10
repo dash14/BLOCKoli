@@ -13,22 +13,25 @@ import {
   AccordionPanel,
   AccordionIcon,
 } from "@chakra-ui/react";
-import cloneDeep from "lodash-es/cloneDeep";
 import { useI18n } from "../hooks/useI18n";
 import { EditableTitle } from "@/components/EditableTitle";
-import { RegexValidator, RuleEditor } from "@/components/RuleEditor";
-import { Rule, RuleActionType } from "@/modules/core/rules";
-import { useState } from "react";
+import {
+  Rule,
+  RuleActionType,
+  RuleSet,
+  RuleSets,
+  RuleWithId,
+} from "@/modules/core/rules";
+import { useEffect, useState } from "react";
 import { ChromeApiFactory } from "@/modules/chrome/factory";
 import { UnsupportedRegexReason } from "@/modules/chrome/api";
+import {
+  OptionController,
+  RegexValidator,
+} from "@/modules/clients/OptionController";
+import { RulesEditor } from "@/components/RulesEditor";
 
-const ruleTemplate: Rule = {
-  action: {
-    type: RuleActionType.BLOCK,
-  },
-  condition: {},
-};
-
+// Regex Validator
 const chrome = new ChromeApiFactory();
 const regexValidator: RegexValidator = chrome.isExtension()
   ? async (regex: string, isCaseSensitive: boolean) =>
@@ -47,13 +50,37 @@ const regexValidator: RegexValidator = chrome.isExtension()
       }
     };
 
+const controller = new OptionController(regexValidator);
+
+const newRuleTemplate: RuleWithId = {
+  id: 0,
+  action: {
+    type: RuleActionType.BLOCK,
+  },
+  condition: {},
+};
+
 function Options() {
   const i18n = useI18n();
 
-  const [rules, setRules] = useState([cloneDeep(ruleTemplate)]);
+  const [ruleSets, setRuleSets] = useState<RuleSets>([]);
 
-  const updateRule = (rule: Rule, index: number) => {
-    setRules(rules.map((r, i) => (i === index ? rule : r)));
+  useEffect(() => {
+    controller.getRuleSets().then((ruleSets) => {
+      setRuleSets(ruleSets);
+    });
+  }, []);
+
+  const updateRules = (rules: Rule[], ruleSetIndex: number) => {
+    setRuleSets(
+      ruleSets.map((ruleSet, i) => {
+        if (i === ruleSetIndex) {
+          return { ...ruleSet, rules } as RuleSet;
+        } else {
+          return ruleSet;
+        }
+      })
+    );
   };
 
   return (
@@ -75,21 +102,26 @@ function Options() {
             Rule Sets:
           </Heading>
           <Accordion defaultIndex={[0]} allowMultiple>
-            <AccordionItem>
-              <AccordionButton as="div" cursor="pointer" paddingLeft={2}>
-                <Box flex="1">
-                  <EditableTitle cursor="pointer" />
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel paddingX={6}>
-                <RuleEditor
-                  rule={rules[0]}
-                  onChange={(rule) => updateRule(rule, 0)}
-                  regexValidator={regexValidator}
-                />
-              </AccordionPanel>
-            </AccordionItem>
+            {ruleSets.map((ruleSet, ruleSetIndex) => (
+              <AccordionItem key={ruleSetIndex}>
+                <AccordionButton as="div" cursor="pointer" paddingLeft={2}>
+                  <Box flex="1">
+                    <EditableTitle
+                      defaultValue={ruleSet.name}
+                      cursor="pointer"
+                    />
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel paddingX={6}>
+                  <RulesEditor
+                    rules={ruleSet.rules}
+                    onChange={(rules) => updateRules(rules, ruleSetIndex)}
+                    ruleValidator={(r) => controller.validateRule(r)}
+                  />
+                </AccordionPanel>
+              </AccordionItem>
+            ))}
           </Accordion>
         </Box>
       </Container>

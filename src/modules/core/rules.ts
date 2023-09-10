@@ -103,3 +103,10 @@ export interface RuleWithId extends Rule {
 }
 
 export type Rules = RuleWithId[];
+
+export interface RuleSet {
+  name: string;
+  rules: Rules;
+}
+
+export type RuleSets = RuleSet[];

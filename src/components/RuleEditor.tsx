@@ -36,18 +36,15 @@ import { useState } from "react";
 import { Tags } from "./Tags";
 import { HintPopover } from "./HintPopover";
 import { ExternalLink } from "./ExternalLink";
-import { IsRegexSupportedResult } from "@/modules/chrome/api";
 import { RuleBox } from "./RuleBox";
-
-export type RegexValidator = (
-  regex: string,
-  isCaseSensitive: boolean
-) => Promise<IsRegexSupportedResult>;
+import { RuleValidator } from "@/modules/core/validation";
 
 type Props = {
   rule: Rule;
+  isEditing: boolean;
   onChange: (rule: Rule) => void;
-  regexValidator: RegexValidator;
+  onEditingChange: (isEditing: boolean) => void;
+  ruleValidator: RuleValidator;
 };
 
 const requestMethodOptions = makeOptions(REQUEST_METHODS, (v) =>
@@ -67,10 +64,11 @@ function makeOptions(
 
 export const RuleEditor: React.FC<Props> = ({
   rule: initialRule,
+  isEditing,
   onChange,
-  regexValidator,
+  onEditingChange,
+  ruleValidator,
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
   const [rule, setRuleObject] = useState(initialRule);
   const [domains, setDomains] = useState(
     rule.condition.initiatorDomains?.join(",") ?? ""
@@ -80,12 +78,12 @@ export const RuleEditor: React.FC<Props> = ({
 
   function save() {
     onChange(rule);
-    setIsEditing(false);
+    onEditingChange(false);
   }
 
   function cancel() {
     setRuleObject(initialRule);
-    setIsEditing(false);
+    onEditingChange(false);
   }
 
   function updateAction(value: RuleActionType) {
@@ -137,24 +135,16 @@ export const RuleEditor: React.FC<Props> = ({
   }
 
   async function validate(newRule: Rule) {
-    // regex pattern check
-    setRegexInvalidReason("");
-    if (newRule.condition.isRegexFilter && newRule.condition.urlFilter) {
-      const result = await regexValidator(newRule.condition.urlFilter, false);
-      if (!result.isSupported) {
-        setRegexInvalidReason(result.reason ?? "Not supported regex");
-        setIsValid(false);
-        return;
+    const result = await ruleValidator(newRule);
+    if (result.isValid) {
+      setRegexInvalidReason("");
+      setIsValid(true);
+    } else {
+      if (result.reason?.isInvalidUrlFilter) {
+        setRegexInvalidReason(result.reason?.urlFilterReason ?? "");
       }
+      setIsValid(false);
     }
-
-    // At least one value required
-    setIsValid(
-      !!newRule.condition.requestMethods?.length ||
-        !!newRule.condition.initiatorDomains?.length ||
-        !!newRule.condition.urlFilter ||
-        !!newRule.condition.resourceTypes?.length
-    );
   }
 
   return (
@@ -169,7 +159,7 @@ export const RuleEditor: React.FC<Props> = ({
             variant="ghost"
             size="sm"
             leftIcon={<EditIcon />}
-            onClick={() => setIsEditing(!isEditing)}
+            onClick={() => onEditingChange(!isEditing)}
           >
             Edit
           </Button>

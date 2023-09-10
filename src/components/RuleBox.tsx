@@ -11,7 +11,7 @@ export const RuleBox: React.FC<Props> = ({ isEditing = false, children }) => {
     <Box
       position="relative"
       paddingX={6}
-      paddingY={3}
+      paddingY={4}
       border="solid 1px #dfdfdf"
       borderRadius={10}
       {...(isEditing && {
