@@ -38,12 +38,15 @@ import { HintPopover } from "./HintPopover";
 import { ExternalLink } from "./ExternalLink";
 import { RuleBox } from "./RuleBox";
 import { RuleValidator } from "@/modules/core/validation";
+import { RemoveButton } from "./RemoveButton";
 
 type Props = {
   rule: Rule;
   isEditing: boolean;
+  isRemoveEnabled: boolean;
   onChange: (rule: Rule) => void;
   onCancel: () => void;
+  onRemove: () => void;
   onEditingChange: (isEditing: boolean) => void;
   ruleValidator: RuleValidator;
 };
@@ -66,8 +69,10 @@ function makeOptions(
 export const RuleEditor: React.FC<Props> = ({
   rule: initialRule,
   isEditing,
+  isRemoveEnabled,
   onChange,
   onCancel,
+  onRemove,
   onEditingChange,
   ruleValidator,
 }) => {
@@ -87,6 +92,10 @@ export const RuleEditor: React.FC<Props> = ({
     onEditingChange(false);
     setRuleObject(initialRule);
     onCancel();
+  }
+
+  function remove() {
+    onRemove();
   }
 
   function updateAction(value: RuleActionType) {
@@ -359,7 +368,7 @@ export const RuleEditor: React.FC<Props> = ({
         </Grid>
       </Box>
       {isEditing && (
-        <ButtonGroup size="sm">
+        <ButtonGroup size="sm" width="100%">
           <Button leftIcon={<EditIcon />} onClick={save} isDisabled={!isValid}>
             Save
           </Button>
@@ -370,6 +379,9 @@ export const RuleEditor: React.FC<Props> = ({
           >
             Cancel
           </Button>
+          {isRemoveEnabled && (
+            <RemoveButton style={{ marginLeft: "auto" }} onClick={remove} />
+          )}
         </ButtonGroup>
       )}
     </RuleBox>

@@ -55,6 +55,18 @@ export const RulesEditor: React.FC<Props> = ({
     onChange(newRules);
   }
 
+  function removeRule(index: number) {
+    const rule = rules[index];
+    if (rule.id === RULE_ID_EDITING) {
+      cancelEdit(index);
+    } else {
+      const newRules = removeAt(rules, index);
+      setRules(newRules);
+      setIsEditingList(removeAt(isEditingList, index));
+      onChange(newRules);
+    }
+  }
+
   function updateEditing(isEditing: boolean, index: number) {
     const newList = replaceAt(isEditingList, index, isEditing);
     setIsEditingList(newList);
@@ -65,12 +77,12 @@ export const RulesEditor: React.FC<Props> = ({
     setIsEditingList(push(isEditingList, true));
   }
 
-  function cancelEdit(ruleIndex: number) {
-    if (rules[ruleIndex].id === RULE_ID_EDITING) {
+  function cancelEdit(index: number) {
+    if (rules[index].id === RULE_ID_EDITING) {
       // cancel new rule
-      const newRules = removeAt(rules, ruleIndex);
+      const newRules = removeAt(rules, index);
       setRules(newRules);
-      setIsEditingList(removeAt(isEditingList, ruleIndex));
+      setIsEditingList(removeAt(isEditingList, index));
       if (newRules.length === 0) {
         onChange(newRules); // Notify that it is empty.
       }
@@ -110,8 +122,13 @@ export const RulesEditor: React.FC<Props> = ({
             <RuleEditor
               rule={rule ?? newRuleTemplate}
               isEditing={isEditingList[ruleIndex] ?? false}
+              isRemoveEnabled={
+                rule.id !== RULE_ID_EDITING &&
+                rules.filter((r) => r.id !== RULE_ID_EDITING).length > 1
+              }
               onChange={(rule) => updateRule(rule, ruleIndex)}
               onCancel={() => cancelEdit(ruleIndex)}
+              onRemove={() => removeRule(ruleIndex)}
               onEditingChange={(e) => updateEditing(e, ruleIndex)}
               ruleValidator={ruleValidator}
             />
