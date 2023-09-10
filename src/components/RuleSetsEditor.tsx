@@ -14,7 +14,7 @@ import {
   RuleSets,
   newRuleSetTemplate,
 } from "@/modules/core/rules";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RulesEditor } from "@/components/RulesEditor";
 import { CSSTransition } from "react-transition-group";
 import { css } from "@emotion/react";
@@ -23,6 +23,7 @@ import { push, removeAt, replaceAt } from "@/modules/core/array";
 import { RuleValidator } from "@/modules/core/validation";
 import { AddIcon } from "@chakra-ui/icons";
 import cloneDeep from "lodash-es/cloneDeep";
+import { RuleSetMenu } from "./RuleSetMenu";
 
 type Props = {
   ruleSets: RuleSets;
@@ -47,6 +48,11 @@ export const RuleSetsEditor: React.FC<Props> = ({
     []
   );
   const [ruleSets, setRuleSets] = useState<RuleSets>(originalRuleSets);
+  const [filteredRuleSets, setFilteredRuleSets] = useState<RuleSets>([]);
+
+  useEffect(() => {
+    setFilteredRuleSets(filterAvailableRuleSets(ruleSets));
+  }, [ruleSets]);
 
   function addRuleSet() {
     setRuleSets(push(ruleSets, cloneDeep(newRuleSetTemplate)));
@@ -54,7 +60,18 @@ export const RuleSetsEditor: React.FC<Props> = ({
     setAccordionOpenStates(push(accordionOpenStates, [0]));
   }
 
-  const updateRules = (rules: Rule[], ruleSetIndex: number) => {
+  function filterAvailableRuleSets(ruleSets: RuleSets): RuleSets {
+    return ruleSets
+      .map((ruleSet) => {
+        const rules = ruleSet.rules.filter(
+          (rule) => rule.id !== RULE_ID_EDITING
+        );
+        return { ...ruleSet, rules };
+      })
+      .filter((ruleSet) => ruleSet.rules.length > 0);
+  }
+
+  function updateRules(rules: Rule[], ruleSetIndex: number) {
     if (rules.length === 0) {
       // add -> cancel
       setRuleSets(removeAt(ruleSets, ruleSetIndex));
@@ -64,17 +81,20 @@ export const RuleSetsEditor: React.FC<Props> = ({
       setRuleSets(newRuleSets);
 
       // filter editing
-      const filtered = newRuleSets
-        .map((ruleSet) => {
-          const rules = ruleSet.rules.filter(
-            (rule) => rule.id !== RULE_ID_EDITING
-          );
-          return { ...ruleSet, rules };
-        })
-        .filter((ruleSet) => ruleSet.rules.length > 0);
-      onChange(filtered);
+      onChange(filterAvailableRuleSets(newRuleSets));
     }
-  };
+  }
+
+  function removeRuleSet(index: number) {
+    const ruleSet = ruleSets[index];
+    if (ruleSet.rules.filter((r) => r.id !== RULE_ID_EDITING).length === 0) {
+      // new rule set: same as cancel
+      setRuleSets(removeAt(ruleSets, index));
+    } else {
+      setRuleSets(removeAt(ruleSets, index));
+      onChange(filterAvailableRuleSets(ruleSets));
+    }
+  }
 
   function updateRuleSetTitle(title: string, index: number) {
     const ruleSet = { ...ruleSets[index], name: title } as RuleSet;
@@ -100,6 +120,9 @@ export const RuleSetsEditor: React.FC<Props> = ({
                       }
                     />
                   </Box>
+                  {filteredRuleSets.length > 1 && (
+                    <RuleSetMenu onRemove={() => removeRuleSet(ruleSetIndex)} />
+                  )}
                   <AccordionIcon />
                 </AccordionButton>
                 <AccordionPanel paddingX={6}>

@@ -39,6 +39,7 @@ import { ExternalLink } from "./ExternalLink";
 import { RuleBox } from "./RuleBox";
 import { RuleValidator } from "@/modules/core/validation";
 import { RemoveButton } from "./RemoveButton";
+import { RuleMenu } from "./RuleMenu";
 
 type Props = {
   rule: Rule;
@@ -167,14 +168,17 @@ export const RuleEditor: React.FC<Props> = ({
             Editing
           </Tag>
         ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            leftIcon={<EditIcon />}
-            onClick={() => onEditingChange(!isEditing)}
-          >
-            Edit
-          </Button>
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              leftIcon={<EditIcon />}
+              onClick={() => onEditingChange(!isEditing)}
+            >
+              Edit
+            </Button>
+            {isRemoveEnabled && <RuleMenu onRemove={remove} />}
+          </>
         )}
       </Box>
       <Box>
