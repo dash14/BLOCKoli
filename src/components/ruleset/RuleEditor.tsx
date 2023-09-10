@@ -30,15 +30,15 @@ import {
   Text,
   UnorderedList,
 } from "@chakra-ui/react";
-import cloneDeep from "lodash-es/cloneDeep";
-import { MultipleSelect } from "./MultipleSelect";
 import { useState } from "react";
-import { Tags } from "./Tags";
-import { HintPopover } from "./HintPopover";
-import { ExternalLink } from "./ExternalLink";
-import { RuleBox } from "./RuleBox";
+import cloneDeep from "lodash-es/cloneDeep";
 import { RuleValidator } from "@/modules/core/validation";
-import { RemoveButton } from "./RemoveButton";
+import { MultipleSelect } from "@/components/forms/MultipleSelect";
+import { Tags } from "@/components/parts/Tags";
+import { HintPopover } from "@/components/parts/HintPopover";
+import { ExternalLink } from "@/components/parts/ExternalLink";
+import { RemoveButton } from "@/components/parts/RemoveButton";
+import { RuleBox } from "./RuleBox";
 import { RuleMenu } from "./RuleMenu";
 
 type Props = {

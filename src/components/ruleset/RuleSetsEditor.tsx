@@ -6,7 +6,6 @@ import {
   AccordionPanel,
   AccordionIcon,
 } from "@chakra-ui/react";
-import { EditableTitle } from "@/components/EditableTitle";
 import {
   RULE_ID_EDITING,
   Rule,
@@ -15,14 +14,15 @@ import {
   newRuleSetTemplate,
 } from "@/modules/core/rules";
 import { useEffect, useState } from "react";
-import { RulesEditor } from "@/components/RulesEditor";
-import { CSSTransition } from "react-transition-group";
-import { css } from "@emotion/react";
-import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
-import { push, removeAt, replaceAt } from "@/modules/core/array";
-import { RuleValidator } from "@/modules/core/validation";
 import { AddIcon } from "@chakra-ui/icons";
 import cloneDeep from "lodash-es/cloneDeep";
+import { css } from "@emotion/react";
+import { CSSTransition } from "react-transition-group";
+import { push, removeAt, replaceAt } from "@/modules/core/array";
+import { RuleValidator } from "@/modules/core/validation";
+import { EditableTitle } from "@/components/forms/EditableTitle";
+import { RulesEditor } from "@/components/ruleset/RulesEditor";
+import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
 import { RuleSetMenu } from "./RuleSetMenu";
 
 type Props = {

@@ -16,7 +16,7 @@ import {
   OptionController,
   RegexValidator,
 } from "@/modules/clients/OptionController";
-import { RuleSetsEditor } from "@/components/RuleSetsEditor";
+import { RuleSetsEditor } from "@/components/ruleset/RuleSetsEditor";
 
 // Regex Validator
 const chrome = new ChromeApiFactory();

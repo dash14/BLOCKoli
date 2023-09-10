@@ -5,17 +5,17 @@ import {
   RuleWithId,
   newRuleTemplate,
 } from "@/modules/core/rules";
-import { RuleValidator } from "@/modules/core/validation";
-import { RuleEditor } from "./RuleEditor";
-import { RuleBox } from "./RuleBox";
+import { useEffect, useState } from "react";
 import { Button } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
-import cloneDeep from "lodash-es/cloneDeep";
 import { CSSTransition } from "react-transition-group";
+import cloneDeep from "lodash-es/cloneDeep";
 import { css } from "@emotion/react";
-import { SlideTransitionGroup } from "./transition/SlideTransitionGroup";
-import { useEffect, useState } from "react";
 import { push, removeAt, replaceAt } from "@/modules/core/array";
+import { RuleValidator } from "@/modules/core/validation";
+import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
+import { RuleEditor } from "./RuleEditor";
+import { RuleBox } from "./RuleBox";
 
 type Props = {
   rules: RuleWithId[];
