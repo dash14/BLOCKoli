@@ -23,8 +23,9 @@ function Options() {
     controller.getRuleSets().then(setRuleSets);
   }, []);
 
-  function updateRuleSet(ruleSets: RuleSets) {
-    setRuleSets(ruleSets);
+  async function updateRuleSet(ruleSets: RuleSets) {
+    const updated = await controller.updateRuleSets(ruleSets);
+    setRuleSets(updated);
   }
 
   return (
@@ -46,14 +47,11 @@ function Options() {
             Rule Sets:
           </Heading>
 
-          {ruleSets.length > 0 && (
-            <RuleSetsEdit ruleSets={ruleSets} onChange={updateRuleSet} />
-          )}
+          <RuleSetsEdit ruleSets={ruleSets} onChange={updateRuleSet} />
         </Box>
       </Container>
     </>
   );
 }
-
 
 export default Options;

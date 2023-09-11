@@ -3,6 +3,7 @@ import { EventEmitter, ServiceBase } from "@/modules/core/service";
 import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import { ChromeApiDeclarativeNetRequest } from "@/modules/chrome/api";
 import logging from "@/modules/utils/logging";
+import { RULE_ID_UNSAVED, RuleSets } from "../core/rules";
 
 const log = logging.getLogger("RequestBlock");
 
@@ -60,18 +61,41 @@ export class RequestBlockServiceImpl
     return (await this.store.loadState()) === "enable";
   }
 
-  public async update(): Promise<void> {
-    log.debug("update");
-    throw new Error("Method not implemented.");
+  public async getRuleSets(): Promise<RuleSets> {
+    log.debug("getRuleSets");
+
+    // Load from store
+    return await this.store.loadRuleSets();
+  }
+
+  public async updateRuleSets(ruleSets: RuleSets): Promise<RuleSets> {
+    log.debug("updateRuleSets");
+
+    // Assign ID to new rules
+    let nextId = await this.store.loadNextRuleId();
+    ruleSets.forEach((ruleSet) => {
+      ruleSet.rules.forEach((rule) => {
+        if (rule.id === RULE_ID_UNSAVED) {
+          rule.id = nextId++;
+        }
+      });
+    });
+    await this.store.saveNextRuleId(nextId);
+
+    // Save to store
+    await this.store.saveRuleSets(ruleSets);
+
+    // TODO: Update to chrome
+    return ruleSets;
   }
 
   private async run(): Promise<void> {
     // clear rules
     await this.chrome.removeAllDynamicRules();
 
-    const rules = await this.store.loadRules();
-    if (rules.length === 0) return;
+    const ruleSets = await this.store.loadRuleSets();
+    if (ruleSets.length === 0) return;
 
-    this.chrome.updateDynamicRules({ addRules: rules });
+    // this.chrome.updateDynamicRules({ addRules: rules });
   }
 }

@@ -2,8 +2,7 @@ import { MessageProxyFactory } from "@/modules/chrome/message/MessageProxy";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { MessageProxy } from "@/modules/chrome/message/types";
 import logging from "@/modules/utils/logging";
-import { RuleSets, newRuleTemplate } from "../core/rules";
-import cloneDeep from "lodash-es/cloneDeep";
+import { RuleSets } from "../core/rules";
 const log = logging.getLogger("options");
 
 export class OptionController {
@@ -18,11 +17,10 @@ export class OptionController {
   }
 
   async getRuleSets(): Promise<RuleSets> {
-    return [
-      {
-        name: "My RuleSet 1",
-        rules: [{ ...cloneDeep(newRuleTemplate), id: 1 }],
-      },
-    ];
+    return await this.requestBlockService.getRuleSets();
+  }
+
+  async updateRuleSets(ruleSets: RuleSets): Promise<RuleSets> {
+    return await this.requestBlockService.updateRuleSets(ruleSets);
   }
 }

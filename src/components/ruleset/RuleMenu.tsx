@@ -39,7 +39,7 @@ export const RuleMenu: React.FC<Props> = ({ onRemove }) => {
           size="sm"
           onClick={(e) => e.stopPropagation()}
         />
-        <MenuList>
+        <MenuList fontSize="1rem">
           <MenuItem
             icon={<DeleteIcon />}
             color="red"

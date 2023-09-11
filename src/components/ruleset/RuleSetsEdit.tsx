@@ -9,6 +9,7 @@ import {
   AccordionIcon,
   Box,
   Button,
+  Text,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { CSSTransition } from "react-transition-group";
@@ -43,14 +44,24 @@ export const RuleSetsEdit: React.FC<Props> = ({
   onChange,
 }) => {
   const [ruleSets, setRuleSets] = useState<RuleSets>(originalRuleSets);
-  const [filteredRuleSets, setFilteredRuleSets] = useState<RuleSets>([]);
   const [accordionOpenStates, setAccordionOpenStates] = useState<number[][]>(
     []
   );
 
   useEffect(() => {
-    setFilteredRuleSets(filterAvailableRuleSets(ruleSets));
-  }, [ruleSets]);
+    if (ruleSets.length === 0) {
+      setRuleSets(originalRuleSets);
+      if (originalRuleSets.length === 1) {
+        setAccordionOpenStates([[0]]);
+      } else {
+        setAccordionOpenStates(originalRuleSets.map(() => []));
+      }
+    } else {
+      // merge editing
+      setRuleSets(mergeEditingRuleSets(originalRuleSets, ruleSets));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [originalRuleSets]);
 
   function addRuleSet() {
     setRuleSets(push(ruleSets, cloneDeep(newRuleSetTemplate)));
@@ -66,9 +77,7 @@ export const RuleSetsEdit: React.FC<Props> = ({
       const ruleSet = { ...ruleSets[ruleSetIndex], rules } as RuleSet;
       const newRuleSets = replaceAt(ruleSets, ruleSetIndex, ruleSet);
       setRuleSets(newRuleSets);
-
-      // filter editing
-      onChange(filterAvailableRuleSets(newRuleSets));
+      onChange(filterAvailableRuleSets(newRuleSets)); // filter editing
     }
   }
 
@@ -78,8 +87,9 @@ export const RuleSetsEdit: React.FC<Props> = ({
       // new rule set: same as cancel
       setRuleSets(removeAt(ruleSets, index));
     } else {
-      setRuleSets(removeAt(ruleSets, index));
-      onChange(filterAvailableRuleSets(ruleSets));
+      const newRuleSets = removeAt(ruleSets, index);
+      setRuleSets(newRuleSets);
+      onChange(filterAvailableRuleSets(newRuleSets)); // filter editing
     }
   }
 
@@ -92,10 +102,18 @@ export const RuleSetsEdit: React.FC<Props> = ({
 
   return (
     <>
+      {ruleSets.length === 0 && (
+        <Text fontSize={16} marginLeft={10}>
+          (No rule set)
+        </Text>
+      )}
       <SlideTransitionGroup style={listTransitionCss}>
         {ruleSets.map((ruleSet, ruleSetIndex) => (
           <CSSTransition key={ruleSetIndex} timeout={250} classNames="slide">
-            <Accordion defaultIndex={[0]} allowMultiple>
+            <Accordion
+              defaultIndex={accordionOpenStates[ruleSetIndex]}
+              allowMultiple
+            >
               <AccordionItem key={ruleSetIndex} borderWidth="1px">
                 <AccordionButton as="div" cursor="pointer" paddingLeft={2}>
                   <Box flex="1">
@@ -107,9 +125,7 @@ export const RuleSetsEdit: React.FC<Props> = ({
                       }
                     />
                   </Box>
-                  {filteredRuleSets.length > 1 && (
-                    <RuleSetMenu onRemove={() => removeRuleSet(ruleSetIndex)} />
-                  )}
+                  <RuleSetMenu onRemove={() => removeRuleSet(ruleSetIndex)} />
                   <AccordionIcon />
                 </AccordionButton>
                 <AccordionPanel paddingX={6}>
@@ -144,4 +160,23 @@ function filterAvailableRuleSets(ruleSets: RuleSets): RuleSets {
       return { ...ruleSet, rules };
     })
     .filter((ruleSet) => ruleSet.rules.length > 0);
+}
+
+function mergeEditingRuleSets(
+  filtered: RuleSets,
+  ruleSets: RuleSets
+): RuleSets {
+  const newRuleSets = cloneDeep(filtered);
+  ruleSets.forEach((ruleSet, ruleSetIndex) => {
+    if (newRuleSets[ruleSetIndex]) {
+      ruleSet.rules.forEach((rule, ruleIndex) => {
+        if (rule.id === RULE_ID_EDITING) {
+          newRuleSets[ruleSetIndex].rules.splice(ruleIndex, 0, rule);
+        }
+      });
+    } else {
+      newRuleSets[ruleSetIndex] = ruleSet;
+    }
+  });
+  return newRuleSets;
 }

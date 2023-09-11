@@ -1,9 +1,4 @@
-import {
-  RequestMethod,
-  ResourceType,
-  RuleActionType,
-  Rules,
-} from "@/modules/core/rules";
+import { RuleSets } from "@/modules/core/rules";
 import { State } from "@/modules/core/state";
 import { ServiceConfigurationStore } from "./ServiceConfigurationStore";
 import { ChromeApiStorage } from "../chrome/api";
@@ -16,7 +11,6 @@ export class ServiceConfigurationStoreImpl
   constructor(storage: ChromeApiStorage) {
     this.storage = storage;
   }
-
   async saveState(state: State): Promise<void> {
     await this.storage.set("state", state);
   }
@@ -26,25 +20,21 @@ export class ServiceConfigurationStoreImpl
     return state ?? "disable";
   }
 
-  async saveRules(rules: Rules): Promise<void> {
-    await this.storage.set("rules", rules);
+  async saveNextRuleId(id: number): Promise<void> {
+    await this.storage.set("nextRuleId", id);
   }
 
-  async loadRules(): Promise<Rules> {
-    // const rules = await this.storage.get("rules");
-    // return rules ?? [];
-    return [
-      {
-        id: 1,
-        action: {
-          type: RuleActionType.BLOCK,
-        },
-        condition: {
-          initiatorDomains: ["www.example.com"],
-          requestMethods: [RequestMethod.GET],
-          resourceTypes: [ResourceType.IMAGE],
-        },
-      },
-    ];
+  async loadNextRuleId(): Promise<number> {
+    const nextId = await this.storage.get<number>("nextRuleId");
+    return nextId ?? 1;
+  }
+
+  async saveRuleSets(ruleSets: RuleSets): Promise<void> {
+    await this.storage.set("ruleSets", ruleSets);
+  }
+
+  async loadRuleSets(): Promise<RuleSets> {
+    const ruleSets = await this.storage.get<RuleSets>("ruleSets");
+    return ruleSets ?? [];
   }
 }

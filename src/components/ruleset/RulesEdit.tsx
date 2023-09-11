@@ -21,13 +21,9 @@ type Props = {
   onChange: (rules: RuleWithId[]) => void;
 };
 
-export const RulesEdit: React.FC<Props> = ({
-  rules: originalRules,
-  onChange,
-}) => {
-  const [rules, setRules] = useState<RuleWithId[]>(originalRules);
+export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
   const [isEditingList, setIsEditingList] = useState<boolean[]>(
-    originalRules.map(() => false)
+    rules.map(() => false)
   );
   const [isAllowAdd, setIsAllowAdd] = useState(true);
 
@@ -48,7 +44,6 @@ export const RulesEdit: React.FC<Props> = ({
       updated.id = RULE_ID_UNSAVED;
     }
     const newRules = replaceAt(rules, index, updated);
-    setRules(newRules);
     onChange(newRules);
   }
 
@@ -58,7 +53,6 @@ export const RulesEdit: React.FC<Props> = ({
       cancelEdit(index);
     } else {
       const newRules = removeAt(rules, index);
-      setRules(newRules);
       setIsEditingList(removeAt(isEditingList, index));
       onChange(newRules);
     }
@@ -70,7 +64,7 @@ export const RulesEdit: React.FC<Props> = ({
   }
 
   function addRule() {
-    setRules(push(rules, cloneDeep(newRuleTemplate)));
+    onChange(push(rules, cloneDeep(newRuleTemplate)));
     setIsEditingList(push(isEditingList, true));
   }
 
@@ -78,11 +72,8 @@ export const RulesEdit: React.FC<Props> = ({
     if (rules[index].id === RULE_ID_EDITING) {
       // cancel new rule
       const newRules = removeAt(rules, index);
-      setRules(newRules);
+      onChange(newRules);
       setIsEditingList(removeAt(isEditingList, index));
-      if (newRules.length === 0) {
-        onChange(newRules); // Notify that it is empty.
-      }
     }
   }
 
