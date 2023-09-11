@@ -350,7 +350,11 @@ export const RuleEdit: React.FC<Props> = ({
             Cancel
           </Button>
           {isRemoveEnabled && (
-            <RemoveButton style={{ marginLeft: "auto" }} onClick={remove} />
+            <RemoveButton
+              title="Remove the rule"
+              style={{ marginLeft: "auto" }}
+              onPerform={remove}
+            />
           )}
         </ButtonGroup>
       )}

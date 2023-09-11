@@ -1,26 +1,16 @@
 import { DeleteIcon } from "@chakra-ui/icons";
-import {
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogCloseButton,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogOverlay,
-  Button,
-  useDisclosure,
-} from "@chakra-ui/react";
-import { CSSProperties, useRef } from "react";
+import { Button, useDisclosure } from "@chakra-ui/react";
+import { CSSProperties } from "react";
+import { RemoveDialog } from "./RemoveDialog";
 
 type Props = {
+  title?: string;
+  onPerform: () => void;
   style?: CSSProperties;
-  onClick: () => void;
 };
 
-export const RemoveButton: React.FC<Props> = ({ onClick, style }) => {
+export const RemoveButton: React.FC<Props> = ({ title, onPerform, style }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const cancelRef = useRef<HTMLButtonElement>(null);
-
   return (
     <>
       <Button
@@ -33,29 +23,12 @@ export const RemoveButton: React.FC<Props> = ({ onClick, style }) => {
       >
         Remove
       </Button>
-      <AlertDialog
-        motionPreset="slideInBottom"
-        leastDestructiveRef={cancelRef}
-        onClose={onClose}
+      <RemoveDialog
+        title={title}
         isOpen={isOpen}
-        isCentered
-      >
-        <AlertDialogOverlay />
-
-        <AlertDialogContent>
-          <AlertDialogHeader>Remove</AlertDialogHeader>
-          <AlertDialogCloseButton />
-          <AlertDialogBody>Are you sure you want to remove?</AlertDialogBody>
-          <AlertDialogFooter>
-            <Button ref={cancelRef} variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button colorScheme="red" ml={3} onClick={onClick}>
-              Remove
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onClose={onClose}
+        onPerform={onPerform}
+      />
     </>
   );
 };

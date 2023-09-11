@@ -1,13 +1,5 @@
 import { DeleteIcon, HamburgerIcon } from "@chakra-ui/icons";
 import {
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogCloseButton,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogOverlay,
-  Button,
   IconButton,
   Menu,
   MenuButton,
@@ -15,7 +7,8 @@ import {
   MenuList,
   useDisclosure,
 } from "@chakra-ui/react";
-import { useRef, MouseEvent } from "react";
+import { MouseEvent } from "react";
+import { RemoveDialog } from "../parts/RemoveDialog";
 
 type Props = {
   onRemove: () => void;
@@ -23,7 +16,6 @@ type Props = {
 
 export const RuleMenu: React.FC<Props> = ({ onRemove }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const cancelRef = useRef<HTMLButtonElement>(null);
 
   function onClickDeleteMenu(event: MouseEvent) {
     event.stopPropagation();
@@ -53,34 +45,17 @@ export const RuleMenu: React.FC<Props> = ({ onRemove }) => {
             color="red"
             onClick={(e) => onClickDeleteMenu(e)}
           >
-            Remove Rule
+            Remove
           </MenuItem>
         </MenuList>
       </Menu>
 
-      <AlertDialog
-        motionPreset="slideInBottom"
-        leastDestructiveRef={cancelRef}
-        onClose={onClose}
+      <RemoveDialog
+        title="Remove the rule"
         isOpen={isOpen}
-        isCentered
-      >
-        <AlertDialogOverlay />
-
-        <AlertDialogContent>
-          <AlertDialogHeader>Remove</AlertDialogHeader>
-          <AlertDialogCloseButton />
-          <AlertDialogBody>Are you sure you want to remove?</AlertDialogBody>
-          <AlertDialogFooter>
-            <Button ref={cancelRef} variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button colorScheme="red" ml={3} onClick={onClickRemoveInDialog}>
-              Remove
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onClose={onClose}
+        onPerform={onClickRemoveInDialog}
+      />
     </>
   );
 };
