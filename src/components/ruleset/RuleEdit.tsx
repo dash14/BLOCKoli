@@ -22,24 +22,23 @@ import {
   HStack,
   Heading,
   Input,
-  ListItem,
   Radio,
   RadioGroup,
   Stack,
   Tag,
   Text,
-  UnorderedList,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import cloneDeep from "lodash-es/cloneDeep";
-import { RuleValidator } from "@/modules/core/validation";
 import { MultipleSelect } from "@/components/forms/MultipleSelect";
 import { Tags } from "@/components/parts/Tags";
-import { HintPopover } from "@/components/parts/HintPopover";
 import { ExternalLink } from "@/components/parts/ExternalLink";
 import { RemoveButton } from "@/components/parts/RemoveButton";
 import { RuleBox } from "./RuleBox";
 import { RuleMenu } from "./RuleMenu";
+import { createRegexValidator } from "@/modules/chrome/regex";
+import { RuleValidator } from "@/modules/rules/validation";
+import { InitiatorDomainsHint } from "../hints/InitiatorDomainsHint";
 
 type Props = {
   rule: Rule;
@@ -49,7 +48,6 @@ type Props = {
   onCancel: () => void;
   onRemove: () => void;
   onEditingChange: (isEditing: boolean) => void;
-  ruleValidator: RuleValidator;
 };
 
 const requestMethodOptions = makeOptions(REQUEST_METHODS, (v) =>
@@ -57,17 +55,9 @@ const requestMethodOptions = makeOptions(REQUEST_METHODS, (v) =>
 );
 const resourceTypeOptions = makeOptions(RESOURCE_TYPES);
 
-function makeOptions(
-  values: string[],
-  labeler: (v: string) => string = (v) => v
-) {
-  return values.map((v) => ({
-    label: labeler(v),
-    value: v,
-  }));
-}
+const ruleValidator = new RuleValidator(createRegexValidator());
 
-export const RuleEditor: React.FC<Props> = ({
+export const RuleEdit: React.FC<Props> = ({
   rule: initialRule,
   isEditing,
   isRemoveEnabled,
@@ -75,7 +65,6 @@ export const RuleEditor: React.FC<Props> = ({
   onCancel,
   onRemove,
   onEditingChange,
-  ruleValidator,
 }) => {
   const [rule, setRuleObject] = useState(initialRule);
   const [domains, setDomains] = useState(
@@ -148,7 +137,7 @@ export const RuleEditor: React.FC<Props> = ({
   }
 
   async function validate(newRule: Rule) {
-    const result = await ruleValidator(newRule);
+    const result = await ruleValidator.validate(newRule);
     if (result.isValid) {
       setRegexInvalidReason("");
       setIsValid(true);
@@ -317,30 +306,7 @@ export const RuleEditor: React.FC<Props> = ({
                 </HStack>
               )}
 
-              <HintPopover title="Initiator Domains" width={400}>
-                The rule will only match network requests originating from the
-                list of initiator domains. If the list is empty, the rule is
-                applied to requests from all domains.
-                <Box>Note:</Box>
-                <UnorderedList marginLeft={5}>
-                  <ListItem>
-                    Sub-domains like "a.example.com" are also allowed.
-                  </ListItem>
-                  <ListItem>
-                    The entries must consist of only ascii characters.
-                  </ListItem>
-                  <ListItem>
-                    Use punycode encoding for internationalized domains.
-                  </ListItem>
-                  <ListItem>
-                    This matches against the request initiator and not the
-                    request url.
-                  </ListItem>
-                  <ListItem>
-                    Sub-domains of the listed domains are also matched.
-                  </ListItem>
-                </UnorderedList>
-              </HintPopover>
+              <InitiatorDomainsHint />
             </HStack>
             {isEditing && (
               <Text fontSize={12}>
@@ -391,3 +357,13 @@ export const RuleEditor: React.FC<Props> = ({
     </RuleBox>
   );
 };
+
+function makeOptions(
+  values: string[],
+  labeler: (v: string) => string = (v) => v
+) {
+  return values.map((v) => ({
+    label: labeler(v),
+    value: v,
+  }));
+}

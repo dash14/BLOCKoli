@@ -1,11 +1,17 @@
-import { Box, Button } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { css } from "@emotion/react";
+import cloneDeep from "lodash-es/cloneDeep";
 import {
   Accordion,
   AccordionItem,
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
+  Box,
+  Button,
 } from "@chakra-ui/react";
+import { AddIcon } from "@chakra-ui/icons";
+import { CSSTransition } from "react-transition-group";
 import {
   RULE_ID_EDITING,
   Rule,
@@ -13,22 +19,15 @@ import {
   RuleSets,
   newRuleSetTemplate,
 } from "@/modules/core/rules";
-import { useEffect, useState } from "react";
-import { AddIcon } from "@chakra-ui/icons";
-import cloneDeep from "lodash-es/cloneDeep";
-import { css } from "@emotion/react";
-import { CSSTransition } from "react-transition-group";
 import { push, removeAt, replaceAt } from "@/modules/core/array";
-import { RuleValidator } from "@/modules/core/validation";
 import { EditableTitle } from "@/components/forms/EditableTitle";
-import { RulesEditor } from "@/components/ruleset/RulesEditor";
+import { RulesEdit } from "@/components/ruleset/RulesEdit";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
 import { RuleSetMenu } from "./RuleSetMenu";
 
 type Props = {
   ruleSets: RuleSets;
   onChange: (ruleSets: RuleSets) => void;
-  ruleValidator: RuleValidator;
 };
 
 const listTransitionCss = css(`
@@ -39,16 +38,15 @@ const listTransitionCss = css(`
   gap: 16px;
 `);
 
-export const RuleSetsEditor: React.FC<Props> = ({
+export const RuleSetsEdit: React.FC<Props> = ({
   ruleSets: originalRuleSets,
   onChange,
-  ruleValidator,
 }) => {
+  const [ruleSets, setRuleSets] = useState<RuleSets>(originalRuleSets);
+  const [filteredRuleSets, setFilteredRuleSets] = useState<RuleSets>([]);
   const [accordionOpenStates, setAccordionOpenStates] = useState<number[][]>(
     []
   );
-  const [ruleSets, setRuleSets] = useState<RuleSets>(originalRuleSets);
-  const [filteredRuleSets, setFilteredRuleSets] = useState<RuleSets>([]);
 
   useEffect(() => {
     setFilteredRuleSets(filterAvailableRuleSets(ruleSets));
@@ -58,17 +56,6 @@ export const RuleSetsEditor: React.FC<Props> = ({
     setRuleSets(push(ruleSets, cloneDeep(newRuleSetTemplate)));
     // open new accordion
     setAccordionOpenStates(push(accordionOpenStates, [0]));
-  }
-
-  function filterAvailableRuleSets(ruleSets: RuleSets): RuleSets {
-    return ruleSets
-      .map((ruleSet) => {
-        const rules = ruleSet.rules.filter(
-          (rule) => rule.id !== RULE_ID_EDITING
-        );
-        return { ...ruleSet, rules };
-      })
-      .filter((ruleSet) => ruleSet.rules.length > 0);
   }
 
   function updateRules(rules: Rule[], ruleSetIndex: number) {
@@ -126,10 +113,9 @@ export const RuleSetsEditor: React.FC<Props> = ({
                   <AccordionIcon />
                 </AccordionButton>
                 <AccordionPanel paddingX={6}>
-                  <RulesEditor
+                  <RulesEdit
                     rules={ruleSet.rules}
                     onChange={(rules) => updateRules(rules, ruleSetIndex)}
-                    ruleValidator={ruleValidator}
                   />
                 </AccordionPanel>
               </AccordionItem>
@@ -150,3 +136,12 @@ export const RuleSetsEditor: React.FC<Props> = ({
     </>
   );
 };
+
+function filterAvailableRuleSets(ruleSets: RuleSets): RuleSets {
+  return ruleSets
+    .map((ruleSet) => {
+      const rules = ruleSet.rules.filter((rule) => rule.id !== RULE_ID_EDITING);
+      return { ...ruleSet, rules };
+    })
+    .filter((ruleSet) => ruleSet.rules.length > 0);
+}

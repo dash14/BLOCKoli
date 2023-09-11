@@ -12,21 +12,18 @@ import { CSSTransition } from "react-transition-group";
 import cloneDeep from "lodash-es/cloneDeep";
 import { css } from "@emotion/react";
 import { push, removeAt, replaceAt } from "@/modules/core/array";
-import { RuleValidator } from "@/modules/core/validation";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
-import { RuleEditor } from "./RuleEditor";
+import { RuleEdit } from "./RuleEdit";
 import { RuleBox } from "./RuleBox";
 
 type Props = {
   rules: RuleWithId[];
   onChange: (rules: RuleWithId[]) => void;
-  ruleValidator: RuleValidator;
 };
 
-export const RulesEditor: React.FC<Props> = ({
+export const RulesEdit: React.FC<Props> = ({
   rules: originalRules,
   onChange,
-  ruleValidator,
 }) => {
   const [rules, setRules] = useState<RuleWithId[]>(originalRules);
   const [isEditingList, setIsEditingList] = useState<boolean[]>(
@@ -119,7 +116,7 @@ export const RulesEditor: React.FC<Props> = ({
       <SlideTransitionGroup style={listTransitionCss}>
         {rules.map((rule, ruleIndex) => (
           <CSSTransition key={ruleIndex} timeout={250} classNames="slide">
-            <RuleEditor
+            <RuleEdit
               rule={rule ?? newRuleTemplate}
               isEditing={isEditingList[ruleIndex] ?? false}
               isRemoveEnabled={
@@ -130,7 +127,6 @@ export const RulesEditor: React.FC<Props> = ({
               onCancel={() => cancelEdit(ruleIndex)}
               onRemove={() => removeRule(ruleIndex)}
               onEditingChange={(e) => updateEditing(e, ruleIndex)}
-              ruleValidator={ruleValidator}
             />
           </CSSTransition>
         ))}
