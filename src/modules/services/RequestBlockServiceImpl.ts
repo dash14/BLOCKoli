@@ -3,7 +3,15 @@ import { EventEmitter, ServiceBase } from "@/modules/core/service";
 import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import { ChromeApiDeclarativeNetRequest } from "@/modules/chrome/api";
 import logging from "@/modules/utils/logging";
-import { RULE_ID_UNSAVED, RuleSets } from "../core/rules";
+import { RULE_ID_UNSAVED, RuleSets, RuleWithId } from "@/modules/core/rules";
+import isEqual from "lodash-es/isEqual";
+import {
+  toRuleIdSet,
+  toRuleList,
+  toRuleMap,
+  walkRules,
+} from "@/modules/rules/rulesets";
+import { convertToApiRule } from "@/modules/rules/convert";
 
 const log = logging.getLogger("RequestBlock");
 
@@ -82,20 +90,74 @@ export class RequestBlockServiceImpl
     });
     await this.store.saveNextRuleId(nextId);
 
+    // Update to chrome
+    if (await this.isEnabled()) {
+      const prevRuleSets = await this.store.loadRuleSets();
+      const { removeIdList, addRuleList } = diffRules(ruleSets, prevRuleSets);
+      const addRules = convertToApiRule(addRuleList);
+      const dynamicRules = {
+        removeRuleIds: removeIdList,
+        addRules,
+      };
+      log.info("Update dynamic rule:", dynamicRules);
+      await this.chrome.updateDynamicRules(dynamicRules);
+    }
+
     // Save to store
     await this.store.saveRuleSets(ruleSets);
 
-    // TODO: Update to chrome
     return ruleSets;
   }
 
   private async run(): Promise<void> {
+    log.info("Start service");
     // clear rules
     await this.chrome.removeAllDynamicRules();
 
-    const ruleSets = await this.store.loadRuleSets();
-    if (ruleSets.length === 0) return;
-
-    // this.chrome.updateDynamicRules({ addRules: rules });
+    if (await this.isEnabled()) {
+      const ruleSets = await this.store.loadRuleSets();
+      const rules = toRuleList(ruleSets);
+      const addRules = convertToApiRule(rules);
+      if (addRules.length > 0) {
+        log.info("Update dynamic rule:", { addRules });
+        await this.chrome.updateDynamicRules({ addRules });
+      } else {
+        log.info("Rule is empty");
+      }
+    } else {
+      // do nothing
+    }
   }
+}
+
+function diffRules(ruleSets: RuleSets, prevRuleSets: RuleSets) {
+  const prevRules = toRuleMap(prevRuleSets);
+
+  const removeIdList: number[] = [];
+  const addRuleList: RuleWithId[] = [];
+
+  walkRules(ruleSets, (rule) => {
+    if (!prevRules.has(rule.id)) {
+      // add
+      addRuleList.push(rule);
+      return;
+    }
+
+    const prevRule = prevRules.get(rule.id);
+    if (!isEqual(rule, prevRule)) {
+      // replace
+      removeIdList.push(rule.id);
+      addRuleList.push(rule);
+    }
+  });
+
+  const currentRuleIdSet = toRuleIdSet(ruleSets);
+  for (const id of prevRules.keys()) {
+    if (!currentRuleIdSet.has(id)) {
+      // remove
+      removeIdList.push(id);
+    }
+  }
+
+  return { removeIdList, addRuleList };
 }

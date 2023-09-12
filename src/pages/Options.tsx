@@ -17,15 +17,25 @@ const controller = new OptionController();
 function Options() {
   const i18n = useI18n();
 
+  const [enabled, setEnabled] = useState(false);
   const [ruleSets, setRuleSets] = useState<RuleSets>([]);
 
   useEffect(() => {
+    controller.initialize((state) => setEnabled(state === "enable"));
     controller.getRuleSets().then(setRuleSets);
   }, []);
 
   async function updateRuleSet(ruleSets: RuleSets) {
     const updated = await controller.updateRuleSets(ruleSets);
     setRuleSets(updated);
+  }
+
+  async function onChangeSwitch(checked: boolean) {
+    if (checked) {
+      await controller.enable();
+    } else {
+      await controller.disable();
+    }
   }
 
   return (
@@ -40,7 +50,10 @@ function Options() {
             <Text fontSize={18} marginRight={10}>
               Apply Rules
             </Text>
-            <Switch />
+            <Switch
+              isChecked={enabled}
+              onChange={(e) => onChangeSwitch(e.target.checked)}
+            />
           </HStack>
 
           <Heading as="h2" fontSize={18} fontWeight="normal" marginBottom={4}>

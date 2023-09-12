@@ -1,19 +1,11 @@
-import { MessageProxyFactory } from "@/modules/chrome/message/MessageProxy";
-import * as RequestBlock from "@/modules/services/RequestBlockService";
-import { MessageProxy } from "@/modules/chrome/message/types";
 import logging from "@/modules/utils/logging";
 import { RuleSets } from "../core/rules";
+import { ClientController } from "./ClientController";
 const log = logging.getLogger("options");
 
-export class OptionController {
-  private requestBlockService: MessageProxy<RequestBlock.Service>;
-
+export class OptionController extends ClientController {
   constructor() {
-    log.debug("create");
-    this.requestBlockService =
-      new MessageProxyFactory().create<RequestBlock.Service>(
-        RequestBlock.ServiceId
-      );
+    super();
   }
 
   async getRuleSets(): Promise<RuleSets> {

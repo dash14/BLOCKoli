@@ -1,4 +1,9 @@
-import { Rule, Rules } from "@/modules/core/rules";
+import {
+  RequestMethod,
+  ResourceType,
+  RuleAction,
+  Rules,
+} from "@/modules/core/rules";
 
 export interface ChromeApiStorage {
   /** Gets an item from storage. */
@@ -9,6 +14,47 @@ export interface ChromeApiStorage {
 
   /** Removes an item from storage. */
   remove(key: string): Promise<void>;
+}
+
+export interface RuleCondition {
+  /**
+   * The rule will only match network requests originating from the list of initiatorDomains.
+   */
+  initiatorDomains?: string[] | undefined;
+
+  /**
+   * The pattern which is matched against the network request url.
+   */
+  urlFilter?: string | undefined;
+
+  /**
+   * Regular expression to match against the network request url.
+   */
+  regexFilter?: string | undefined;
+
+  /**
+   * List of HTTP request methods which the rule can match.
+   */
+  requestMethods?: RequestMethod[];
+
+  /**
+   * List of resource types which the rule can match.
+   * An empty list is not allowed.
+   */
+  resourceTypes?: ResourceType[] | undefined;
+}
+
+export interface Rule {
+  /** The action to take if this rule is matched. */
+  action: RuleAction;
+
+  /** The condition under which this rule is triggered. */
+  condition: RuleCondition;
+
+  /** An id which uniquely identifies a rule.
+   * Mandatory and should be >= 1.
+   */
+  id: number;
 }
 
 export interface UpdateRuleOptions {

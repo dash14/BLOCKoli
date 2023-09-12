@@ -26,7 +26,7 @@ export class ServiceConfigurationStoreImpl
 
   async loadNextRuleId(): Promise<number> {
     const nextId = await this.storage.get<number>("nextRuleId");
-    return nextId ?? 1;
+    return nextId ?? 11; // 1-10 is reserved
   }
 
   async saveRuleSets(ruleSets: RuleSets): Promise<void> {

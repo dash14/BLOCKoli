@@ -1,4 +1,4 @@
-import { Rules } from "@/modules/core/rules";
+import { RuleActionType, Rules } from "@/modules/core/rules";
 import {
   ChromeApiDeclarativeNetRequest,
   IsRegexSupportedResult,
@@ -6,19 +6,39 @@ import {
   RegexOptions,
   UpdateRuleOptions,
 } from "./api";
+import logging from "@/modules/utils/logging";
 
+const log = logging.getLogger("net");
+
+const RESERVED_RULES = [
+  {
+    id: 1,
+    action: {
+      type: RuleActionType.ALLOW,
+    },
+    condition: {
+      initiatorDomains: [chrome.runtime.id],
+    },
+    priority: 100,
+  },
+];
 export class ChromeApiDeclarativeNetRequestImpl
   implements ChromeApiDeclarativeNetRequest
 {
   async updateDynamicRules(options: UpdateRuleOptions): Promise<void> {
-    console.log("updateDynamicRules:", options);
-    await chrome.declarativeNetRequest.updateDynamicRules(
+    const ruleOptions = addReservedRules(
       options as chrome.declarativeNetRequest.UpdateRuleOptions
     );
+
+    log.debug("updateDynamicRules:", ruleOptions);
+    await chrome.declarativeNetRequest.updateDynamicRules(ruleOptions);
   }
 
   async getDynamicRules(): Promise<Rules> {
-    return chrome.declarativeNetRequest.getDynamicRules() as unknown as Rules;
+    const rules =
+      chrome.declarativeNetRequest.getDynamicRules() as unknown as Rules;
+    log.debug("getDynamicRules", rules);
+    return removeReservedRules(rules);
   }
 
   async removeAllDynamicRules(): Promise<void> {
@@ -50,4 +70,27 @@ export class ChromeApiDeclarativeNetRequestImpl
       requireCapturing: false,
     });
   }
+}
+
+function addReservedRules(
+  options: chrome.declarativeNetRequest.UpdateRuleOptions
+): chrome.declarativeNetRequest.UpdateRuleOptions {
+  if (!options.addRules) {
+    options.addRules = [];
+  }
+  if (!options.removeRuleIds) {
+    options.removeRuleIds = [];
+  }
+
+  const ids = RESERVED_RULES.map((rule) => rule.id);
+
+  return {
+    addRules: [...(options.addRules ?? []), ...RESERVED_RULES],
+    removeRuleIds: [...(options.removeRuleIds ?? []), ...ids],
+  };
+}
+
+function removeReservedRules(rules: Rules): Rules {
+  const ids = new Set(RESERVED_RULES.map((rule) => rule.id));
+  return rules.filter((rule) => !ids.has(rule.id));
 }
