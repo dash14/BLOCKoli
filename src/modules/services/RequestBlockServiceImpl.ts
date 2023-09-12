@@ -1,7 +1,10 @@
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { EventEmitter, ServiceBase } from "@/modules/core/service";
 import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
-import { ChromeApiDeclarativeNetRequest } from "@/modules/chrome/api";
+import {
+  ChromeApiAction,
+  ChromeApiDeclarativeNetRequest,
+} from "@/modules/chrome/api";
 import logging from "@/modules/utils/logging";
 import { RULE_ID_UNSAVED, RuleSets, RuleWithId } from "@/modules/core/rules";
 import isEqual from "lodash-es/isEqual";
@@ -15,21 +18,27 @@ import { convertToApiRule } from "@/modules/rules/convert";
 
 const log = logging.getLogger("RequestBlock");
 
+const ENABLED_ICON = "./images/icon16.png";
+const DISABLED_ICON = "./images/icon16-gray.png";
+
 export class RequestBlockServiceImpl
   extends ServiceBase<RequestBlock.Events>
   implements RequestBlock.Service
 {
   private store: ServiceConfigurationStore;
   private chrome: ChromeApiDeclarativeNetRequest;
+  private action: ChromeApiAction;
 
   constructor(
     emitter: EventEmitter<RequestBlock.Events>,
     store: ServiceConfigurationStore,
-    chrome: ChromeApiDeclarativeNetRequest
+    chrome: ChromeApiDeclarativeNetRequest,
+    action: ChromeApiAction
   ) {
     super(emitter);
     this.store = store;
     this.chrome = chrome;
+    this.action = action;
   }
 
   public async start(): Promise<void> {
@@ -50,6 +59,9 @@ export class RequestBlockServiceImpl
 
     await this.store.saveState("enable");
     this.emitter.emit("changeState", "enable");
+
+    // update icon
+    this.action.setIcon({ path: ENABLED_ICON });
   }
 
   public async disable(): Promise<void> {
@@ -63,6 +75,9 @@ export class RequestBlockServiceImpl
 
     await this.store.saveState("disable");
     this.emitter.emit("changeState", "disable");
+
+    // update icon
+    this.action.setIcon({ path: DISABLED_ICON });
   }
 
   public async isEnabled(): Promise<boolean> {

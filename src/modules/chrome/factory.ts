@@ -1,4 +1,9 @@
-import { ChromeApiDeclarativeNetRequest, ChromeApiStorage } from "./api";
+import {
+  ChromeApiAction,
+  ChromeApiDeclarativeNetRequest,
+  ChromeApiStorage,
+} from "./api";
+import { ChromeApiActionImpl } from "./action";
 import { ChromeApiDeclarativeNetRequestImpl } from "./declarativeNetRequest";
 import { ChromeApiStorageImpl } from "./storage";
 
@@ -13,5 +18,9 @@ export class ChromeApiFactory {
 
   public declarativeNetRequest(): ChromeApiDeclarativeNetRequest {
     return new ChromeApiDeclarativeNetRequestImpl();
+  }
+
+  public action(): ChromeApiAction {
+    return new ChromeApiActionImpl();
   }
 }

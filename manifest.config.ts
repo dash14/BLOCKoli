@@ -19,7 +19,15 @@ export default defineManifest(async (env) => ({
     service_worker: "src/background.ts",
     type: "module",
   },
-  action: { default_popup: "popup.html" },
+  action: {
+    default_popup: "popup.html",
+    default_icon: "images/icon16-gray.png",
+  },
   options_page: "options.html",
   permissions: ["declarativeNetRequest", "activeTab", "storage"],
+  icons: {
+    16: "images/icon16.png",
+    48: "images/icon48.png",
+    128: "images/icon128.png",
+  },
 }));
