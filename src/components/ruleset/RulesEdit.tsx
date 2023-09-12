@@ -136,7 +136,7 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
             leftIcon={<AddIcon />}
             onClick={addRule}
           >
-            Add Rule
+            Add a Rule
           </Button>
         </RuleBox>
       </CSSTransition>

@@ -104,7 +104,7 @@ export const RuleSetsEdit: React.FC<Props> = ({
     <>
       {ruleSets.length === 0 && (
         <Text fontSize={16} marginLeft={10}>
-          (No rule set)
+          (empty)
         </Text>
       )}
       <SlideTransitionGroup style={listTransitionCss}>
@@ -146,7 +146,7 @@ export const RuleSetsEdit: React.FC<Props> = ({
           size="sm"
           onClick={addRuleSet}
         >
-          Add Rule Set
+          Add a Rule Set
         </Button>
       </Box>
     </>
