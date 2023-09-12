@@ -97,7 +97,7 @@ export const RuleSetsEdit: React.FC<Props> = ({
     const ruleSet = { ...ruleSets[index], name: title } as RuleSet;
     const newRuleSets = replaceAt(ruleSets, index, ruleSet);
     setRuleSets(newRuleSets);
-    onChange(newRuleSets);
+    onChange(filterAvailableRuleSets(newRuleSets)); // filter editing
   }
 
   return (
