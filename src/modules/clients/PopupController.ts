@@ -2,7 +2,7 @@ import { State } from "@/modules/core/state";
 import logging from "@/modules/utils/logging";
 import { ChromeApiDeclarativeNetRequest } from "@/modules/chrome/api";
 import { ClientController } from "./ClientController";
-import { RuleSets } from "../core/rules";
+import { RuleActionType, RuleSets } from "../core/rules";
 import { walkRules } from "../rules/rulesets";
 
 const log = logging.getLogger("popup");
@@ -10,6 +10,7 @@ const log = logging.getLogger("popup");
 interface RulePointer {
   ruleSetName: string;
   number: number;
+  isBlocking: boolean;
 }
 type RulePointers = Map<number, RulePointer>;
 
@@ -64,6 +65,7 @@ export class PopupController extends ClientController {
       pointers.set(rule.id, {
         ruleSetName: ruleSet.name,
         number: index + 1,
+        isBlocking: rule.action.type == RuleActionType.BLOCK,
       });
     });
     return pointers;

@@ -4,25 +4,11 @@ import {
   PopupController,
 } from "@/modules/clients/PopupController";
 import logging from "@/modules/utils/logging";
-import {
-  Box,
-  HStack,
-  Heading,
-  IconButton,
-  Img,
-  Link,
-  Switch,
-  Table,
-  TableContainer,
-  Tbody,
-  Td,
-  Text,
-  Th,
-  Thead,
-  Tr,
-} from "@chakra-ui/react";
+import { Box, HStack, IconButton, Link, Switch, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { ExternalLinkIcon, RepeatIcon, SettingsIcon } from "@chakra-ui/icons";
+import { MatchedRulesTable } from "@/features/popup/components/MatchedRulesTable";
+import { Header } from "@/features/popup/components/Header";
 
 const log = logging.getLogger("popup");
 
@@ -66,24 +52,7 @@ function Popup() {
 
   return (
     <Box width="360px" height="320px" padding="0" position="relative">
-      <HStack
-        as="header"
-        backgroundColor="#F6FFE7"
-        padding="10px 24px"
-        justifyContent="space-between"
-        borderBottom="1px solid #ddd;"
-      >
-        <Heading as="h1" fontSize="22px">
-          BLOCKoli
-        </Heading>
-        <Img
-          src="images/icon32.png"
-          srcSet="images/icon32.png 1x, images/icon32@2x.png 2x"
-          width="32px"
-          height="32px"
-          marginLeft="4px"
-        />
-      </HStack>
+      <Header />
 
       {loaded && (
         <Box as="main" marginX="30px">
@@ -94,6 +63,7 @@ function Popup() {
               onChange={(e) => onChangeSwitch(e.target.checked)}
             />
           </HStack>
+
           <Box marginTop="10px">
             <Text fontSize={16}>
               <Link
@@ -112,6 +82,7 @@ function Popup() {
             </Text>
           </Box>
 
+          {/* Table title */}
           <HStack marginTop="10px" justifyContent="space-between">
             <Text fontSize="14px">
               Matched rules in tabs (within 5 minutes)
@@ -125,52 +96,9 @@ function Popup() {
               onClick={updateMatchedRules}
             />
           </HStack>
-          <Box
-            height="110px"
-            overflowY="auto"
-            border="1px solid #ccc"
-            borderRadius="6px"
-          >
-            <TableContainer overflowX="unset" overflowY="unset">
-              <Table variant="simple" size="sm">
-                <Thead
-                  position="sticky"
-                  top="0"
-                  zIndex="docked"
-                  backgroundColor="#eee"
-                >
-                  <Tr>
-                    <Th textTransform="none">timestamp</Th>
-                    <Th textTransform="none">rule</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {matchedRules.map((rule, i) => (
-                    <Tr key={i}>
-                      <Td fontSize="12px" paddingY="4px">
-                        {rule.timeStamp.toLocaleTimeString()}
-                      </Td>
-                      <Td
-                        fontSize="12px"
-                        paddingY="4px"
-                        overflowX="hidden"
-                        textOverflow="ellipsis"
-                        title={
-                          rule.rule
-                            ? `${rule.rule.ruleSetName} #${rule.rule.number}`
-                            : "unknown"
-                        }
-                      >
-                        {rule.rule
-                          ? `${rule.rule.ruleSetName} #${rule.rule.number}`
-                          : "unknown"}
-                      </Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-            </TableContainer>
-          </Box>
+
+          {/* Table */}
+          <MatchedRulesTable matchedRules={matchedRules} height="110px" />
         </Box>
       )}
     </Box>
