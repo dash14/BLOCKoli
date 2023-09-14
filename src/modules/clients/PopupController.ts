@@ -1,12 +1,23 @@
 import { State } from "@/modules/core/state";
 import logging from "@/modules/utils/logging";
-import {
-  ChromeApiDeclarativeNetRequest,
-  MatchedRuleInfo,
-} from "@/modules/chrome/api";
+import { ChromeApiDeclarativeNetRequest } from "@/modules/chrome/api";
 import { ClientController } from "./ClientController";
+import { RuleSets } from "../core/rules";
+import { walkRules } from "../rules/rulesets";
 
 const log = logging.getLogger("popup");
+
+interface RulePointer {
+  ruleSetName: string;
+  number: number;
+}
+type RulePointers = Map<number, RulePointer>;
+
+export interface MatchedRule {
+  ruleId: number;
+  rule?: RulePointer;
+  timeStamp: Date;
+}
 
 export class PopupController extends ClientController {
   private chrome: ChromeApiDeclarativeNetRequest;
@@ -28,7 +39,33 @@ export class PopupController extends ClientController {
     setState(isEnabled ? "enable" : "disable");
   }
 
-  public async getMatchedRulesInActiveTab(): Promise<MatchedRuleInfo[]> {
-    return await this.chrome.getMatchedRulesInActiveTab();
+  public async getMatchedRulesInActiveTab(): Promise<MatchedRule[]> {
+    const matchedRules = await this.chrome.getMatchedRulesInActiveTab();
+    if (matchedRules.length === 0) {
+      return [];
+    }
+    const ruleSets = await this.requestBlockService.getRuleSets();
+    const pointers = this.convertToRulePointers(ruleSets);
+    const results: MatchedRule[] = [];
+    matchedRules.map((rule) => {
+      const ruleId = rule.rule.ruleId;
+      results.push({
+        ruleId,
+        rule: pointers.get(ruleId),
+        timeStamp: new Date(rule.timeStamp),
+      });
+    });
+    return results.reverse();
+  }
+
+  private convertToRulePointers(ruleSets: RuleSets): RulePointers {
+    const pointers = new Map<number, RulePointer>();
+    walkRules(ruleSets, (rule, index, ruleSet) => {
+      pointers.set(rule.id, {
+        ruleSetName: ruleSet.name,
+        number: index + 1,
+      });
+    });
+    return pointers;
   }
 }
