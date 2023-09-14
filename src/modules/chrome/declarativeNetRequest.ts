@@ -22,6 +22,9 @@ const RESERVED_RULES = [
     priority: 100,
   },
 ];
+
+let matchedRuleCache: MatchedRuleInfo[] = [];
+
 export class ChromeApiDeclarativeNetRequestImpl
   implements ChromeApiDeclarativeNetRequest
 {
@@ -56,10 +59,23 @@ export class ChromeApiDeclarativeNetRequestImpl
     if (tab.url?.includes("chrome://")) {
       return [];
     }
-    const rules = await chrome.declarativeNetRequest.getMatchedRules({
-      tabId: tab.id,
-    });
-    return rules.rulesMatchedInfo;
+    try {
+      const rules = await chrome.declarativeNetRequest.getMatchedRules({
+        tabId: tab.id,
+      });
+      // remove reserved rule
+      rules.rulesMatchedInfo.filter((rule) => {
+        return rule.rule.ruleId > 10;
+      });
+      matchedRuleCache = removeReservedRulesFromMatchedRule(
+        rules.rulesMatchedInfo
+      );
+      return matchedRuleCache;
+    } catch (e) {
+      // rate limit exceeded. return cached value
+      console.log(e);
+      return matchedRuleCache;
+    }
   }
 
   async isRegexSupported(
@@ -91,6 +107,15 @@ function addReservedRules(
 }
 
 function removeReservedRules(rules: Rules): Rules {
+  if (rules.length === 0) return [];
   const ids = new Set(RESERVED_RULES.map((rule) => rule.id));
   return rules.filter((rule) => !ids.has(rule.id));
+}
+
+function removeReservedRulesFromMatchedRule(
+  rules: MatchedRuleInfo[]
+): MatchedRuleInfo[] {
+  if (rules.length === 0) return [];
+  const ids = new Set(RESERVED_RULES.map((rule) => rule.id));
+  return rules.filter((rule) => !ids.has(rule.rule.ruleId));
 }
