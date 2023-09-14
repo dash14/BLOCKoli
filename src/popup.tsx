@@ -4,10 +4,23 @@ import Popup from "./pages/Popup.tsx";
 import "./index.css";
 
 const theme = extendTheme({
+  styles: {
+    global: {
+      html: {
+        fontSize: "16px",
+      },
+    },
+  },
   components: {
     Button: {
       defaultProps: {
         colorScheme: "blue",
+      },
+    },
+    Switch: {
+      defaultProps: {
+        colorScheme: "blue",
+        size: "lg",
       },
     },
   },

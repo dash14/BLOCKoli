@@ -1,11 +1,13 @@
 import {
   ChromeApiAction,
   ChromeApiDeclarativeNetRequest,
+  ChromeApiRuntime,
   ChromeApiStorage,
 } from "./api";
 import { ChromeApiActionImpl } from "./action";
 import { ChromeApiDeclarativeNetRequestImpl } from "./declarativeNetRequest";
 import { ChromeApiStorageImpl } from "./storage";
+import { ChromeApiRuntimeImpl } from "./runtime";
 
 export class ChromeApiFactory {
   public isExtension(): boolean {
@@ -22,5 +24,9 @@ export class ChromeApiFactory {
 
   public action(): ChromeApiAction {
     return new ChromeApiActionImpl();
+  }
+
+  public runtime(): ChromeApiRuntime {
+    return new ChromeApiRuntimeImpl();
   }
 }

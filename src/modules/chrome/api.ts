@@ -109,3 +109,7 @@ export interface TabIconDetails {
 export interface ChromeApiAction {
   setIcon(details: TabIconDetails): void;
 }
+
+export interface ChromeApiRuntime {
+  getURL(path: string): string;
+}

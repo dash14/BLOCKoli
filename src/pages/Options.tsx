@@ -11,6 +11,9 @@ import { RuleSets } from "@/modules/core/rules";
 import { useEffect, useState } from "react";
 import { OptionController } from "@/modules/clients/OptionController";
 import { RuleSetsEdit } from "@/components/ruleset/RuleSetsEdit";
+import logging from "@/modules/utils/logging";
+
+const log = logging.getLogger("popup");
 
 const controller = new OptionController();
 
@@ -21,8 +24,14 @@ function Options() {
   const [ruleSets, setRuleSets] = useState<RuleSets>([]);
 
   useEffect(() => {
+    log.debug("initialize");
     controller.initialize((state) => setEnabled(state === "enable"));
     controller.getRuleSets().then(setRuleSets);
+
+    return () => {
+      log.debug("destroy");
+      controller.destroy();
+    };
   }, []);
 
   async function updateRuleSet(ruleSets: RuleSets) {
