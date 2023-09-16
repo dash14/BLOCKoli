@@ -6,7 +6,14 @@ import {
   ChromeApiDeclarativeNetRequest,
 } from "@/modules/chrome/api";
 import logging from "@/modules/utils/logging";
-import { RULE_ID_UNSAVED, RuleSets, RuleWithId } from "@/modules/core/rules";
+import {
+  MatchedRule,
+  RULE_ID_UNSAVED,
+  RuleActionType,
+  RulePointer,
+  RuleSets,
+  RuleWithId,
+} from "@/modules/core/rules";
 import isEqual from "lodash-es/isEqual";
 import {
   toRuleIdSet,
@@ -20,6 +27,8 @@ const log = logging.getLogger("RequestBlock");
 
 const ENABLED_ICON = "./images/icon16.png";
 const DISABLED_ICON = "./images/icon16-gray.png";
+
+type RulePointers = Map<number, RulePointer>;
 
 export class RequestBlockServiceImpl
   extends ServiceBase<RequestBlock.Events>
@@ -124,6 +133,28 @@ export class RequestBlockServiceImpl
     return ruleSets;
   }
 
+  public async getMatchedRules(): Promise<MatchedRule[]> {
+    const matchedRules = await this.chrome.getMatchedRulesInActiveTab();
+    if (matchedRules.length === 0) {
+      return [];
+    }
+
+    const ruleSets = await this.getRuleSets();
+    const pointers = this.convertToRulePointers(ruleSets);
+
+    const results: MatchedRule[] = [];
+    matchedRules.map((rule) => {
+      const ruleId = rule.rule.ruleId;
+      results.push({
+        ruleId,
+        rule: pointers.get(ruleId),
+        timeStamp: rule.timeStamp,
+      });
+    });
+    log.debug("Matched rule:", results);
+    return results;
+  }
+
   private async run(): Promise<void> {
     log.info("Start service");
     // clear rules
@@ -142,6 +173,18 @@ export class RequestBlockServiceImpl
     } else {
       // do nothing
     }
+  }
+
+  private convertToRulePointers(ruleSets: RuleSets): RulePointers {
+    const pointers = new Map<number, RulePointer>();
+    walkRules(ruleSets, (rule, index, ruleSet) => {
+      pointers.set(rule.id, {
+        ruleSetName: ruleSet.name,
+        number: index + 1,
+        isBlocking: rule.action.type == RuleActionType.BLOCK,
+      });
+    });
+    return pointers;
   }
 }
 

@@ -126,3 +126,17 @@ export const newRuleSetTemplate: RuleSet = {
   name: "My Rule Set",
   rules: [newRuleTemplate],
 };
+
+// matched rules info
+
+export interface RulePointer {
+  ruleSetName: string;
+  number: number;
+  isBlocking: boolean;
+}
+
+export interface MatchedRule {
+  ruleId: number;
+  rule?: RulePointer;
+  timeStamp: number;
+}

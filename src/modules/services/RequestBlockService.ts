@@ -1,6 +1,6 @@
 import { ServiceBase } from "@/modules/core/service";
 import { State } from "@/modules/core/state";
-import { RuleSets } from "@/modules/core/rules";
+import { MatchedRule, RuleSets } from "@/modules/core/rules";
 
 export const ServiceId = "RequestBlock";
 
@@ -15,4 +15,5 @@ export interface Service extends ServiceBase<Events> {
   isEnabled(): Promise<boolean>;
   getRuleSets(): Promise<RuleSets>;
   updateRuleSets(ruleSets: RuleSets): Promise<RuleSets>;
+  getMatchedRules(): Promise<MatchedRule[]>;
 }

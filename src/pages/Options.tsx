@@ -7,49 +7,22 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useI18n } from "../hooks/useI18n";
-import { RuleSets } from "@/modules/core/rules";
-import { useEffect, useState } from "react";
-import { OptionController } from "@/modules/clients/OptionController";
 import { RuleSetsEdit } from "@/components/ruleset/RuleSetsEdit";
-import logging from "@/modules/utils/logging";
-
-const log = logging.getLogger("popup");
-
-const controller = new OptionController();
+import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
+import { css } from "@emotion/react";
 
 function Options() {
   const i18n = useI18n();
 
-  const [enabled, setEnabled] = useState(false);
-  const [ruleSets, setRuleSets] = useState<RuleSets>([]);
-
-  useEffect(() => {
-    log.debug("initialize");
-    controller.initialize((state) => setEnabled(state === "enable"));
-    controller.getRuleSets().then(setRuleSets);
-
-    return () => {
-      log.debug("destroy");
-      controller.destroy();
-    };
-  }, []);
-
-  async function updateRuleSet(ruleSets: RuleSets) {
-    const updated = await controller.updateRuleSets(ruleSets);
-    setRuleSets(updated);
-  }
-
-  async function onChangeSwitch(checked: boolean) {
-    if (checked) {
-      await controller.enable();
-    } else {
-      await controller.disable();
-    }
-  }
+  const { loaded, enabled, changeState, ruleSets, updateRuleSets } =
+    useRequestBlockClient();
 
   return (
     <>
-      <Container maxW="960px">
+      <Container
+        maxW="960px"
+        css={css({ visibility: loaded ? "visible" : "hidden" })}
+      >
         <Box borderWidth="1px" borderRadius="lg" marginY="6" padding="8">
           <Heading as="h1" fontSize={28}>
             {i18n["Options"]}
@@ -61,7 +34,7 @@ function Options() {
             </Text>
             <Switch
               isChecked={enabled}
-              onChange={(e) => onChangeSwitch(e.target.checked)}
+              onChange={(e) => changeState(e.target.checked)}
             />
           </HStack>
 
@@ -69,7 +42,7 @@ function Options() {
             Rule Sets:
           </Heading>
 
-          <RuleSetsEdit ruleSets={ruleSets} onChange={updateRuleSet} />
+          <RuleSetsEdit ruleSets={ruleSets} onChange={updateRuleSets} />
         </Box>
       </Container>
     </>
