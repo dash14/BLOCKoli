@@ -35,29 +35,18 @@ export const MatchedRulesTable: React.FC<Props> = ({
             backgroundColor="#eee"
           >
             <Tr>
-              <Th width="20px" paddingLeft="10px" paddingRight="6px">
-                <QuestionOutlineIcon />
-              </Th>
               <Th textTransform="none">timestamp</Th>
               <Th textTransform="none">rule</Th>
+              <Th width="20px" paddingLeft="6px" paddingRight="10px">
+                <QuestionOutlineIcon />
+              </Th>
             </Tr>
           </Thead>
           <Tbody>
             {matchedRules.map((rule, i) => (
               <Tr key={i}>
-                <Td width="20px" paddingLeft="10px" paddingRight="6px">
-                  {rule.rule ? (
-                    rule.rule.isBlocking ? (
-                      <NotAllowedIcon color="red" />
-                    ) : (
-                      <CheckCircleIcon color="green" />
-                    )
-                  ) : (
-                    <QuestionOutlineIcon color="blue.500" />
-                  )}
-                </Td>
                 <Td fontSize="12px" paddingY="4px">
-                  {rule.timeStamp.toLocaleTimeString()}
+                  {new Date(rule.timeStamp).toLocaleTimeString()}
                 </Td>
                 <Td
                   fontSize="12px"
@@ -73,6 +62,17 @@ export const MatchedRulesTable: React.FC<Props> = ({
                   {rule.rule
                     ? `${rule.rule.ruleSetName} #${rule.rule.number}`
                     : "unknown"}
+                </Td>
+                <Td width="20px" paddingLeft="6px" paddingRight="10px">
+                  {rule.rule ? (
+                    rule.rule.isBlocking ? (
+                      <NotAllowedIcon color="red" />
+                    ) : (
+                      <CheckCircleIcon color="green" />
+                    )
+                  ) : (
+                    <QuestionOutlineIcon color="blue.500" />
+                  )}
                 </Td>
               </Tr>
             ))}
