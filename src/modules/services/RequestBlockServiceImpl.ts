@@ -4,6 +4,7 @@ import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationS
 import {
   ChromeApiAction,
   ChromeApiDeclarativeNetRequest,
+  ChromeApiRuntime,
 } from "@/modules/chrome/api";
 import logging from "@/modules/utils/logging";
 import {
@@ -12,16 +13,13 @@ import {
   RuleActionType,
   RulePointer,
   RuleSets,
-  RuleWithId,
 } from "@/modules/core/rules";
 import isEqual from "lodash-es/isEqual";
-import {
-  toRuleIdSet,
-  toRuleList,
-  toRuleMap,
-  walkRules,
-} from "@/modules/rules/rulesets";
+import { toRuleList, walkRules } from "@/modules/rules/rulesets";
+import { Rule as ApiRule } from "@/modules/chrome/api";
+
 import { convertToApiRule } from "@/modules/rules/convert";
+import { getReservedRules } from "../rules/reserved";
 
 const log = logging.getLogger("RequestBlock");
 
@@ -35,26 +33,29 @@ export class RequestBlockServiceImpl
   implements RequestBlock.Service
 {
   private store: ServiceConfigurationStore;
-  private chrome: ChromeApiDeclarativeNetRequest;
+  private runtime: ChromeApiRuntime;
+  private declarativeNetRequest: ChromeApiDeclarativeNetRequest;
   private action: ChromeApiAction;
 
   constructor(
     emitter: EventEmitter<RequestBlock.Events>,
     store: ServiceConfigurationStore,
-    chrome: ChromeApiDeclarativeNetRequest,
+    runtime: ChromeApiRuntime,
+    declarativeNetRequest: ChromeApiDeclarativeNetRequest,
     action: ChromeApiAction
   ) {
     super(emitter);
     this.store = store;
-    this.chrome = chrome;
+    this.runtime = runtime;
+    this.declarativeNetRequest = declarativeNetRequest;
     this.action = action;
   }
 
   public async start(): Promise<void> {
-    const state = await this.store.loadState();
-    if (state === "enable") {
-      log.debug("start");
-      await this.run();
+    if (await this.isEnabled()) {
+      await this.activate();
+    } else {
+      await this.deactivate();
     }
   }
 
@@ -64,13 +65,10 @@ export class RequestBlockServiceImpl
 
     log.debug("enable");
 
-    this.run();
+    await this.activate();
 
     await this.store.saveState("enable");
     this.emitter.emit("changeState", "enable");
-
-    // update icon
-    this.action.setIcon({ path: ENABLED_ICON });
   }
 
   public async disable(): Promise<void> {
@@ -79,14 +77,10 @@ export class RequestBlockServiceImpl
 
     log.debug("disable");
 
-    // clear rules
-    await this.chrome.removeAllDynamicRules();
+    await this.deactivate();
 
     await this.store.saveState("disable");
     this.emitter.emit("changeState", "disable");
-
-    // update icon
-    this.action.setIcon({ path: DISABLED_ICON });
   }
 
   public async isEnabled(): Promise<boolean> {
@@ -103,28 +97,18 @@ export class RequestBlockServiceImpl
   public async updateRuleSets(ruleSets: RuleSets): Promise<RuleSets> {
     log.debug("updateRuleSets");
 
+    const prevRuleSets = await this.getRuleSets();
+    if (isEqual(ruleSets, prevRuleSets)) {
+      log.debug("No updated");
+      return ruleSets;
+    }
+
     // Assign ID to new rules
-    let nextId = await this.store.loadNextRuleId();
-    ruleSets.forEach((ruleSet) => {
-      ruleSet.rules.forEach((rule) => {
-        if (rule.id === RULE_ID_UNSAVED) {
-          rule.id = nextId++;
-        }
-      });
-    });
-    await this.store.saveNextRuleId(nextId);
+    await this.assignRuleId(ruleSets);
 
     // Update to chrome
     if (await this.isEnabled()) {
-      const prevRuleSets = await this.store.loadRuleSets();
-      const { removeIdList, addRuleList } = diffRules(ruleSets, prevRuleSets);
-      const addRules = convertToApiRule(addRuleList);
-      const dynamicRules = {
-        removeRuleIds: removeIdList,
-        addRules,
-      };
-      log.info("Update dynamic rule:", dynamicRules);
-      await this.chrome.updateDynamicRules(dynamicRules);
+      await this.applyRuleSets(ruleSets);
     }
 
     // Save to store
@@ -133,11 +117,33 @@ export class RequestBlockServiceImpl
     return ruleSets;
   }
 
+  private async applyRuleSets(ruleSets: RuleSets): Promise<void> {
+    const rules: ApiRule[] = [
+      ...getReservedRules(this.runtime.getId()),
+      ...convertToApiRule(toRuleList(ruleSets)),
+    ];
+
+    const prevRules = await this.declarativeNetRequest.getDynamicRules();
+
+    const { removeRuleIds, addRules } = diffRules(rules, prevRules);
+    const dynamicRules = { removeRuleIds, addRules };
+
+    await this.declarativeNetRequest.updateDynamicRules(dynamicRules);
+  }
+
   public async getMatchedRules(): Promise<MatchedRule[]> {
-    const matchedRules = await this.chrome.getMatchedRulesInActiveTab();
+    let matchedRules =
+      await this.declarativeNetRequest.getMatchedRulesInActiveTab();
     if (matchedRules.length === 0) {
       return [];
     }
+
+    // remove reserved rule
+    const reservedRules = getReservedRules(this.runtime.getId());
+    const reservedIds = new Set(reservedRules.map((rule) => rule.id));
+    matchedRules = matchedRules.filter(
+      (rule) => !reservedIds.has(rule.rule.ruleId)
+    );
 
     const ruleSets = await this.getRuleSets();
     const pointers = this.convertToRulePointers(ruleSets);
@@ -155,24 +161,36 @@ export class RequestBlockServiceImpl
     return results;
   }
 
-  private async run(): Promise<void> {
-    log.info("Start service");
-    // clear rules
-    await this.chrome.removeAllDynamicRules();
+  private async activate(): Promise<void> {
+    log.info("Activate");
+    // Apply rules
+    const ruleSets = await this.store.loadRuleSets();
+    await this.applyRuleSets(ruleSets);
 
-    if (await this.isEnabled()) {
-      const ruleSets = await this.store.loadRuleSets();
-      const rules = toRuleList(ruleSets);
-      const addRules = convertToApiRule(rules);
-      if (addRules.length > 0) {
-        log.info("Update dynamic rule:", { addRules });
-        await this.chrome.updateDynamicRules({ addRules });
-      } else {
-        log.info("Rule is empty");
-      }
-    } else {
-      // do nothing
-    }
+    // Update icon
+    this.action.setIcon({ path: ENABLED_ICON });
+  }
+
+  private async deactivate(): Promise<void> {
+    log.info("Deactivate");
+
+    // clear rules
+    await this.declarativeNetRequest.removeAllDynamicRules();
+
+    // Update icon
+    this.action.setIcon({ path: DISABLED_ICON });
+  }
+
+  private async assignRuleId(ruleSets: RuleSets): Promise<void> {
+    let nextId = await this.store.loadNextRuleId();
+    ruleSets.forEach((ruleSet) => {
+      ruleSet.rules.forEach((rule) => {
+        if (rule.id === RULE_ID_UNSAVED) {
+          rule.id = nextId++;
+        }
+      });
+    });
+    await this.store.saveNextRuleId(nextId);
   }
 
   private convertToRulePointers(ruleSets: RuleSets): RulePointers {
@@ -188,34 +206,57 @@ export class RequestBlockServiceImpl
   }
 }
 
-function diffRules(ruleSets: RuleSets, prevRuleSets: RuleSets) {
-  const prevRules = toRuleMap(prevRuleSets);
+function diffRules(rules: ApiRule[], prevRules: ApiRule[]) {
+  const removeRuleIds: number[] = [];
+  const addRules: ApiRule[] = [];
 
-  const removeIdList: number[] = [];
-  const addRuleList: RuleWithId[] = [];
+  const prevRuleMap = new Map<number, ApiRule>(
+    prevRules.map((rule) => [rule.id, rule])
+  );
 
-  walkRules(ruleSets, (rule) => {
-    if (!prevRules.has(rule.id)) {
+  rules.forEach((rule) => {
+    const prevRule = prevRuleMap.get(rule.id);
+    if (!prevRule) {
       // add
-      addRuleList.push(rule);
+      addRules.push(rule);
       return;
     }
 
-    const prevRule = prevRules.get(rule.id);
-    if (!isEqual(rule, prevRule)) {
+    if (!isEqualRule(rule, prevRule)) {
       // replace
-      removeIdList.push(rule.id);
-      addRuleList.push(rule);
+      removeRuleIds.push(rule.id);
+      addRules.push(rule);
     }
   });
 
-  const currentRuleIdSet = toRuleIdSet(ruleSets);
-  for (const id of prevRules.keys()) {
+  const currentRuleIdSet = new Set<number>(rules.map((rule) => rule.id));
+
+  for (const id of prevRuleMap.keys()) {
     if (!currentRuleIdSet.has(id)) {
       // remove
-      removeIdList.push(id);
+      removeRuleIds.push(id);
     }
   }
 
-  return { removeIdList, addRuleList };
+  return { removeRuleIds, addRules };
+}
+
+function isEqualRule(rule1: ApiRule, rule2: ApiRule) {
+  return (
+    // id
+    rule1.id === rule2.id &&
+    // action
+    isEqual(rule1.action, rule2.action) &&
+    // condition
+    isEqual(
+      rule1.condition.initiatorDomains,
+      rule2.condition.initiatorDomains
+    ) &&
+    rule1.condition.urlFilter === rule2.condition.urlFilter &&
+    rule1.condition.regexFilter === rule2.condition.regexFilter &&
+    isEqual(rule1.condition.requestMethods, rule2.condition.requestMethods) &&
+    isEqual(rule1.condition.resourceTypes, rule2.condition.resourceTypes) &&
+    // priority
+    rule1.priority === rule2.priority
+  );
 }

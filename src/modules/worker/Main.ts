@@ -21,6 +21,7 @@ export class Main {
     const requestBlockService = new RequestBlockServiceImpl(
       server,
       store,
+      chrome.runtime(),
       chrome.declarativeNetRequest(),
       chrome.action()
     );

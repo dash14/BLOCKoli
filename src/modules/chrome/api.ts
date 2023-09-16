@@ -55,6 +55,12 @@ export interface Rule {
    * Mandatory and should be >= 1.
    */
   id: number;
+
+  /** Rule priority.
+   * Defaults to 1.
+   * When specified, should be >= 1.
+   */
+  priority?: number | undefined;
 }
 
 export interface UpdateRuleOptions {
@@ -111,5 +117,6 @@ export interface ChromeApiAction {
 }
 
 export interface ChromeApiRuntime {
+  getId(): string;
   getURL(path: string): string;
 }

@@ -2,6 +2,7 @@ import { RuleSets } from "@/modules/core/rules";
 import { State } from "@/modules/core/state";
 import { ServiceConfigurationStore } from "./ServiceConfigurationStore";
 import { ChromeApiStorage } from "../chrome/api";
+import { RESERVED_RULE_ID_MAX } from "../rules/reserved";
 
 export class ServiceConfigurationStoreImpl
   implements ServiceConfigurationStore
@@ -26,7 +27,7 @@ export class ServiceConfigurationStoreImpl
 
   async loadNextRuleId(): Promise<number> {
     const nextId = await this.storage.get<number>("nextRuleId");
-    return nextId ?? 11; // 1-10 is reserved
+    return nextId ?? RESERVED_RULE_ID_MAX + 1;
   }
 
   async saveRuleSets(ruleSets: RuleSets): Promise<void> {

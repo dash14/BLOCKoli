@@ -1,4 +1,4 @@
-import { RuleActionType, Rules } from "@/modules/core/rules";
+import { Rules } from "@/modules/core/rules";
 import {
   ChromeApiDeclarativeNetRequest,
   IsRegexSupportedResult,
@@ -10,38 +10,21 @@ import logging from "@/modules/utils/logging";
 
 const log = logging.getLogger("net");
 
-const RESERVED_RULES = [
-  {
-    id: 1,
-    action: {
-      type: RuleActionType.ALLOW,
-    },
-    condition: {
-      initiatorDomains: [chrome.runtime.id],
-    },
-    priority: 100,
-  },
-];
-
 let matchedRuleCache: MatchedRuleInfo[] = [];
 
 export class ChromeApiDeclarativeNetRequestImpl
   implements ChromeApiDeclarativeNetRequest
 {
   async updateDynamicRules(options: UpdateRuleOptions): Promise<void> {
-    const ruleOptions = addReservedRules(
-      options as chrome.declarativeNetRequest.UpdateRuleOptions
-    );
-
-    log.debug("updateDynamicRules:", ruleOptions);
-    await chrome.declarativeNetRequest.updateDynamicRules(ruleOptions);
+    log.debug("updateDynamicRules:", options);
+    await chrome.declarativeNetRequest.updateDynamicRules(options);
   }
 
   async getDynamicRules(): Promise<Rules> {
     const rules =
-      chrome.declarativeNetRequest.getDynamicRules() as unknown as Rules;
+      (await chrome.declarativeNetRequest.getDynamicRules()) as unknown as Rules;
     log.debug("getDynamicRules", rules);
-    return removeReservedRules(rules);
+    return rules;
   }
 
   async removeAllDynamicRules(): Promise<void> {
@@ -63,14 +46,8 @@ export class ChromeApiDeclarativeNetRequestImpl
       const rules = await chrome.declarativeNetRequest.getMatchedRules({
         tabId: tab.id,
       });
-      // remove reserved rule
-      rules.rulesMatchedInfo.filter((rule) => {
-        return rule.rule.ruleId > 10;
-      });
-      matchedRuleCache = removeReservedRulesFromMatchedRule(
-        rules.rulesMatchedInfo
-      );
-      return matchedRuleCache;
+      matchedRuleCache = rules.rulesMatchedInfo;
+      return rules.rulesMatchedInfo;
     } catch (e) {
       // rate limit exceeded. return cached value
       console.log(e);
@@ -86,36 +63,4 @@ export class ChromeApiDeclarativeNetRequestImpl
       requireCapturing: false,
     });
   }
-}
-
-function addReservedRules(
-  options: chrome.declarativeNetRequest.UpdateRuleOptions
-): chrome.declarativeNetRequest.UpdateRuleOptions {
-  if (!options.addRules) {
-    options.addRules = [];
-  }
-  if (!options.removeRuleIds) {
-    options.removeRuleIds = [];
-  }
-
-  const ids = RESERVED_RULES.map((rule) => rule.id);
-
-  return {
-    addRules: [...(options.addRules ?? []), ...RESERVED_RULES],
-    removeRuleIds: [...(options.removeRuleIds ?? []), ...ids],
-  };
-}
-
-function removeReservedRules(rules: Rules): Rules {
-  if (rules.length === 0) return [];
-  const ids = new Set(RESERVED_RULES.map((rule) => rule.id));
-  return rules.filter((rule) => !ids.has(rule.id));
-}
-
-function removeReservedRulesFromMatchedRule(
-  rules: MatchedRuleInfo[]
-): MatchedRuleInfo[] {
-  if (rules.length === 0) return [];
-  const ids = new Set(RESERVED_RULES.map((rule) => rule.id));
-  return rules.filter((rule) => !ids.has(rule.rule.ruleId));
 }
