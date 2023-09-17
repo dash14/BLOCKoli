@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { css } from "@emotion/react";
-import cloneDeep from "lodash-es/cloneDeep";
+import { AddIcon } from "@chakra-ui/icons";
 import {
   Accordion,
   AccordionItem,
@@ -11,19 +10,14 @@ import {
   Button,
   Text,
 } from "@chakra-ui/react";
-import { AddIcon } from "@chakra-ui/icons";
+import { css } from "@emotion/react";
 import { CSSTransition } from "react-transition-group";
-import {
-  RULE_ID_EDITING,
-  Rule,
-  RuleSet,
-  RuleSets,
-  newRuleSetTemplate,
-} from "@/modules/core/rules";
-import { push, removeAt, replaceAt } from "@/modules/core/array";
 import { EditableTitle } from "@/components/forms/EditableTitle";
-import { RulesEdit } from "@/features/options/components/rule/RulesEdit";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
+import { RulesEdit } from "@/features/options/components/rule/RulesEdit";
+import { push } from "@/modules/core/array";
+import { RuleSets } from "@/modules/core/rules";
+import { useRuleSetsEdit } from "../../hooks/useRuleSetsEdit";
 import { RuleSetMenu } from "./RuleSetMenu";
 
 type Props = {
@@ -43,61 +37,33 @@ export const RuleSetsEdit: React.FC<Props> = ({
   ruleSets: originalRuleSets,
   onChange,
 }) => {
-  const [ruleSets, setRuleSets] = useState<RuleSets>(originalRuleSets);
   const [accordionOpenStates, setAccordionOpenStates] = useState<number[][]>(
     []
   );
 
+  const {
+    ruleSets,
+    addRuleSet: addRuleSetInHook,
+    updateRules,
+    removeRuleSet,
+    updateRuleSetTitle,
+  } = useRuleSetsEdit(originalRuleSets, onChange);
+
   useEffect(() => {
     if (ruleSets.length === 0) {
-      setRuleSets(originalRuleSets);
       if (originalRuleSets.length === 1) {
         setAccordionOpenStates([[0]]);
       } else {
         setAccordionOpenStates(originalRuleSets.map(() => []));
       }
-    } else {
-      // merge editing
-      setRuleSets(mergeEditingRuleSets(originalRuleSets, ruleSets));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [originalRuleSets]);
 
   function addRuleSet() {
-    setRuleSets(push(ruleSets, cloneDeep(newRuleSetTemplate)));
+    addRuleSetInHook();
     // open new accordion
     setAccordionOpenStates(push(accordionOpenStates, [0]));
-  }
-
-  function updateRules(rules: Rule[], ruleSetIndex: number) {
-    if (rules.length === 0) {
-      // add -> cancel
-      setRuleSets(removeAt(ruleSets, ruleSetIndex));
-    } else {
-      const ruleSet = { ...ruleSets[ruleSetIndex], rules } as RuleSet;
-      const newRuleSets = replaceAt(ruleSets, ruleSetIndex, ruleSet);
-      setRuleSets(newRuleSets);
-      onChange(filterAvailableRuleSets(newRuleSets)); // filter editing
-    }
-  }
-
-  function removeRuleSet(index: number) {
-    const ruleSet = ruleSets[index];
-    if (ruleSet.rules.filter((r) => r.id !== RULE_ID_EDITING).length === 0) {
-      // new rule set: same as cancel
-      setRuleSets(removeAt(ruleSets, index));
-    } else {
-      const newRuleSets = removeAt(ruleSets, index);
-      setRuleSets(newRuleSets);
-      onChange(filterAvailableRuleSets(newRuleSets)); // filter editing
-    }
-  }
-
-  function updateRuleSetTitle(title: string, index: number) {
-    const ruleSet = { ...ruleSets[index], name: title } as RuleSet;
-    const newRuleSets = replaceAt(ruleSets, index, ruleSet);
-    setRuleSets(newRuleSets);
-    onChange(filterAvailableRuleSets(newRuleSets)); // filter editing
   }
 
   return (
@@ -152,31 +118,3 @@ export const RuleSetsEdit: React.FC<Props> = ({
     </>
   );
 };
-
-function filterAvailableRuleSets(ruleSets: RuleSets): RuleSets {
-  return ruleSets
-    .map((ruleSet) => {
-      const rules = ruleSet.rules.filter((rule) => rule.id !== RULE_ID_EDITING);
-      return { ...ruleSet, rules };
-    })
-    .filter((ruleSet) => ruleSet.rules.length > 0);
-}
-
-function mergeEditingRuleSets(
-  filtered: RuleSets,
-  ruleSets: RuleSets
-): RuleSets {
-  const newRuleSets = cloneDeep(filtered);
-  ruleSets.forEach((ruleSet, ruleSetIndex) => {
-    if (newRuleSets[ruleSetIndex]) {
-      ruleSet.rules.forEach((rule, ruleIndex) => {
-        if (rule.id === RULE_ID_EDITING) {
-          newRuleSets[ruleSetIndex].rules.splice(ruleIndex, 0, rule);
-        }
-      });
-    } else {
-      newRuleSets[ruleSetIndex] = ruleSet;
-    }
-  });
-  return newRuleSets;
-}

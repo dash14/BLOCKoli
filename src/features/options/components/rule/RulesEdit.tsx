@@ -1,18 +1,14 @@
-import { useEffect, useState } from "react";
 import { AddIcon } from "@chakra-ui/icons";
 import { Button } from "@chakra-ui/react";
 import { css } from "@emotion/react";
-import cloneDeep from "lodash-es/cloneDeep";
 import { CSSTransition } from "react-transition-group";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
-import { push, removeAt, replaceAt } from "@/modules/core/array";
 import {
   RULE_ID_EDITING,
-  RULE_ID_UNSAVED,
-  Rule,
   RuleWithId,
   newRuleTemplate,
 } from "@/modules/core/rules";
+import { useRulesEdit } from "../../hooks/useRulesEdit";
 import { RuleContainer } from "./RuleContainer";
 import { RuleEdit } from "./RuleEdit";
 
@@ -22,42 +18,8 @@ type Props = {
 };
 
 export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
-  const [isAllowAdd, setIsAllowAdd] = useState(true);
-
-  useEffect(() => {
-    setIsAllowAdd(rules.filter((r) => r.id === RULE_ID_EDITING).length === 0);
-  }, [rules]);
-
-  function updateRule(rule: Rule, index: number) {
-    const updated = rule as RuleWithId;
-    if (updated.id === RULE_ID_EDITING) {
-      updated.id = RULE_ID_UNSAVED;
-    }
-    const newRules = replaceAt(rules, index, updated);
-    onChange(newRules);
-  }
-
-  function removeRule(index: number) {
-    const rule = rules[index];
-    if (rule.id === RULE_ID_EDITING) {
-      cancelEdit(index);
-    } else {
-      const newRules = removeAt(rules, index);
-      onChange(newRules);
-    }
-  }
-
-  function addRule() {
-    onChange(push(rules, cloneDeep(newRuleTemplate)));
-  }
-
-  function cancelEdit(index: number) {
-    if (rules[index].id === RULE_ID_EDITING) {
-      // cancel new rule
-      const newRules = removeAt(rules, index);
-      onChange(newRules);
-    }
-  }
+  const { isAllowAdd, addRule, updateRule, removeRule, cancelEdit } =
+    useRulesEdit(rules, onChange);
 
   const listTransitionCss = css(`
     display: flex;
@@ -111,9 +73,9 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
       >
         <RuleContainer>
           <Button
+            leftIcon={<AddIcon />}
             variant="outline"
             size="sm"
-            leftIcon={<AddIcon />}
             onClick={addRule}
           >
             Add a Rule

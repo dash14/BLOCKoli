@@ -1,8 +1,9 @@
+import { useEffect, useState } from "react";
+import isEqual from "lodash-es/isEqual";
 import { MessageProxyFactory } from "@/modules/chrome/message/MessageProxy";
 import { RuleSets } from "@/modules/core/rules";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import logging from "@/modules/utils/logging";
-import { useEffect, useState } from "react";
 
 const log = logging.getLogger("client");
 
@@ -45,9 +46,11 @@ export function useRequestBlockClient() {
     }
   };
 
-  const updateRuleSets = async (ruleSets: RuleSets) => {
-    await service.updateRuleSets(ruleSets);
-    setRuleSets(ruleSets);
+  const updateRuleSets = async (updatedRuleSets: RuleSets) => {
+    if (!isEqual(updatedRuleSets, ruleSets)) {
+      await service.updateRuleSets(updatedRuleSets);
+      setRuleSets(updatedRuleSets);
+    }
   };
 
   const getMatchedRule = async () => {

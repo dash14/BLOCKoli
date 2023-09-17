@@ -1,3 +1,4 @@
+import { MouseEvent } from "react";
 import { DeleteIcon, HamburgerIcon } from "@chakra-ui/icons";
 import {
   IconButton,
@@ -7,7 +8,6 @@ import {
   MenuList,
   useDisclosure,
 } from "@chakra-ui/react";
-import { MouseEvent } from "react";
 import { RemoveDialog } from "../../../../components/parts/RemoveDialog";
 
 type Props = {
