@@ -7,8 +7,9 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { css } from "@emotion/react";
-import { Brand } from "@/components/parts/Brand";
-import { BrandIcon } from "@/components/parts/BrandIcon";
+import { Brand } from "@/components/brand/Brand";
+import { BrandIcon } from "@/components/brand/BrandIcon";
+import { Copyright } from "@/components/brand/Copyright";
 import { RuleSetsEdit } from "@/features/options/components/ruleset/RuleSetsEdit";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
 import { useI18n } from "../hooks/useI18n";
@@ -56,6 +57,10 @@ function Options() {
 
           <RuleSetsEdit ruleSets={ruleSets} onChange={updateRuleSets} />
         </Box>
+      </Container>
+
+      <Container as="footer" textAlign="center">
+        <Copyright />
       </Container>
     </>
   );

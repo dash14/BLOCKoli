@@ -1,6 +1,6 @@
 import { ChakraProps, HStack, Img } from "@chakra-ui/react";
-import { Brand } from "@/components/parts/Brand";
-import { BrandIcon } from "@/components/parts/BrandIcon";
+import { Brand } from "@/components/brand/Brand";
+import { BrandIcon } from "@/components/brand/BrandIcon";
 
 type Props = ChakraProps;
 
