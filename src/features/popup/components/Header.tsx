@@ -1,27 +1,21 @@
-import { ChakraProps, HStack, Heading, Img } from "@chakra-ui/react";
+import { ChakraProps, HStack, Img } from "@chakra-ui/react";
+import { Brand } from "@/components/parts/Brand";
+import { BrandIcon } from "@/components/parts/BrandIcon";
 
 type Props = ChakraProps;
 
-export const Header: React.FC<Props> = ({ ...props }) => {
+export const Header: React.FC<Props> = (props) => {
   return (
     <HStack
       as="header"
-      backgroundColor="#F6FFE7"
+      backgroundColor="#f6ffe7"
       padding="10px 24px"
       justifyContent="space-between"
-      borderBottom="1px solid #ddd;"
+      borderBottom="1px solid #d6dFc7;"
       {...props}
     >
-      <Heading as="h1" fontSize="22px">
-        BLOCKoli
-      </Heading>
-      <Img
-        src="images/icon32.png"
-        srcSet="images/icon32.png 1x, images/icon32@2x.png 2x"
-        width="32px"
-        height="32px"
-        marginLeft="4px"
-      />
+      <Brand as="h1" fontSize={24} />
+      <BrandIcon marginLeft="4px" />
     </HStack>
   );
 };
