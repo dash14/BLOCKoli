@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { QuestionIcon } from "@chakra-ui/icons";
 import {
   IconButton,
   Popover,
@@ -9,7 +10,6 @@ import {
   PopoverHeader,
   PopoverTrigger,
 } from "@chakra-ui/react";
-import { QuestionIcon } from "@chakra-ui/icons";
 
 type Props = {
   width: number;

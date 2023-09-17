@@ -1,3 +1,11 @@
+import { useEffect, useState } from "react";
+import { AddIcon } from "@chakra-ui/icons";
+import { Button } from "@chakra-ui/react";
+import { css } from "@emotion/react";
+import cloneDeep from "lodash-es/cloneDeep";
+import { CSSTransition } from "react-transition-group";
+import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
+import { push, removeAt, replaceAt } from "@/modules/core/array";
 import {
   RULE_ID_EDITING,
   RULE_ID_UNSAVED,
@@ -5,16 +13,8 @@ import {
   RuleWithId,
   newRuleTemplate,
 } from "@/modules/core/rules";
-import { useEffect, useState } from "react";
-import { Button } from "@chakra-ui/react";
-import { AddIcon } from "@chakra-ui/icons";
-import { CSSTransition } from "react-transition-group";
-import cloneDeep from "lodash-es/cloneDeep";
-import { css } from "@emotion/react";
-import { push, removeAt, replaceAt } from "@/modules/core/array";
-import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
+import { RuleContainer } from "./RuleContainer";
 import { RuleEdit } from "./RuleEdit";
-import { RuleBox } from "./RuleBox";
 
 type Props = {
   rules: RuleWithId[];
@@ -22,17 +22,7 @@ type Props = {
 };
 
 export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
-  const [isEditingList, setIsEditingList] = useState<boolean[]>(
-    rules.map(() => false)
-  );
   const [isAllowAdd, setIsAllowAdd] = useState(true);
-
-  useEffect(() => {
-    if (rules.length === 1 && rules[0].id === RULE_ID_EDITING) {
-      setIsEditingList([true]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     setIsAllowAdd(rules.filter((r) => r.id === RULE_ID_EDITING).length === 0);
@@ -53,19 +43,12 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
       cancelEdit(index);
     } else {
       const newRules = removeAt(rules, index);
-      setIsEditingList(removeAt(isEditingList, index));
       onChange(newRules);
     }
   }
 
-  function updateEditing(isEditing: boolean, index: number) {
-    const newList = replaceAt(isEditingList, index, isEditing);
-    setIsEditingList(newList);
-  }
-
   function addRule() {
     onChange(push(rules, cloneDeep(newRuleTemplate)));
-    setIsEditingList(push(isEditingList, true));
   }
 
   function cancelEdit(index: number) {
@@ -73,7 +56,6 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
       // cancel new rule
       const newRules = removeAt(rules, index);
       onChange(newRules);
-      setIsEditingList(removeAt(isEditingList, index));
     }
   }
 
@@ -109,7 +91,6 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
           <CSSTransition key={ruleIndex} timeout={250} classNames="slide">
             <RuleEdit
               rule={rule ?? newRuleTemplate}
-              isEditing={isEditingList[ruleIndex] ?? false}
               isRemoveEnabled={
                 rule.id !== RULE_ID_EDITING &&
                 rules.filter((r) => r.id !== RULE_ID_EDITING).length > 1
@@ -117,7 +98,6 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
               onChange={(rule) => updateRule(rule, ruleIndex)}
               onCancel={() => cancelEdit(ruleIndex)}
               onRemove={() => removeRule(ruleIndex)}
-              onEditingChange={(e) => updateEditing(e, ruleIndex)}
             />
           </CSSTransition>
         ))}
@@ -129,7 +109,7 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
         unmountOnExit
         css={addButtonTransition}
       >
-        <RuleBox>
+        <RuleContainer>
           <Button
             variant="outline"
             size="sm"
@@ -138,7 +118,7 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
           >
             Add a Rule
           </Button>
-        </RuleBox>
+        </RuleContainer>
       </CSSTransition>
     </>
   );

@@ -1,3 +1,4 @@
+import { MouseEventHandler } from "react";
 import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
 import {
   ButtonGroup,
@@ -8,7 +9,6 @@ import {
   useEditableControls,
 } from "@chakra-ui/react";
 import { Editable, EditableInput, EditablePreview } from "@chakra-ui/react";
-import { MouseEventHandler } from "react";
 
 type Props = {
   defaultValue?: string;
@@ -23,10 +23,12 @@ export const EditableTitle: React.FC<Props> = ({
 }) => {
   function Preview() {
     const { getEditButtonProps } = useEditableControls();
+
     const onDoubleClick: MouseEventHandler<HTMLDivElement> = (e) => {
       getEditButtonProps().onClick?.(e);
       e.stopPropagation();
     };
+
     return (
       <EditablePreview
         marginX={4}
@@ -37,7 +39,7 @@ export const EditableTitle: React.FC<Props> = ({
     );
   }
 
-  function EditableControls() {
+  const EditableControls: React.FC = () => {
     const {
       isEditing,
       getSubmitButtonProps,
@@ -71,15 +73,15 @@ export const EditableTitle: React.FC<Props> = ({
     ) : (
       <Flex justifyContent="center" onClick={(e) => e.stopPropagation()}>
         <IconButton
-          icon={<EditIcon color="gray.400" />}
+          icon={<EditIcon color="gray.500" />}
           aria-label="Edit"
           variant="ghost"
-          size="xs"
+          size="sm"
           {...getEditButtonProps()}
         />
       </Flex>
     );
-  }
+  };
 
   return (
     <Editable

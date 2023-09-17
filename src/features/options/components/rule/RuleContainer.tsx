@@ -6,7 +6,10 @@ type Props = {
   children: ReactNode;
 };
 
-export const RuleBox: React.FC<Props> = ({ isEditing = false, children }) => {
+export const RuleContainer: React.FC<Props> = ({
+  isEditing = false,
+  children,
+}) => {
   return (
     <Box
       position="relative"

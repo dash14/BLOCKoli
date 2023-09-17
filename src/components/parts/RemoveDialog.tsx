@@ -37,7 +37,9 @@ export const RemoveDialog: React.FC<Props> = ({
       <AlertDialogContent>
         <AlertDialogHeader>{title ?? "Remove"}</AlertDialogHeader>
         <AlertDialogCloseButton />
-        <AlertDialogBody>Are you sure you want to remove?</AlertDialogBody>
+        <AlertDialogBody fontSize={14}>
+          Are you sure you want to remove?
+        </AlertDialogBody>
         <AlertDialogFooter>
           <Button ref={cancelRef} variant="outline" onClick={onClose}>
             Cancel

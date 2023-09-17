@@ -2,26 +2,17 @@ import { HStack, Tag } from "@chakra-ui/react";
 
 type Props = {
   empty: string;
-  options: { label: string; value: string }[];
-  values?: string[];
+  values: string[] | undefined;
 };
 
-export const Tags: React.FC<Props> = ({ empty, options, values }) => {
-  if (!values) {
+export const Tags: React.FC<Props> = ({ empty, values }) => {
+  if (!values || values.length === 0) {
     return <Tag>{empty}</Tag>;
   }
-
-  const labels = options
-    .filter((o) => values.includes(o.value))
-    .map((o) => o.label);
-  if (labels.length === 0) {
-    return <Tag>{empty}</Tag>;
-  }
-
   return (
     <HStack>
-      {labels.map((label) => (
-        <Tag key={label}>{label}</Tag>
+      {values.map((value) => (
+        <Tag key={value}>{value}</Tag>
       ))}
     </HStack>
   );

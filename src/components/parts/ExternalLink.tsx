@@ -1,6 +1,6 @@
+import { ReactNode } from "react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import { Link } from "@chakra-ui/react";
-import { ReactNode } from "react";
 
 type Props = {
   href: string;

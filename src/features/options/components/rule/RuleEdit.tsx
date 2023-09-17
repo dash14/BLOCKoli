@@ -1,24 +1,11 @@
-import {
-  REQUEST_METHODS,
-  RESOURCE_TYPES,
-  RequestMethod,
-  ResourceType,
-  Rule,
-  RuleActionType,
-} from "@/modules/core/rules";
-import {
-  CheckCircleIcon,
-  EditIcon,
-  NotAllowedIcon,
-  SmallCloseIcon,
-} from "@chakra-ui/icons";
+import { CheckCircleIcon, EditIcon, NotAllowedIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
-  ButtonGroup,
   Checkbox,
-  Grid,
-  GridItem,
+  FormControl,
+  FormErrorMessage,
+  FormLabel,
   HStack,
   Heading,
   Input,
@@ -27,27 +14,31 @@ import {
   Stack,
   Tag,
   Text,
+  VStack,
 } from "@chakra-ui/react";
-import { useState } from "react";
-import cloneDeep from "lodash-es/cloneDeep";
+import { css } from "@emotion/react";
 import { MultipleSelect } from "@/components/forms/MultipleSelect";
-import { Tags } from "@/components/parts/Tags";
 import { ExternalLink } from "@/components/parts/ExternalLink";
-import { RemoveButton } from "@/components/parts/RemoveButton";
-import { RuleBox } from "./RuleBox";
-import { RuleMenu } from "./RuleMenu";
-import { createRegexValidator } from "@/modules/chrome/regex";
-import { RuleValidator } from "@/modules/rules/validation";
+import { LabelTags } from "@/components/parts/LabelTags";
+import { Tags } from "@/components/parts/Tags";
+import {
+  REQUEST_METHODS,
+  RESOURCE_TYPES,
+  Rule,
+  RuleActionType,
+} from "@/modules/core/rules";
+import { useRuleEdit } from "../../hooks/useRuleEdit";
 import { InitiatorDomainsHint } from "../hints/InitiatorDomainsHint";
+import { ControlButtons } from "./ControlButtons";
+import { RuleContainer } from "./RuleContainer";
+import { RuleMenu } from "./RuleMenu";
 
 type Props = {
   rule: Rule;
-  isEditing: boolean;
   isRemoveEnabled: boolean;
   onChange: (rule: Rule) => void;
   onCancel: () => void;
   onRemove: () => void;
-  onEditingChange: (isEditing: boolean) => void;
 };
 
 const requestMethodOptions = makeOptions(REQUEST_METHODS, (v) =>
@@ -55,102 +46,52 @@ const requestMethodOptions = makeOptions(REQUEST_METHODS, (v) =>
 );
 const resourceTypeOptions = makeOptions(RESOURCE_TYPES);
 
-const ruleValidator = new RuleValidator(createRegexValidator());
-
 export const RuleEdit: React.FC<Props> = ({
   rule: initialRule,
-  isEditing,
   isRemoveEnabled,
   onChange,
   onCancel,
   onRemove,
-  onEditingChange,
 }) => {
-  const [rule, setRuleObject] = useState(initialRule);
-  const [domains, setDomains] = useState(
-    rule.condition.initiatorDomains?.join(",") ?? ""
-  );
-  const [isValid, setIsValid] = useState(false);
-  const [regexInvalidReason, setRegexInvalidReason] = useState("");
+  const {
+    save,
+    cancel,
+    remove,
+    enterEditMode,
+    updateAction,
+    updateRequestMethods,
+    updateResourceTypes,
+    updateUrlFilter,
+    updateIsRegexFilter,
+    updateInitiatorDomains,
+    isEditing,
+    rule,
+    domainsText,
+    isValid,
+    regexInvalidReason,
+  } = useRuleEdit(initialRule, onChange, onCancel, onRemove);
 
-  function save() {
-    onEditingChange(false);
-    onChange(rule);
-  }
-
-  function cancel() {
-    onEditingChange(false);
-    setRuleObject(initialRule);
-    onCancel();
-  }
-
-  function remove() {
-    onRemove();
-  }
-
-  function updateAction(value: RuleActionType) {
-    const newRule = cloneDeep(rule);
-    newRule.action.type = value;
-    setRuleObject(newRule);
-    validate(newRule);
-  }
-
-  function updateRequestMethods(value: string[]) {
-    const newRule = cloneDeep(rule);
-    newRule.condition.requestMethods = value as RequestMethod[];
-    setRuleObject(newRule);
-    validate(newRule);
-  }
-
-  function updateResourceTypes(value: string[]) {
-    const newRule = cloneDeep(rule);
-    newRule.condition.resourceTypes = value as ResourceType[];
-    setRuleObject(newRule);
-    validate(newRule);
-  }
-
-  function updateIsRegexFilter(checked: boolean) {
-    const newRule = cloneDeep(rule);
-    newRule.condition.isRegexFilter = checked;
-    setRuleObject(newRule);
-    validate(newRule);
-  }
-
-  async function updateUrlFilter(text: string) {
-    const newRule = cloneDeep(rule);
-    newRule.condition.urlFilter = text;
-    setRuleObject(newRule);
-    validate(newRule);
-  }
-
-  function updateInitiatorDomains(text: string) {
-    setDomains(text);
-    const domains = text
-      .split(",")
-      .map((text) => text.trim())
-      .filter(Boolean);
-
-    const newRule = cloneDeep(rule);
-    newRule.condition.initiatorDomains = domains;
-    setRuleObject(newRule);
-    validate(newRule);
-  }
-
-  async function validate(newRule: Rule) {
-    const result = await ruleValidator.validate(newRule);
-    if (result.isValid) {
-      setRegexInvalidReason("");
-      setIsValid(true);
-    } else {
-      if (result.reason?.isInvalidUrlFilter) {
-        setRegexInvalidReason(result.reason?.urlFilterReason ?? "");
-      }
-      setIsValid(false);
-    }
-  }
+  const styles = {
+    formControl: css({
+      display: "flex",
+      flexDirection: "row",
+      width: "auto",
+    }),
+    label: css({
+      fontSize: 14,
+      fontWeight: "normal",
+      margin: 0,
+      width: "130px",
+      paddingTop: "2px",
+    }),
+    note: css({
+      marginTop: "2px",
+      marginLeft: "130px",
+    }),
+  };
 
   return (
-    <RuleBox isEditing={isEditing}>
+    <RuleContainer isEditing={isEditing}>
       <Box position="absolute" top={1} right={1}>
         {isEditing ? (
           <Tag size="sm" backgroundColor="blue.500" color="white">
@@ -162,7 +103,7 @@ export const RuleEdit: React.FC<Props> = ({
               variant="ghost"
               size="sm"
               leftIcon={<EditIcon />}
-              onClick={() => onEditingChange(!isEditing)}
+              onClick={enterEditMode}
             >
               Edit
             </Button>
@@ -189,11 +130,13 @@ export const RuleEdit: React.FC<Props> = ({
           ) : (
             <HStack gap={1}>
               {rule.action.type === RuleActionType.BLOCK ? (
-                <NotAllowedIcon color="red" />
+                <NotAllowedIcon color="red" boxSize={4} />
               ) : (
-                <CheckCircleIcon color="green" />
+                <CheckCircleIcon color="green" boxSize={4} />
               )}
-              <Text as="span">{rule.action.type}</Text>
+              <Text as="span" fontSize={16}>
+                {rule.action.type}
+              </Text>
             </HStack>
           )}
         </Box>
@@ -203,162 +146,165 @@ export const RuleEdit: React.FC<Props> = ({
         <Heading as="h4" size="sm" marginBottom={2}>
           Condition
         </Heading>
-        <Grid
-          marginLeft="20px"
-          templateColumns="repeat(2, 1fr)"
-          gridTemplateColumns="auto 1fr"
-          gap="5"
-        >
-          <GridItem>Request Methods</GridItem>
-          {isEditing ? (
-            <GridItem width={400}>
-              <MultipleSelect
-                placeholder="(ALL)"
-                options={requestMethodOptions}
-                value={rule.condition.requestMethods}
-                onChange={updateRequestMethods}
-              />
-            </GridItem>
-          ) : (
-            <GridItem>
-              <Tags
+        <VStack marginLeft="20px" alignItems="start" gap={4}>
+          {/* Request Methods */}
+          <FormControl css={styles.formControl}>
+            <FormLabel css={styles.label}>Request Methods</FormLabel>
+            {isEditing ? (
+              <Box width={450}>
+                <MultipleSelect
+                  placeholder="(ALL)"
+                  options={requestMethodOptions}
+                  value={rule.condition.requestMethods}
+                  onChange={updateRequestMethods}
+                />
+              </Box>
+            ) : (
+              <LabelTags
                 empty="(ALL)"
                 options={requestMethodOptions}
                 values={rule.condition.requestMethods}
               />
-            </GridItem>
-          )}
+            )}
+          </FormControl>
 
-          <GridItem>URL Filter</GridItem>
-          <GridItem>
-            {isEditing ? (
-              <HStack>
-                <Input
-                  value={rule.condition.urlFilter ?? ""}
-                  onChange={(e) => updateUrlFilter(e.target.value)}
-                  width={400}
-                  variant="outline"
-                  placeholder={
-                    rule.condition.isRegexFilter
-                      ? "^https?://www\\.example\\.com/api/"
-                      : "||www.example.com"
-                  }
-                />
-
-                <Box whiteSpace="nowrap">
+          {/* URL Filter */}
+          <Box>
+            <HStack alignItems="start">
+              <FormControl
+                css={styles.formControl}
+                isInvalid={!!regexInvalidReason}
+              >
+                <FormLabel css={styles.label}>URL Filter</FormLabel>
+                <Box>
+                  {isEditing ? (
+                    <Input
+                      value={rule.condition.urlFilter ?? ""}
+                      onChange={(e) => updateUrlFilter(e.target.value)}
+                      width={450}
+                      variant="outline"
+                      placeholder={
+                        rule.condition.isRegexFilter
+                          ? "^https?://www\\.example\\.com/api/"
+                          : "||www.example.com"
+                      }
+                    />
+                  ) : (
+                    <>
+                      {rule.condition.urlFilter ? (
+                        <Tag>{rule.condition.urlFilter}</Tag>
+                      ) : (
+                        <Tag>(Not specified)</Tag>
+                      )}
+                    </>
+                  )}
+                  <FormErrorMessage marginTop={1}>
+                    {regexInvalidReason}
+                  </FormErrorMessage>
+                </Box>
+              </FormControl>
+              {isEditing ? (
+                <FormControl paddingTop="2px" width="auto">
                   <Checkbox
                     defaultChecked={rule.condition.isRegexFilter}
                     checked={rule.condition.isRegexFilter}
                     onChange={(e) => updateIsRegexFilter(e.target.checked)}
+                    size="sm"
+                    marginTop="3px"
                   >
                     Use regex
                   </Checkbox>
-                </Box>
-              </HStack>
-            ) : (
-              <Box>
-                {rule.condition.urlFilter ? (
-                  <>
-                    <Tag>{rule.condition.urlFilter}</Tag>
-                    {rule.condition.isRegexFilter ? " (regex)" : ""}
-                  </>
+                </FormControl>
+              ) : (
+                <Text as="span">
+                  {rule.condition.isRegexFilter && rule.condition.urlFilter
+                    ? " (regex)"
+                    : ""}
+                </Text>
+              )}
+            </HStack>
+            {(isEditing || rule.condition.urlFilter) && (
+              <Text as="div" css={styles.note}>
+                For available formats, see{" "}
+                {rule.condition.isRegexFilter ? (
+                  <ExternalLink href="https://developer.chrome.com/docs/extensions/reference/declarativeNetRequest/#property-RuleCondition-regexFilter">
+                    API reference (regexFilter)
+                  </ExternalLink>
                 ) : (
-                  <Tag>(Not specified)</Tag>
+                  <ExternalLink href="https://developer.chrome.com/docs/extensions/reference/declarativeNetRequest/#filter-matching-charactgers">
+                    API reference (urlFilter)
+                  </ExternalLink>
                 )}
-              </Box>
+                .
+              </Text>
             )}
-            {regexInvalidReason && (
-              <Text color="red">{regexInvalidReason}</Text>
-            )}
-            For available formats, see{" "}
-            {rule.condition.isRegexFilter ? (
-              <ExternalLink href="https://developer.chrome.com/docs/extensions/reference/declarativeNetRequest/#property-RuleCondition-regexFilter">
-                API reference (regexFilter)
-              </ExternalLink>
-            ) : (
-              <ExternalLink href="https://developer.chrome.com/docs/extensions/reference/declarativeNetRequest/#filter-matching-charactgers">
-                API reference (urlFilter)
-              </ExternalLink>
-            )}
-            .
-          </GridItem>
+          </Box>
 
-          <GridItem>Initiator Domains</GridItem>
-          <GridItem>
-            <HStack>
+          {/* Initiator Domains */}
+          <Box>
+            <FormControl css={styles.formControl}>
+              <FormLabel css={styles.label}>Initiator Domains</FormLabel>
               {isEditing ? (
                 <Input
-                  value={domains}
+                  value={domainsText}
                   onChange={(e) => updateInitiatorDomains(e.target.value)}
                   variant="outline"
                   placeholder="www.example.com, ..."
-                  width={400}
+                  width={450}
                 />
               ) : (
                 <HStack>
-                  {rule.condition.initiatorDomains ? (
-                    (rule.condition.initiatorDomains ?? []).map((domain) => (
-                      <Tag>{domain}</Tag>
-                    ))
-                  ) : (
-                    <Tag>(Not specified)</Tag>
-                  )}
+                  <Tags
+                    empty="(Not specified)"
+                    values={rule.condition.initiatorDomains}
+                  />
                 </HStack>
               )}
+              <Box marginLeft={2}>
+                <InitiatorDomainsHint />
+              </Box>
+            </FormControl>
 
-              <InitiatorDomainsHint />
-            </HStack>
             {isEditing && (
-              <Text fontSize={12}>
+              <Text as="div" css={styles.note}>
                 Specify the origination of the request as a comma-separated
                 list.
               </Text>
             )}
-          </GridItem>
+          </Box>
 
-          <GridItem>Resource Types</GridItem>
-          {isEditing ? (
-            <GridItem width={400}>
-              <MultipleSelect
-                placeholder="(ALL)"
-                options={resourceTypeOptions}
-                value={rule.condition.resourceTypes}
-                onChange={updateResourceTypes}
-              />
-            </GridItem>
-          ) : (
-            <GridItem>
-              <Tags
-                empty="(ALL)"
-                options={resourceTypeOptions}
-                values={rule.condition.resourceTypes}
-              />
-            </GridItem>
-          )}
-        </Grid>
+          {/* Resource Types */}
+          <FormControl css={styles.formControl}>
+            <FormLabel css={styles.label}>Resource Types</FormLabel>
+            <Box width={450}>
+              {isEditing ? (
+                <MultipleSelect
+                  placeholder="(ALL)"
+                  options={resourceTypeOptions}
+                  value={rule.condition.resourceTypes}
+                  onChange={updateResourceTypes}
+                />
+              ) : (
+                <LabelTags
+                  empty="(ALL)"
+                  options={resourceTypeOptions}
+                  values={rule.condition.resourceTypes}
+                />
+              )}
+            </Box>
+          </FormControl>
+        </VStack>
       </Box>
       {isEditing && (
-        <ButtonGroup size="sm" width="100%">
-          <Button leftIcon={<EditIcon />} onClick={save} isDisabled={!isValid}>
-            Save
-          </Button>
-          <Button
-            variant="outline"
-            leftIcon={<SmallCloseIcon />}
-            onClick={cancel}
-          >
-            Cancel
-          </Button>
-          {isRemoveEnabled && (
-            <RemoveButton
-              title="Remove the rule"
-              style={{ marginLeft: "auto" }}
-              onPerform={remove}
-            />
-          )}
-        </ButtonGroup>
+        <ControlButtons
+          save={save}
+          cancel={cancel}
+          remove={remove}
+          isValid={isValid}
+          isRemoveEnabled={isRemoveEnabled}
+        />
       )}
-    </RuleBox>
+    </RuleContainer>
   );
 };
 
