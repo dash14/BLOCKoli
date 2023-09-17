@@ -8,7 +8,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { MouseEvent } from "react";
-import { RemoveDialog } from "../parts/RemoveDialog";
+import { RemoveDialog } from "../../../../components/parts/RemoveDialog";
 
 type Props = {
   onRemove: () => void;

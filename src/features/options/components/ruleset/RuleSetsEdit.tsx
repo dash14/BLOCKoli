@@ -22,7 +22,7 @@ import {
 } from "@/modules/core/rules";
 import { push, removeAt, replaceAt } from "@/modules/core/array";
 import { EditableTitle } from "@/components/forms/EditableTitle";
-import { RulesEdit } from "@/components/ruleset/RulesEdit";
+import { RulesEdit } from "@/features/options/components/rule/RulesEdit";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
 import { RuleSetMenu } from "./RuleSetMenu";
 

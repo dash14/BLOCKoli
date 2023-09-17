@@ -7,7 +7,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useI18n } from "../hooks/useI18n";
-import { RuleSetsEdit } from "@/components/ruleset/RuleSetsEdit";
+import { RuleSetsEdit } from "@/features/options/components/ruleset/RuleSetsEdit";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
 import { css } from "@emotion/react";
 
