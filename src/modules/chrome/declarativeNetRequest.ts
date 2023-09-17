@@ -1,19 +1,19 @@
 import { Rules } from "@/modules/core/rules";
+import logging from "@/modules/utils/logging";
 import {
-  ChromeApiDeclarativeNetRequest,
+  ChromeDeclarativeNetRequestApi,
   IsRegexSupportedResult,
   MatchedRuleInfo,
   RegexOptions,
   UpdateRuleOptions,
 } from "./api";
-import logging from "@/modules/utils/logging";
 
 const log = logging.getLogger("net");
 
 let matchedRuleCache: MatchedRuleInfo[] = [];
 
-export class ChromeApiDeclarativeNetRequestImpl
-  implements ChromeApiDeclarativeNetRequest
+export class ChromeDeclarativeNetRequestApiImpl
+  implements ChromeDeclarativeNetRequestApi
 {
   async updateDynamicRules(options: UpdateRuleOptions): Promise<void> {
     log.debug("updateDynamicRules:", options);

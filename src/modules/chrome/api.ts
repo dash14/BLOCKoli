@@ -5,7 +5,21 @@ import {
   Rules,
 } from "@/modules/core/rules";
 
-export interface ChromeApiStorage {
+export interface ChromeRuntimeApi {
+  getId(): string;
+  getURL(path: string): string;
+}
+
+export interface TabIconDetails {
+  /** Optional. Either a relative image path or a dictionary {size -> relative image path} pointing to icon to be set. If the icon is specified as a dictionary, the actual image to be used is chosen depending on screen's pixel density. If the number of image pixels that fit into one screen space unit equals scale, then image with size scale * 19 will be selected. Initially only scales 1 and 2 will be supported. At least one image must be specified. Note that 'details.path = foo' is equivalent to 'details.imageData = {'19': foo}'  */
+  path?: string | { [index: string]: string } | undefined;
+}
+
+export interface ChromeActionApi {
+  setIcon(details: TabIconDetails): void;
+}
+
+export interface ChromeStorageApi {
   /** Gets an item from storage. */
   get<T>(key: string): Promise<T | undefined>;
 
@@ -99,24 +113,10 @@ export interface IsRegexSupportedResult {
   reason?: UnsupportedRegexReason | undefined;
 }
 
-export interface ChromeApiDeclarativeNetRequest {
+export interface ChromeDeclarativeNetRequestApi {
   updateDynamicRules(options: UpdateRuleOptions): Promise<void>;
   getDynamicRules(): Promise<Rules>;
   removeAllDynamicRules(): Promise<void>;
   getMatchedRulesInActiveTab(): Promise<MatchedRuleInfo[]>;
   isRegexSupported(options: RegexOptions): Promise<IsRegexSupportedResult>;
-}
-
-export interface TabIconDetails {
-  /** Optional. Either a relative image path or a dictionary {size -> relative image path} pointing to icon to be set. If the icon is specified as a dictionary, the actual image to be used is chosen depending on screen's pixel density. If the number of image pixels that fit into one screen space unit equals scale, then image with size scale * 19 will be selected. Initially only scales 1 and 2 will be supported. At least one image must be specified. Note that 'details.path = foo' is equivalent to 'details.imageData = {'19': foo}'  */
-  path?: string | { [index: string]: string } | undefined;
-}
-
-export interface ChromeApiAction {
-  setIcon(details: TabIconDetails): void;
-}
-
-export interface ChromeApiRuntime {
-  getId(): string;
-  getURL(path: string): string;
 }

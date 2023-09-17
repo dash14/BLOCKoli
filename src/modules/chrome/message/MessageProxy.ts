@@ -4,6 +4,7 @@ import {
   EventsOf,
   ServiceBase,
 } from "@/modules/core/service";
+import logging from "@/modules/utils/logging";
 import {
   Message,
   BroadcastMessage,
@@ -11,7 +12,6 @@ import {
   RequestMessage,
   ResponseMessage,
 } from "./types";
-import logging from "@/modules/utils/logging";
 
 const log = logging.getLogger("popup");
 

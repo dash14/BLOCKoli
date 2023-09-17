@@ -1,12 +1,10 @@
-import * as RequestBlock from "@/modules/services/RequestBlockService";
-import { EventEmitter, ServiceBase } from "@/modules/core/service";
-import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
+import isEqual from "lodash-es/isEqual";
 import {
-  ChromeApiAction,
-  ChromeApiDeclarativeNetRequest,
-  ChromeApiRuntime,
+  ChromeActionApi,
+  ChromeDeclarativeNetRequestApi,
+  ChromeRuntimeApi,
 } from "@/modules/chrome/api";
-import logging from "@/modules/utils/logging";
+import { Rule as ApiRule } from "@/modules/chrome/api";
 import {
   MatchedRule,
   RULE_ID_UNSAVED,
@@ -14,11 +12,13 @@ import {
   RulePointer,
   RuleSets,
 } from "@/modules/core/rules";
-import isEqual from "lodash-es/isEqual";
-import { toRuleList, walkRules } from "@/modules/rules/rulesets";
-import { Rule as ApiRule } from "@/modules/chrome/api";
-
+import { EventEmitter, ServiceBase } from "@/modules/core/service";
 import { convertToApiRule } from "@/modules/rules/convert";
+import { toRuleList, walkRules } from "@/modules/rules/rulesets";
+import * as RequestBlock from "@/modules/services/RequestBlockService";
+import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
+import logging from "@/modules/utils/logging";
+
 import { getReservedRules } from "../rules/reserved";
 
 const log = logging.getLogger("RequestBlock");
@@ -33,16 +33,16 @@ export class RequestBlockServiceImpl
   implements RequestBlock.Service
 {
   private store: ServiceConfigurationStore;
-  private runtime: ChromeApiRuntime;
-  private declarativeNetRequest: ChromeApiDeclarativeNetRequest;
-  private action: ChromeApiAction;
+  private runtime: ChromeRuntimeApi;
+  private declarativeNetRequest: ChromeDeclarativeNetRequestApi;
+  private action: ChromeActionApi;
 
   constructor(
     emitter: EventEmitter<RequestBlock.Events>,
     store: ServiceConfigurationStore,
-    runtime: ChromeApiRuntime,
-    declarativeNetRequest: ChromeApiDeclarativeNetRequest,
-    action: ChromeApiAction
+    runtime: ChromeRuntimeApi,
+    declarativeNetRequest: ChromeDeclarativeNetRequestApi,
+    action: ChromeActionApi
   ) {
     super(emitter);
     this.store = store;

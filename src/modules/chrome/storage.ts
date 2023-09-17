@@ -1,6 +1,6 @@
-import { ChromeApiStorage } from "./api";
+import { ChromeStorageApi } from "./api";
 
-export class ChromeApiStorageImpl implements ChromeApiStorage {
+export class ChromeStorageApiImpl implements ChromeStorageApi {
   private area: chrome.storage.StorageArea;
 
   constructor(area: chrome.storage.StorageArea) {

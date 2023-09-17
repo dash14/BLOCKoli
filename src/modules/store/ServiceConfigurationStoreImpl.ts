@@ -1,15 +1,15 @@
+import { ChromeStorageApi } from "@/modules/chrome/api";
 import { RuleSets } from "@/modules/core/rules";
 import { State } from "@/modules/core/state";
+import { RESERVED_RULE_ID_MAX } from "@/modules/rules/reserved";
 import { ServiceConfigurationStore } from "./ServiceConfigurationStore";
-import { ChromeApiStorage } from "../chrome/api";
-import { RESERVED_RULE_ID_MAX } from "../rules/reserved";
 
 export class ServiceConfigurationStoreImpl
   implements ServiceConfigurationStore
 {
-  private storage: ChromeApiStorage;
+  private storage: ChromeStorageApi;
 
-  constructor(storage: ChromeApiStorage) {
+  constructor(storage: ChromeStorageApi) {
     this.storage = storage;
   }
   async saveState(state: State): Promise<void> {

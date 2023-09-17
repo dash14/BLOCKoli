@@ -1,6 +1,6 @@
-import { ChromeApiRuntime } from "./api";
+import { ChromeRuntimeApi } from "./api";
 
-export class ChromeApiRuntimeImpl implements ChromeApiRuntime {
+export class ChromeRuntimeApiImpl implements ChromeRuntimeApi {
   getId(): string {
     return chrome.runtime.id;
   }

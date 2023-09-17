@@ -1,5 +1,5 @@
-import { RegexValidator } from "../core/regex";
-import { Rule } from "../core/rules";
+import { RegexValidator } from "@/modules/core/regex";
+import { Rule } from "@/modules/core/rules";
 
 export type RuleValidationResult =
   | {

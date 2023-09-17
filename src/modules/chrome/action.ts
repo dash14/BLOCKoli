@@ -1,6 +1,6 @@
-import { ChromeApiAction, TabIconDetails } from "./api";
+import { ChromeActionApi, TabIconDetails } from "./api";
 
-export class ChromeApiActionImpl implements ChromeApiAction {
+export class ChromeActionApiImpl implements ChromeActionApi {
   setIcon(details: TabIconDetails): void {
     chrome.action.setIcon(details);
   }

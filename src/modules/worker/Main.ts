@@ -1,8 +1,8 @@
+import { ChromeApiFactory } from "@/modules/chrome/factory";
 import { MessageServer } from "@/modules/chrome/message/MessageServer";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { RequestBlockServiceImpl } from "@/modules/services/RequestBlockServiceImpl";
 import { ServiceConfigurationStoreImpl } from "@/modules/store/ServiceConfigurationStoreImpl";
-import { ChromeApiFactory } from "@/modules/chrome/factory";
 
 export class Main {
   public run() {

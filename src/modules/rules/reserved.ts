@@ -1,5 +1,5 @@
-import { RuleActionType } from "../core/rules";
 import { Rule } from "@/modules/chrome/api";
+import { RuleActionType } from "@/modules/core/rules";
 
 export const RESERVED_RULE_ID_MAX = 10; // 1-10 is reserved
 

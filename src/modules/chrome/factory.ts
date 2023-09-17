@@ -1,32 +1,32 @@
+import { ChromeActionApiImpl } from "./action";
 import {
-  ChromeApiAction,
-  ChromeApiDeclarativeNetRequest,
-  ChromeApiRuntime,
-  ChromeApiStorage,
+  ChromeActionApi,
+  ChromeDeclarativeNetRequestApi,
+  ChromeRuntimeApi,
+  ChromeStorageApi,
 } from "./api";
-import { ChromeApiActionImpl } from "./action";
-import { ChromeApiDeclarativeNetRequestImpl } from "./declarativeNetRequest";
-import { ChromeApiStorageImpl } from "./storage";
-import { ChromeApiRuntimeImpl } from "./runtime";
+import { ChromeDeclarativeNetRequestApiImpl } from "./declarativeNetRequest";
+import { ChromeRuntimeApiImpl } from "./runtime";
+import { ChromeStorageApiImpl } from "./storage";
 
 export class ChromeApiFactory {
   public isExtension(): boolean {
     return !!chrome.declarativeNetRequest;
   }
 
-  public storage(): ChromeApiStorage {
-    return new ChromeApiStorageImpl(chrome.storage.sync);
+  public storage(): ChromeStorageApi {
+    return new ChromeStorageApiImpl(chrome.storage.sync);
   }
 
-  public declarativeNetRequest(): ChromeApiDeclarativeNetRequest {
-    return new ChromeApiDeclarativeNetRequestImpl();
+  public declarativeNetRequest(): ChromeDeclarativeNetRequestApi {
+    return new ChromeDeclarativeNetRequestApiImpl();
   }
 
-  public action(): ChromeApiAction {
-    return new ChromeApiActionImpl();
+  public action(): ChromeActionApi {
+    return new ChromeActionApiImpl();
   }
 
-  public runtime(): ChromeApiRuntime {
-    return new ChromeApiRuntimeImpl();
+  public runtime(): ChromeRuntimeApi {
+    return new ChromeRuntimeApiImpl();
   }
 }
