@@ -1,4 +1,4 @@
-import { As, ChakraProps, Heading } from "@chakra-ui/react";
+import { As, ChakraProps, Heading, Text } from "@chakra-ui/react";
 
 type Props = { as?: As } & ChakraProps;
 
@@ -6,12 +6,17 @@ export const Brand: React.FC<Props> = (props) => {
   return (
     <Heading
       fontFamily="'Lalezar', cursive"
-      letterSpacing="0.5px"
-      color="#2d2d2d"
+      fontWeight="normal"
+      letterSpacing="0.02rem"
       paddingTop="0.25rem"
       {...props}
     >
-      BLOCKoli
+      <Text as="span" color="#009B22">
+        BLOCK
+      </Text>
+      <Text as="span" color="#95C900">
+        oli
+      </Text>
     </Heading>
   );
 };

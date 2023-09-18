@@ -1,8 +1,8 @@
-import { ChromeApiFactory } from "@/modules/chrome/factory";
 import { Box } from "@chakra-ui/react";
 import { Header } from "@/features/popup/components/Header";
 import { Main } from "@/features/popup/components/Main";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
+import { ChromeApiFactory } from "@/modules/chrome/factory";
 
 const chrome = new ChromeApiFactory();
 const optionsUrl = chrome.runtime().getURL("options.html");

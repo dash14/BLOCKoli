@@ -29,11 +29,11 @@ function Options() {
         as="header"
         backgroundColor="#f6ffe7"
         borderBottom="1px solid #d6dFc7"
-        padding="14px 24px"
+        padding="8px 24px"
         alignItems="center"
       >
-        <BrandIcon marginRight="2px" />
-        <Brand as="h1" fontSize={28} />
+        <BrandIcon marginRight="4px" />
+        <Brand as="h1" fontSize={36} />
       </HStack>
       <Container
         maxW="960px"

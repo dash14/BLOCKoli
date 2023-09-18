@@ -9,12 +9,12 @@ export const Header: React.FC<Props> = (props) => {
     <HStack
       as="header"
       backgroundColor="#f6ffe7"
-      padding="10px 24px"
+      padding="6px 20px"
       justifyContent="space-between"
-      borderBottom="1px solid #d6dFc7;"
+      borderBottom="1px solid #d6dFc7"
       {...props}
     >
-      <Brand as="h1" fontSize={24} />
+      <Brand as="h1" fontSize={28} />
       <BrandIcon marginLeft="4px" />
     </HStack>
   );
