@@ -1,5 +1,5 @@
 import { Rule as ApiRule } from "@/modules/chrome/api";
-import { RuleWithId } from "@/modules/core/rules";
+import { RESOURCE_TYPES, RuleWithId } from "@/modules/core/rules";
 
 export function convertToApiRule(rules: RuleWithId[]): ApiRule[] {
   return rules.map((rule) => {
@@ -25,6 +25,10 @@ export function convertToApiRule(rules: RuleWithId[]): ApiRule[] {
     const resourceTypes = emptyToUndefined(rule.condition.resourceTypes);
     if (resourceTypes) {
       apiRule.condition.resourceTypes = resourceTypes;
+    } else {
+      // convert to specify all types
+      // (If empty, all frames except main_frame are targeted.)
+      apiRule.condition.resourceTypes = RESOURCE_TYPES;
     }
 
     // Only one of urlFilter or regexFilter can be specified.
