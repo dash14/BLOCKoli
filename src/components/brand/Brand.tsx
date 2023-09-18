@@ -7,7 +7,7 @@ export const Brand: React.FC<Props> = (props) => {
     <Heading
       fontFamily="'Lalezar', cursive"
       letterSpacing="0.5px"
-      fontWeight="normal"
+      color="#2d2d2d"
       paddingTop="0.25rem"
       {...props}
     >
