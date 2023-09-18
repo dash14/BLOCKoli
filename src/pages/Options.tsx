@@ -59,7 +59,7 @@ function Options() {
         </Box>
       </Container>
 
-      <Container as="footer" textAlign="center">
+      <Container as="footer" textAlign="center" marginBottom={4}>
         <Copyright />
       </Container>
     </>
