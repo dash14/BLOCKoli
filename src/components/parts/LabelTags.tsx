@@ -27,9 +27,11 @@ export const LabelTags: React.FC<Props> = ({
     const observer = new ResizeObserver(() => {
       const newWidth = Array.from(element.children).reduce((newWidth, elm) => {
         const div = elm as HTMLDivElement;
-        return Math.max(div.offsetLeft + div.offsetWidth + 1, newWidth);
+        return Math.max(div.offsetLeft + div.offsetWidth, newWidth);
       }, 0);
-      setWidth(newWidth);
+      if (newWidth > 0) {
+        setWidth(newWidth + 1); // 1: additional margin
+      }
     });
     observer.observe(element);
     return () => {
@@ -43,7 +45,7 @@ export const LabelTags: React.FC<Props> = ({
       position="relative"
       flexWrap="wrap"
       flex="1"
-      maxWidth={width === "auto" ? "auto" : `${width}px`}
+      maxWidth={width}
       gap="5px"
       {...props}
     >
