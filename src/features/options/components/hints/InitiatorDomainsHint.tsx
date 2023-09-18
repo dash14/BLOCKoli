@@ -6,7 +6,7 @@ export const InitiatorDomainsHint: React.FC = () => (
     The rule will only match network requests originating from the list of
     initiator domains. If the list is empty, the rule is applied to requests
     from all domains.
-    <Box>Note:</Box>
+    <Box marginTop={1}>Note:</Box>
     <UnorderedList marginLeft={5}>
       <ListItem>Sub-domains like "a.example.com" are also allowed.</ListItem>
       <ListItem>The entries must consist of only ascii characters.</ListItem>

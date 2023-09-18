@@ -29,6 +29,9 @@ import {
 } from "@/modules/core/rules";
 import { useRuleEdit } from "../../hooks/useRuleEdit";
 import { InitiatorDomainsHint } from "../hints/InitiatorDomainsHint";
+import { RegexHint } from "../hints/RegexHint";
+import { RequestMethodsHint } from "../hints/RequestMethodsHint";
+import { ResourceTypesHint } from "../hints/ResourceTypesHint";
 import { ControlButtons } from "./ControlButtons";
 import { RuleContainer } from "./RuleContainer";
 import { RuleMenu } from "./RuleMenu";
@@ -76,6 +79,7 @@ export const RuleEdit: React.FC<Props> = ({
       display: "flex",
       flexDirection: "row",
       width: "auto",
+      alignItems: "start",
     }),
     label: css({
       fontSize: 14,
@@ -164,8 +168,12 @@ export const RuleEdit: React.FC<Props> = ({
                 empty="(ALL)"
                 options={requestMethodOptions}
                 values={rule.condition.requestMethods}
+                marginTop="2px"
               />
             )}
+            <Box marginLeft={2}>
+              <RequestMethodsHint />
+            </Box>
           </FormControl>
 
           {/* URL Filter */}
@@ -190,13 +198,13 @@ export const RuleEdit: React.FC<Props> = ({
                       }
                     />
                   ) : (
-                    <>
+                    <Box marginTop="2px">
                       {rule.condition.urlFilter ? (
                         <Tag>{rule.condition.urlFilter}</Tag>
                       ) : (
-                        <Tag>(Not specified)</Tag>
+                        <Tag fontWeight="normal">(Not specified)</Tag>
                       )}
-                    </>
+                    </Box>
                   )}
                   <FormErrorMessage marginTop={1}>
                     {regexInvalidReason}
@@ -216,12 +224,10 @@ export const RuleEdit: React.FC<Props> = ({
                   </Checkbox>
                 </FormControl>
               ) : (
-                <Text as="span">
-                  {rule.condition.isRegexFilter && rule.condition.urlFilter
-                    ? " (regex)"
-                    : ""}
-                </Text>
+                rule.condition.isRegexFilter &&
+                rule.condition.urlFilter && <Text as="span">" (regex)"</Text>
               )}
+              <RegexHint />
             </HStack>
             {(isEditing || rule.condition.urlFilter) && (
               <Text as="div" css={styles.note}>
@@ -253,12 +259,11 @@ export const RuleEdit: React.FC<Props> = ({
                   width={450}
                 />
               ) : (
-                <HStack>
-                  <Tags
-                    empty="(Not specified)"
-                    values={rule.condition.initiatorDomains}
-                  />
-                </HStack>
+                <Tags
+                  empty="(Not specified)"
+                  values={rule.condition.initiatorDomains}
+                  marginTop="2px"
+                />
               )}
               <Box marginLeft={2}>
                 <InitiatorDomainsHint />
@@ -276,21 +281,25 @@ export const RuleEdit: React.FC<Props> = ({
           {/* Resource Types */}
           <FormControl css={styles.formControl}>
             <FormLabel css={styles.label}>Resource Types</FormLabel>
-            <Box width={450}>
-              {isEditing ? (
+            {isEditing ? (
+              <Box width={450}>
                 <MultipleSelect
                   placeholder="(ALL)"
                   options={resourceTypeOptions}
                   value={rule.condition.resourceTypes}
                   onChange={updateResourceTypes}
                 />
-              ) : (
-                <LabelTags
-                  empty="(ALL)"
-                  options={resourceTypeOptions}
-                  values={rule.condition.resourceTypes}
-                />
-              )}
+              </Box>
+            ) : (
+              <LabelTags
+                empty="(ALL)"
+                options={resourceTypeOptions}
+                values={rule.condition.resourceTypes}
+                marginTop="2px"
+              />
+            )}
+            <Box marginLeft={2}>
+              <ResourceTypesHint />
             </Box>
           </FormControl>
         </VStack>
