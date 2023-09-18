@@ -18,6 +18,7 @@ import {
 } from "@chakra-ui/react";
 import { css } from "@emotion/react";
 import { MultipleSelect } from "@/components/forms/MultipleSelect";
+import { DisableTag } from "@/components/parts/DisableTag";
 import { ExternalLink } from "@/components/parts/ExternalLink";
 import { LabelTags } from "@/components/parts/LabelTags";
 import { Tags } from "@/components/parts/Tags";
@@ -202,7 +203,7 @@ export const RuleEdit: React.FC<Props> = ({
                       {rule.condition.urlFilter ? (
                         <Tag>{rule.condition.urlFilter}</Tag>
                       ) : (
-                        <Tag fontWeight="normal">(Not specified)</Tag>
+                        <DisableTag>(Not specified)</DisableTag>
                       )}
                     </Box>
                   )}
