@@ -15,7 +15,7 @@ export class ChromeApiFactory {
   }
 
   public storage(): ChromeStorageApi {
-    return new ChromeStorageApiImpl(chrome.storage.sync);
+    return new ChromeStorageApiImpl(chrome.storage.local);
   }
 
   public declarativeNetRequest(): ChromeDeclarativeNetRequestApi {
