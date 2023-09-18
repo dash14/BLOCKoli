@@ -67,6 +67,12 @@ export const RESOURCE_TYPES = [
 
 export interface RuleCondition {
   /**
+   * The rule will only match network requests when the domain matches one from the list of requestDomains.
+   * If the list is omitted, the rule is applied to requests from all domains.
+   */
+  requestDomains?: string[] | undefined;
+
+  /**
    * The rule will only match network requests originating from the list of initiatorDomains.
    */
   initiatorDomains?: string[] | undefined;

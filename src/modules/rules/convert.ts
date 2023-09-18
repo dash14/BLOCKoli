@@ -3,24 +3,39 @@ import { RuleWithId } from "@/modules/core/rules";
 
 export function convertToApiRule(rules: RuleWithId[]): ApiRule[] {
   return rules.map((rule) => {
-    return {
+    const apiRule = {
       id: rule.id,
       action: rule.action,
-      condition: {
-        // An empty list is not allowed.
-        initiatorDomains: emptyToUndefined(rule.condition.initiatorDomains),
-        requestMethods: emptyToUndefined(rule.condition.requestMethods),
-        resourceTypes: emptyToUndefined(rule.condition.resourceTypes),
-
-        // Only one of urlFilter or regexFilter can be specified.
-        urlFilter: rule.condition.isRegexFilter
-          ? undefined
-          : rule.condition.urlFilter,
-        regexFilter: rule.condition.isRegexFilter
-          ? rule.condition.urlFilter
-          : undefined,
-      },
+      condition: {},
     } as ApiRule;
+
+    // An empty list is not allowed.
+    const requestDomains = emptyToUndefined(rule.condition.requestDomains);
+    if (requestDomains) {
+      apiRule.condition.requestDomains = requestDomains;
+    }
+    const initiatorDomains = emptyToUndefined(rule.condition.initiatorDomains);
+    if (initiatorDomains) {
+      apiRule.condition.initiatorDomains = initiatorDomains;
+    }
+    const requestMethods = emptyToUndefined(rule.condition.requestMethods);
+    if (requestMethods) {
+      apiRule.condition.requestMethods = requestMethods;
+    }
+    const resourceTypes = emptyToUndefined(rule.condition.resourceTypes);
+    if (resourceTypes) {
+      apiRule.condition.resourceTypes = resourceTypes;
+    }
+
+    // Only one of urlFilter or regexFilter can be specified.
+    if (rule.condition.urlFilter) {
+      if (rule.condition.isRegexFilter) {
+        apiRule.condition.regexFilter = rule.condition.urlFilter;
+      } else {
+        apiRule.condition.urlFilter = rule.condition.urlFilter;
+      }
+    }
+    return apiRule;
   });
 }
 

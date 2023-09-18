@@ -248,6 +248,7 @@ function isEqualRule(rule1: ApiRule, rule2: ApiRule) {
     // action
     isEqual(rule1.action, rule2.action) &&
     // condition
+    isEqual(rule1.condition.requestDomains, rule2.condition.requestDomains) &&
     isEqual(
       rule1.condition.initiatorDomains,
       rule2.condition.initiatorDomains

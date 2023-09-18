@@ -31,6 +31,7 @@ import {
 import { useRuleEdit } from "../../hooks/useRuleEdit";
 import { InitiatorDomainsHint } from "../hints/InitiatorDomainsHint";
 import { RegexHint } from "../hints/RegexHint";
+import { RequestDomainsHint } from "../hints/RequestDomainsHint";
 import { RequestMethodsHint } from "../hints/RequestMethodsHint";
 import { ResourceTypesHint } from "../hints/ResourceTypesHint";
 import { ControlButtons } from "./ControlButtons";
@@ -67,10 +68,12 @@ export const RuleEdit: React.FC<Props> = ({
     updateResourceTypes,
     updateUrlFilter,
     updateIsRegexFilter,
+    updateRequestDomains,
     updateInitiatorDomains,
     isEditing,
     rule,
-    domainsText,
+    requestDomainsText,
+    initiatorDomainsText,
     isValid,
     regexInvalidReason,
   } = useRuleEdit(initialRule, onChange, onCancel, onRemove);
@@ -148,9 +151,14 @@ export const RuleEdit: React.FC<Props> = ({
       </Box>
 
       <Box marginTop={4} marginBottom={4}>
-        <Heading as="h4" size="sm" marginBottom={2}>
-          Condition
-        </Heading>
+        <HStack alignItems="baseline">
+          <Heading as="h4" size="sm" marginBottom={2}>
+            Condition
+          </Heading>
+          <Text as="div" fontSize={13} color="#666">
+            (All rules are optional, but at least one must be specified)
+          </Text>
+        </HStack>
         <VStack marginLeft="20px" alignItems="start" gap={4}>
           {/* Request Methods */}
           <FormControl css={styles.formControl}>
@@ -195,7 +203,7 @@ export const RuleEdit: React.FC<Props> = ({
                       placeholder={
                         rule.condition.isRegexFilter
                           ? "^https?://www\\.example\\.com/api/"
-                          : "||www.example.com"
+                          : "||www.example.com*^123"
                       }
                     />
                   ) : (
@@ -247,13 +255,38 @@ export const RuleEdit: React.FC<Props> = ({
             )}
           </Box>
 
+          {/* Request Domains */}
+          <Box>
+            <FormControl css={styles.formControl}>
+              <FormLabel css={styles.label}>Request Domains</FormLabel>
+              {isEditing ? (
+                <Input
+                  value={requestDomainsText}
+                  onChange={(e) => updateRequestDomains(e.target.value)}
+                  variant="outline"
+                  placeholder="www.example.com, ..."
+                  width={450}
+                />
+              ) : (
+                <Tags
+                  empty="(Not specified)"
+                  values={rule.condition.requestDomains}
+                  marginTop="2px"
+                />
+              )}
+              <Box marginLeft={2}>
+                <RequestDomainsHint />
+              </Box>
+            </FormControl>
+          </Box>
+
           {/* Initiator Domains */}
           <Box>
             <FormControl css={styles.formControl}>
               <FormLabel css={styles.label}>Initiator Domains</FormLabel>
               {isEditing ? (
                 <Input
-                  value={domainsText}
+                  value={initiatorDomainsText}
                   onChange={(e) => updateInitiatorDomains(e.target.value)}
                   variant="outline"
                   placeholder="www.example.com, ..."
@@ -270,13 +303,6 @@ export const RuleEdit: React.FC<Props> = ({
                 <InitiatorDomainsHint />
               </Box>
             </FormControl>
-
-            {isEditing && (
-              <Text as="div" css={styles.note}>
-                Specify the origination of the request as a comma-separated
-                list.
-              </Text>
-            )}
           </Box>
 
           {/* Resource Types */}

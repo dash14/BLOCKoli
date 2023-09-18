@@ -41,6 +41,7 @@ export class RuleValidator {
 
     if (
       !!rule.condition.requestMethods?.length ||
+      !!rule.condition.requestDomains?.length ||
       !!rule.condition.initiatorDomains?.length ||
       !!rule.condition.urlFilter ||
       !!rule.condition.resourceTypes?.length

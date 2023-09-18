@@ -19,7 +19,10 @@ export function useRuleEdit(
 ) {
   const [isEditing, setIsEditing] = useState(false);
   const [rule, setRuleObject] = useState(initialRule);
-  const [domainsText, setDomainsText] = useState(
+  const [requestDomainsText, setRequestDomainsText] = useState(
+    rule.condition.requestDomains?.join(",") ?? ""
+  );
+  const [initiatorDomainsText, setInitiatorDomainsText] = useState(
     rule.condition.initiatorDomains?.join(",") ?? ""
   );
   const [isValid, setIsValid] = useState(false);
@@ -89,8 +92,21 @@ export function useRuleEdit(
     validate(newRule);
   }
 
+  function updateRequestDomains(text: string) {
+    setRequestDomainsText(text);
+    const domains = text
+      .split(",")
+      .map((text) => text.trim())
+      .filter(Boolean);
+
+    const newRule = cloneDeep(rule);
+    newRule.condition.requestDomains = domains;
+    setRuleObject(newRule);
+    validate(newRule);
+  }
+
   function updateInitiatorDomains(text: string) {
-    setDomainsText(text);
+    setInitiatorDomainsText(text);
     const domains = text
       .split(",")
       .map((text) => text.trim())
@@ -125,10 +141,12 @@ export function useRuleEdit(
     updateResourceTypes,
     updateUrlFilter,
     updateIsRegexFilter,
+    updateRequestDomains,
     updateInitiatorDomains,
     isEditing,
     rule,
-    domainsText,
+    requestDomainsText,
+    initiatorDomainsText,
     isValid,
     regexInvalidReason,
   };
