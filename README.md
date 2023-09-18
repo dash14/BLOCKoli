@@ -14,6 +14,7 @@ The following features are available:
 The conditions for blocking or allowing, definable as rules, are as follows:
 * Request Methods
 * URL
+* Request Domains
 * Initiator Domains
 * Resource Types
 
