@@ -1,4 +1,4 @@
-import { ChakraProps, HStack, Img } from "@chakra-ui/react";
+import { ChakraProps, HStack } from "@chakra-ui/react";
 import { Brand } from "@/components/brand/Brand";
 import { BrandIcon } from "@/components/brand/BrandIcon";
 

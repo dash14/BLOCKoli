@@ -1,9 +1,9 @@
-import { Box, HStack, IconButton, Switch, Text } from "@chakra-ui/react";
-import { RepeatIcon } from "@chakra-ui/icons";
-import { MatchedRulesTable } from "@/features/popup/components/MatchedRulesTable";
-import { ConfigureRulesLink } from "./ConfigureRulesLink";
-import { MatchedRule, RuleSets } from "@/modules/core/rules";
 import { useEffect, useState } from "react";
+import { RepeatIcon } from "@chakra-ui/icons";
+import { Box, HStack, IconButton, Switch, Text } from "@chakra-ui/react";
+import { MatchedRulesTable } from "@/features/popup/components/MatchedRulesTable";
+import { MatchedRule, RuleSets } from "@/modules/core/rules";
+import { ConfigureRulesLink } from "./ConfigureRulesLink";
 import { NoRules } from "./NoRules";
 
 type Props = {

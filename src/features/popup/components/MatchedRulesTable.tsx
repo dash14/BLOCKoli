@@ -1,4 +1,9 @@
 import {
+  CheckCircleIcon,
+  NotAllowedIcon,
+  QuestionOutlineIcon,
+} from "@chakra-ui/icons";
+import {
   Box,
   ChakraProps,
   Table,
@@ -9,12 +14,7 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { MatchedRule } from "@/modules/clients/PopupController";
-import {
-  CheckCircleIcon,
-  NotAllowedIcon,
-  QuestionOutlineIcon,
-} from "@chakra-ui/icons";
+import { MatchedRule } from "@/modules/core/rules";
 
 type Props = {
   matchedRules: MatchedRule[];
@@ -35,7 +35,14 @@ export const MatchedRulesTable: React.FC<Props> = ({
             backgroundColor="#eee"
           >
             <Tr>
-              <Th textTransform="none">timestamp</Th>
+              <Th
+                width="90px"
+                textTransform="none"
+                paddingLeft="10px"
+                paddingRight="6px"
+              >
+                timestamp
+              </Th>
               <Th textTransform="none">rule</Th>
               <Th width="20px" paddingLeft="6px" paddingRight="10px">
                 <QuestionOutlineIcon />
@@ -45,7 +52,12 @@ export const MatchedRulesTable: React.FC<Props> = ({
           <Tbody>
             {matchedRules.map((rule, i) => (
               <Tr key={i}>
-                <Td fontSize="12px" paddingY="4px">
+                <Td
+                  width="90px"
+                  fontSize="12px"
+                  paddingY="4px"
+                  paddingRight="6px"
+                >
                   {new Date(rule.timeStamp).toLocaleTimeString()}
                 </Td>
                 <Td
