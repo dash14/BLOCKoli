@@ -6,6 +6,11 @@ easy configuration.
 
 ![BLOCKoli](./images/brand.png)
 
+For example, it is useful in the following situations:
+* In user support operations for web services, block only POST requests for the target website to prevent inadvertent modification of user data.
+* In web development, block specific requests and make them fail to check the system behavior.
+* When using a pay-as-you-go network, suppress communication charges by blocking image and media resources.
+
 The following features are available:
 * Define the conditions for blocking or allowing (exceptions to blocking) network requests that occur on the browser as rules
 * Enable or disable entire rules
