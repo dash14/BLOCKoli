@@ -46,7 +46,7 @@ function Options() {
 
           <HStack marginY={10}>
             <Text fontSize={18} marginRight={10}>
-              Enable blocking rules
+              Enable rules
             </Text>
             <Switch
               isChecked={enabled}

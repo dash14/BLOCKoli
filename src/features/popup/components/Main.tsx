@@ -39,7 +39,7 @@ export const Main: React.FC<Props> = ({
       ) : (
         <>
           <HStack marginTop="20px" justifyContent="space-between">
-            <Text fontSize={18}>Enable blocking rules</Text>
+            <Text fontSize={18}>Enable rules</Text>
             <Switch
               isChecked={isServiceEnabled}
               onChange={(e) => changeServiceState(e.target.checked)}
