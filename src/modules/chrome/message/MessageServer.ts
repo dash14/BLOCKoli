@@ -41,7 +41,7 @@ export class MessageServer<T extends ServiceBase>
   private buildMessageListener(serviceObject: unknown) {
     return (
       message: Message,
-      sender: chrome.runtime.MessageSender,
+      _sender: chrome.runtime.MessageSender,
       sendResponse: (message: ResponseMessage) => void
     ): boolean => {
       if (message.type !== "request") {

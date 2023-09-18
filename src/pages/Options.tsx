@@ -15,10 +15,10 @@ import { Copyright } from "@/components/brand/Copyright";
 import { ExternalLink } from "@/components/parts/ExternalLink";
 import { RuleSetsEdit } from "@/features/options/components/ruleset/RuleSetsEdit";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
-import { useI18n } from "../hooks/useI18n";
+// import { useI18n } from "../hooks/useI18n";
 
 function Options() {
-  const i18n = useI18n();
+  // const i18n = useI18n();
 
   const { loaded, enabled, changeState, ruleSets, updateRuleSets } =
     useRequestBlockClient();

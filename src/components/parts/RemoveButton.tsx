@@ -1,4 +1,3 @@
-import { CSSProperties } from "react";
 import { DeleteIcon } from "@chakra-ui/icons";
 import { Button, ChakraProps, useDisclosure } from "@chakra-ui/react";
 import { RemoveDialog } from "./RemoveDialog";
