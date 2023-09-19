@@ -1,11 +1,13 @@
 import { ExternalLinkIcon, SettingsIcon } from "@chakra-ui/icons";
 import { Link, Text } from "@chakra-ui/react";
+import { useI18n } from "@/hooks/useI18n";
 
 type Props = {
   optionsUrl: string;
 };
 
 export const ConfigureRulesLink: React.FC<Props> = ({ optionsUrl }) => {
+  const i18n = useI18n();
   return (
     <Text fontSize={16}>
       <Link
@@ -18,7 +20,7 @@ export const ConfigureRulesLink: React.FC<Props> = ({ optionsUrl }) => {
         gap="3px"
       >
         <SettingsIcon />
-        Configure rules
+        {i18n["ConfigureRules"]}
         <ExternalLinkIcon />
       </Link>
     </Text>

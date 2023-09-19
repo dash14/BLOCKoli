@@ -1,6 +1,7 @@
 import { EditIcon, SmallCloseIcon } from "@chakra-ui/icons";
-import { Button, ButtonGroup } from "@chakra-ui/react";
+import { Button, ButtonGroup, ChakraProps } from "@chakra-ui/react";
 import { RemoveButton } from "@/components/parts/RemoveButton";
+import { useI18n } from "@/hooks/useI18n";
 
 type Props = {
   save: () => void;
@@ -8,7 +9,7 @@ type Props = {
   remove: () => void;
   isValid: boolean;
   isRemoveEnabled: boolean;
-};
+} & ChakraProps;
 
 export const ControlButtons: React.FC<Props> = ({
   save,
@@ -16,18 +17,20 @@ export const ControlButtons: React.FC<Props> = ({
   remove,
   isValid,
   isRemoveEnabled,
+  ...props
 }) => {
+  const i18n = useI18n();
   return (
-    <ButtonGroup size="sm" width="100%">
+    <ButtonGroup size="sm" width="100%" {...props}>
       <Button leftIcon={<EditIcon />} onClick={save} isDisabled={!isValid}>
-        Save
+        {i18n["Save"]}
       </Button>
       <Button variant="outline" leftIcon={<SmallCloseIcon />} onClick={cancel}>
-        Cancel
+        {i18n["Cancel"]}
       </Button>
       {isRemoveEnabled && (
         <RemoveButton
-          title="Remove the rule"
+          title={i18n["remove_rule_confirmation_title"]}
           onPerform={remove}
           marginLeft="auto"
         />

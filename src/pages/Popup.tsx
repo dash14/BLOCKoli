@@ -7,7 +7,7 @@ import { ChromeApiFactory } from "@/modules/chrome/factory";
 const chrome = new ChromeApiFactory();
 const optionsUrl = chrome.runtime().getURL("options.html");
 
-function Popup() {
+const Popup: React.FC = () => {
   const { loaded, enabled, ruleSets, changeState, getMatchedRule } =
     useRequestBlockClient();
 
@@ -26,6 +26,6 @@ function Popup() {
       )}
     </Box>
   );
-}
+};
 
 export default Popup;

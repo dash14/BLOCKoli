@@ -15,10 +15,10 @@ import { Copyright } from "@/components/brand/Copyright";
 import { ExternalLink } from "@/components/parts/ExternalLink";
 import { RuleSetsEdit } from "@/features/options/components/ruleset/RuleSetsEdit";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
-// import { useI18n } from "../hooks/useI18n";
+import { useI18n } from "../hooks/useI18n";
 
-function Options() {
-  // const i18n = useI18n();
+const Options: React.FC = () => {
+  const i18n = useI18n();
 
   const { loaded, enabled, changeState, ruleSets, updateRuleSets } =
     useRequestBlockClient();
@@ -41,12 +41,12 @@ function Options() {
       >
         <Box borderWidth="1px" borderRadius="lg" marginY="6" padding="8">
           <Heading as="h1" fontSize={28}>
-            Options
+            {i18n["Options"]}
           </Heading>
 
           <HStack marginY={10}>
             <Text fontSize={18} marginRight={10}>
-              Enable rules
+              {i18n["EnableRules"]}
             </Text>
             <Switch
               isChecked={enabled}
@@ -55,7 +55,7 @@ function Options() {
           </HStack>
 
           <Heading as="h2" fontSize={18} fontWeight="normal" marginBottom={4}>
-            Rule Sets:
+            {i18n["RuleSets"]}:
           </Heading>
 
           <RuleSetsEdit ruleSets={ruleSets} onChange={updateRuleSets} />
@@ -72,22 +72,16 @@ function Options() {
         paddingY={2}
         borderRadius="0.5rem"
       >
-        <Text as="div">Notes:</Text>
+        <Text as="div">{i18n["Notice"]}:</Text>
         <UnorderedList>
           <ListItem>
-            The network blocking and passing rules provided by this extension
-            utilize the chrome.declarativeNetRequest API. As such, the
-            limitations of this API still applied. See{" "}
+            {i18n["notice1_1"]}{" "}
             <ExternalLink href="https://developer.chrome.com/docs/extensions/reference/declarativeNetRequest/#limits">
               Rules limits
             </ExternalLink>{" "}
-            in the API reference for more information about the limits.
+            {i18n["notice1_2"]}
           </ListItem>
-          <ListItem>
-            Under no circumstances will the author of this extension,
-            dash14.ack, is not responsible for any loss, damage or inconvenience
-            caused by the use of this extension.
-          </ListItem>
+          <ListItem>{i18n["notice_2"]}</ListItem>
         </UnorderedList>
       </Container>
 
@@ -96,6 +90,6 @@ function Options() {
       </Container>
     </>
   );
-}
+};
 
 export default Options;

@@ -14,6 +14,7 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
+import { useI18n } from "@/hooks/useI18n";
 import { MatchedRule } from "@/modules/core/rules";
 
 type Props = {
@@ -24,6 +25,7 @@ export const MatchedRulesTable: React.FC<Props> = ({
   matchedRules,
   ...props
 }) => {
+  const i18n = useI18n();
   return (
     <Box overflowY="auto" border="1px solid #ccc" borderRadius="6px" {...props}>
       <TableContainer overflowX="unset" overflowY="unset">
@@ -41,9 +43,11 @@ export const MatchedRulesTable: React.FC<Props> = ({
                 paddingLeft="10px"
                 paddingRight="6px"
               >
-                timestamp
+                {i18n["table_MatchedRules_column_timestamp"]}
               </Th>
-              <Th textTransform="none">rule</Th>
+              <Th textTransform="none">
+                {i18n["table_MatchedRules_column_rule"]}
+              </Th>
               <Th width="20px" paddingLeft="6px" paddingRight="10px">
                 <QuestionOutlineIcon />
               </Th>

@@ -14,7 +14,7 @@ export const RuleContainer: React.FC<Props> = ({
     <Box
       position="relative"
       paddingX={6}
-      paddingY={4}
+      paddingY={5}
       border="solid 1px #dfdfdf"
       borderRadius={10}
       {...(isEditing && {

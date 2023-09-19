@@ -1,22 +1,22 @@
 import { Box, ListItem, UnorderedList } from "@chakra-ui/react";
 import { HintPopover } from "@/components/parts/HintPopover";
+import { useI18n } from "@/hooks/useI18n";
 
-export const InitiatorDomainsHint: React.FC = () => (
-  <HintPopover title="Initiator Domains" width={400}>
-    Specify the origination of the request as a comma-separated list.
-    <br />
-    The rule will only match network requests originating from the list of
-    initiator domains. If the list is empty, the rule is applied to requests
-    from all domains.
-    <Box marginTop={1}>Note:</Box>
-    <UnorderedList marginLeft={5}>
-      <ListItem>Sub-domains like "a.example.com" are also allowed.</ListItem>
-      <ListItem>The entries must consist of only ascii characters.</ListItem>
-      <ListItem>Use punycode encoding for internationalized domains.</ListItem>
-      <ListItem>
-        This matches against the request initiator and not the request url.
-      </ListItem>
-      <ListItem>Sub-domains of the listed domains are also matched.</ListItem>
-    </UnorderedList>
-  </HintPopover>
-);
+export const InitiatorDomainsHint: React.FC = () => {
+  const i18n = useI18n();
+  return (
+    <HintPopover title={i18n["InitiatorDomains"]} width={400}>
+      {i18n["hint_InitiatorDomains_1"]}
+      <br />
+      {i18n["hint_InitiatorDomains_2"]}
+      <Box marginTop={1}>{i18n["hint_Note"]}:</Box>
+      <UnorderedList marginLeft={5}>
+        <ListItem>{i18n["hint_Domains_note_1"]}</ListItem>
+        <ListItem>{i18n["hint_Domains_note_2"]}</ListItem>
+        <ListItem>{i18n["hint_Domains_note_3"]}</ListItem>
+        <ListItem>{i18n["hint_InitiatorDomains_note_1"]}</ListItem>
+        <ListItem>{i18n["hint_Domains_note_4"]}</ListItem>
+      </UnorderedList>
+    </HintPopover>
+  );
+};

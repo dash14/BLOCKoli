@@ -22,13 +22,14 @@ import { DisableTag } from "@/components/parts/DisableTag";
 import { ExternalLink } from "@/components/parts/ExternalLink";
 import { LabelTags } from "@/components/parts/LabelTags";
 import { Tags } from "@/components/parts/Tags";
+import { useRuleEdit } from "@/features/options/hooks/useRuleEdit";
+import { useI18n } from "@/hooks/useI18n";
 import {
   REQUEST_METHODS,
   RESOURCE_TYPES,
   Rule,
   RuleActionType,
 } from "@/modules/core/rules";
-import { useRuleEdit } from "../../hooks/useRuleEdit";
 import { InitiatorDomainsHint } from "../hints/InitiatorDomainsHint";
 import { RegexHint } from "../hints/RegexHint";
 import { RequestDomainsHint } from "../hints/RequestDomainsHint";
@@ -58,6 +59,7 @@ export const RuleEdit: React.FC<Props> = ({
   onCancel,
   onRemove,
 }) => {
+  const i18n = useI18n();
   const {
     save,
     cancel,
@@ -89,12 +91,12 @@ export const RuleEdit: React.FC<Props> = ({
       fontSize: 14,
       fontWeight: "normal",
       margin: 0,
-      width: "130px",
+      width: "145px",
       paddingTop: "2px",
     }),
     note: css({
       marginTop: "2px",
-      marginLeft: "130px",
+      marginLeft: "145px",
     }),
   };
 
@@ -103,7 +105,7 @@ export const RuleEdit: React.FC<Props> = ({
       <Box position="absolute" top={1} right={1}>
         {isEditing ? (
           <Tag size="sm" backgroundColor="blue.500" color="white">
-            Editing
+            {i18n["Editing"]}
           </Tag>
         ) : (
           <>
@@ -113,7 +115,7 @@ export const RuleEdit: React.FC<Props> = ({
               leftIcon={<EditIcon />}
               onClick={enterEditMode}
             >
-              Edit
+              {i18n["Edit"]}
             </Button>
             {isRemoveEnabled && <RuleMenu onRemove={remove} />}
           </>
@@ -121,17 +123,17 @@ export const RuleEdit: React.FC<Props> = ({
       </Box>
       <Box>
         <Heading as="h4" size="sm" marginBottom={2}>
-          Action
+          {i18n["Action"]}
         </Heading>
         <Box marginLeft="20px">
           {isEditing ? (
             <RadioGroup value={rule.action.type} onChange={updateAction}>
               <Stack direction="row">
                 <Radio value="block" colorScheme="red">
-                  block
+                  {i18n["action_block"]}
                 </Radio>
                 <Radio value="allow" colorScheme="green">
-                  allow
+                  {i18n["action_allow"]}
                 </Radio>
               </Stack>
             </RadioGroup>
@@ -150,23 +152,23 @@ export const RuleEdit: React.FC<Props> = ({
         </Box>
       </Box>
 
-      <Box marginTop={4} marginBottom={4}>
+      <Box marginTop={4}>
         <HStack alignItems="baseline">
           <Heading as="h4" size="sm" marginBottom={2}>
-            Condition
+            {i18n["Condition"]}
           </Heading>
           <Text as="div" fontSize={13} color="#666">
-            (All rules are optional, but at least one must be specified)
+            ({i18n["explain_condition"]})
           </Text>
         </HStack>
-        <VStack marginLeft="20px" alignItems="start" gap={4}>
+        <VStack marginLeft="20px" alignItems="start" gap={isEditing ? 5 : 2}>
           {/* Request Methods */}
           <FormControl css={styles.formControl}>
-            <FormLabel css={styles.label}>Request Methods</FormLabel>
+            <FormLabel css={styles.label}>{i18n["RequestMethods"]}</FormLabel>
             {isEditing ? (
-              <Box width={450}>
+              <Box width={410}>
                 <MultipleSelect
-                  placeholder="(ALL)"
+                  placeholder={i18n["ALL"]}
                   options={requestMethodOptions}
                   value={rule.condition.requestMethods}
                   onChange={updateRequestMethods}
@@ -174,7 +176,7 @@ export const RuleEdit: React.FC<Props> = ({
               </Box>
             ) : (
               <LabelTags
-                empty="(ALL)"
+                empty={i18n["ALL"]}
                 options={requestMethodOptions}
                 values={rule.condition.requestMethods}
                 marginTop="2px"
@@ -192,13 +194,13 @@ export const RuleEdit: React.FC<Props> = ({
                 css={styles.formControl}
                 isInvalid={!!regexInvalidReason}
               >
-                <FormLabel css={styles.label}>URL Filter</FormLabel>
+                <FormLabel css={styles.label}>{i18n["URLFilter"]}</FormLabel>
                 <Box>
                   {isEditing ? (
                     <Input
                       value={rule.condition.urlFilter ?? ""}
                       onChange={(e) => updateUrlFilter(e.target.value)}
-                      width={450}
+                      width={410}
                       variant="outline"
                       placeholder={
                         rule.condition.isRegexFilter
@@ -211,7 +213,7 @@ export const RuleEdit: React.FC<Props> = ({
                       {rule.condition.urlFilter ? (
                         <Tag>{rule.condition.urlFilter}</Tag>
                       ) : (
-                        <DisableTag>(Not specified)</DisableTag>
+                        <DisableTag>{i18n["NotSpecified"]}</DisableTag>
                       )}
                     </Box>
                   )}
@@ -229,7 +231,7 @@ export const RuleEdit: React.FC<Props> = ({
                     size="sm"
                     marginTop="3px"
                   >
-                    Use regex
+                    {i18n["UseRegex"]}
                   </Checkbox>
                 </FormControl>
               ) : (
@@ -258,18 +260,18 @@ export const RuleEdit: React.FC<Props> = ({
           {/* Request Domains */}
           <Box>
             <FormControl css={styles.formControl}>
-              <FormLabel css={styles.label}>Request Domains</FormLabel>
+              <FormLabel css={styles.label}>{i18n["RequestDomains"]}</FormLabel>
               {isEditing ? (
                 <Input
                   value={requestDomainsText}
                   onChange={(e) => updateRequestDomains(e.target.value)}
                   variant="outline"
                   placeholder="www.example.com, ..."
-                  width={450}
+                  width={410}
                 />
               ) : (
                 <Tags
-                  empty="(Not specified)"
+                  empty={i18n["NotSpecified"]}
                   values={rule.condition.requestDomains}
                   marginTop="2px"
                 />
@@ -283,18 +285,20 @@ export const RuleEdit: React.FC<Props> = ({
           {/* Initiator Domains */}
           <Box>
             <FormControl css={styles.formControl}>
-              <FormLabel css={styles.label}>Initiator Domains</FormLabel>
+              <FormLabel css={styles.label}>
+                {i18n["InitiatorDomains"]}
+              </FormLabel>
               {isEditing ? (
                 <Input
                   value={initiatorDomainsText}
                   onChange={(e) => updateInitiatorDomains(e.target.value)}
                   variant="outline"
                   placeholder="www.example.com, ..."
-                  width={450}
+                  width={410}
                 />
               ) : (
                 <Tags
-                  empty="(Not specified)"
+                  empty={i18n["NotSpecified"]}
                   values={rule.condition.initiatorDomains}
                   marginTop="2px"
                 />
@@ -307,11 +311,11 @@ export const RuleEdit: React.FC<Props> = ({
 
           {/* Resource Types */}
           <FormControl css={styles.formControl}>
-            <FormLabel css={styles.label}>Resource Types</FormLabel>
+            <FormLabel css={styles.label}>{i18n["ResourceTypes"]}</FormLabel>
             {isEditing ? (
-              <Box width={450}>
+              <Box width={410}>
                 <MultipleSelect
-                  placeholder="(ALL)"
+                  placeholder={i18n["ALL"]}
                   options={resourceTypeOptions}
                   value={rule.condition.resourceTypes}
                   onChange={updateResourceTypes}
@@ -319,7 +323,7 @@ export const RuleEdit: React.FC<Props> = ({
               </Box>
             ) : (
               <LabelTags
-                empty="(ALL)"
+                empty={i18n["ALL"]}
                 options={resourceTypeOptions}
                 values={rule.condition.resourceTypes}
                 marginTop="2px"
@@ -338,6 +342,7 @@ export const RuleEdit: React.FC<Props> = ({
           remove={remove}
           isValid={isValid}
           isRemoveEnabled={isRemoveEnabled}
+          marginTop={5}
         />
       )}
     </RuleContainer>

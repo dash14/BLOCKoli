@@ -2,13 +2,169 @@
   "Options": {
     "message": "Options"
   },
-  "GeneralSettings": {
-    "message": "General settings"
+  "EnableRules": {
+    "message": "Enable rules"
   },
-  "RuleSettings": {
-    "message": "Rule settings"
+  "RuleSets": {
+    "message": "Rule Sets"
   },
-  "AutoStart": {
-    "message": "Automatically start after manually stopped"
+  "Notice": {
+    "message": "Notice"
+  },
+  "notice1_1": {
+    "message": "The network blocking and passing rules provided by this extension utilize the chrome.declarativeNetRequest API. As such, the limitations of this API still applied. See"
+  },
+  "notice1_2": {
+    "message": "in the API reference for more information about the limits."
+  },
+  "notice_2": {
+    "message": "Under no circumstances will the author of this extension, dash14.ack, is not responsible for any loss, damage or inconvenience caused by the use of this extension."
+  },
+  "AddARuleSet": {
+    "message": "Add a Rule Set"
+  },
+  "AddARule": {
+    "message": "Add a Rule"
+  },
+  "RemoveTheRuleSet": {
+    "message": "Remove the Rule Set"
+  },
+  "RemoveTheRule": {
+    "message": "Remove the Rule"
+  },
+  "remove_rule_set_confirmation_title": {
+    "message": "Remove the Rule Set"
+  },
+  "remove_rule_confirmation_title": {
+    "message": "Remove the Rule"
+  },
+  "remove_confirmation": {
+    "message": "Are you sure you want to remove?"
+  },
+  "Cancel": {
+    "message": "Cancel"
+  },
+  "Save": {
+    "message": "Save"
+  },
+  "Remove": {
+    "message": "Remove"
+  },
+  "Editing": {
+    "message": "Editing"
+  },
+  "Edit": {
+    "message": "Edit"
+  },
+  "Action": {
+    "message": "Action"
+  },
+  "action_block": {
+    "message": "block"
+  },
+  "action_allow": {
+    "message": "allow"
+  },
+  "Condition": {
+    "message": "Condition"
+  },
+  "explain_condition": {
+    "message": "All rules are optional, but at least one must be specified"
+  },
+  "RequestMethods": {
+    "message": "Request Methods"
+  },
+  "URLFilter": {
+    "message": "URL Filter"
+  },
+  "UseRegex": {
+    "message": "Use regex"
+  },
+  "RequestDomains": {
+    "message": "Request Domains"
+  },
+  "InitiatorDomains": {
+    "message": "Initiator Domains"
+  },
+  "ResourceTypes": {
+    "message": "Resource Types"
+  },
+  "ALL": {
+    "message": "(ALL)"
+  },
+  "NotSpecified": {
+    "message": "(Not specified)"
+  },
+  "hint_Note": {
+    "message": "Note"
+  },
+  "hint_InitiatorDomains_1": {
+    "message": "Specify the origination of the request as a comma-separated list."
+  },
+  "hint_InitiatorDomains_2": {
+    "message": "The rule will only match network requests originating from the list of initiator domains. If the list is empty, the rule is applied to requests from all domains."
+  },
+  "hint_InitiatorDomains_note_1": {
+    "message": "This matches against the request initiator and not the request url."
+  },
+  "hint_UseRegex_title": {
+    "message": "Rules that use regex"
+  },
+  "hint_UseRegex_1": {
+    "message": "Regular expression to match against the network request url. This follows the"
+  },
+  "hint_UseRegex_2": {
+    "message": "."
+  },
+  "hint_UseRegex_note_1": {
+    "message": "The regexFilter must be composed of only ASCII characters. This is matched against a url where the host is encoded in the punycode format (in case of internationalized domains) and any other non-ascii characters are url encoded in utf-8."
+  },
+  "hint_UseRegex_note_2": {
+    "message": "The total number of regex rules of each type cannot exceed 1000."
+  },
+  "hint_UseRegex_note_3": {
+    "message": "Each rule must be less than 2KB once compiled. This roughly correlates with the complexity of the rule. If you try to load a rule that exceeds this limit, you will see a warning like the one below and the rule will be ignored."
+  },
+  "hint_UseRegex_note_3_message": {
+    "message": "rules_1.json: Rule with id 1 specified a more complext regex than allowed as part of the \"regexFilter\" key."
+  },
+  "hint_RequestDomains_1": {
+    "message": "Specify the domains in the request url as a comma-separated list."
+  },
+  "hint_RequestDomains_2": {
+    "message": "The rule will only match network requests when the domain matches one from this list. If the list is omitted, the rule is applied to requests from all domains."
+  },
+  "hint_Domains_note_1": {
+    "message": "Sub-domains like \"a.example.com\" are also allowed."
+  },
+  "hint_Domains_note_2": {
+    "message": "The entries must consist of only ascii characters."
+  },
+  "hint_Domains_note_3": {
+    "message": "Use punycode encoding for internationalized domains."
+  },
+  "hint_Domains_note_4": {
+    "message": "Sub-domains of the listed domains are also matched."
+  },
+  "hint_RequestMethods_1": {
+    "message": "List of HTTP request methods which the rule can match."
+  },
+  "hint_RequestMethods_note_1": {
+    "message": "Specifying a requestMethods rule condition will also exclude non-HTTP(s) requests."
+  },
+  "hint_ResourceTypes_1": {
+    "message": "List of resource types which the rule can match."
+  },
+  "ConfigureRules": {
+    "message": "Configure rules"
+  },
+  "MatchedRulesInTabs": {
+    "message": "Matched rules in tabs (within 5 minutes)"
+  },
+  "table_MatchedRules_column_timestamp": {
+    "message": "timestamp"
+  },
+  "table_MatchedRules_column_rule": {
+    "message": "rule"
   }
 }

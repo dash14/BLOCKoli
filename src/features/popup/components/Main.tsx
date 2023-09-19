@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { RepeatIcon } from "@chakra-ui/icons";
 import { Box, HStack, IconButton, Switch, Text } from "@chakra-ui/react";
 import { MatchedRulesTable } from "@/features/popup/components/MatchedRulesTable";
+import { useI18n } from "@/hooks/useI18n";
 import { MatchedRule, RuleSets } from "@/modules/core/rules";
 import { ConfigureRulesLink } from "./ConfigureRulesLink";
 import { NoRules } from "./NoRules";
@@ -21,6 +22,7 @@ export const Main: React.FC<Props> = ({
   getMatchedRule,
   optionsUrl,
 }) => {
+  const i18n = useI18n();
   const [matchedRules, setMatchedRules] = useState<MatchedRule[]>([]);
 
   const updateMatchedRules = () => {
@@ -39,7 +41,7 @@ export const Main: React.FC<Props> = ({
       ) : (
         <>
           <HStack marginTop="20px" justifyContent="space-between">
-            <Text fontSize={18}>Enable rules</Text>
+            <Text fontSize={18}>{i18n["EnableRules"]}</Text>
             <Switch
               isChecked={isServiceEnabled}
               onChange={(e) => changeServiceState(e.target.checked)}
@@ -52,9 +54,7 @@ export const Main: React.FC<Props> = ({
 
           {/* Table title */}
           <HStack marginTop="10px" justifyContent="space-between">
-            <Text fontSize="14px">
-              Matched rules in tabs (within 5 minutes)
-            </Text>
+            <Text fontSize="14px">{i18n["MatchedRulesInTabs"]}</Text>
             <IconButton
               icon={<RepeatIcon />}
               aria-label="Refresh"

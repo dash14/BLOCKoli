@@ -8,13 +8,15 @@ import {
   MenuList,
   useDisclosure,
 } from "@chakra-ui/react";
-import { RemoveDialog } from "../../../../components/parts/RemoveDialog";
+import { RemoveDialog } from "@/components/parts/RemoveDialog";
+import { useI18n } from "@/hooks/useI18n";
 
 type Props = {
   onRemove: () => void;
 };
 
 export const RuleSetMenu: React.FC<Props> = ({ onRemove }) => {
+  const i18n = useI18n();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   function onClickDeleteMenu(event: MouseEvent) {
@@ -44,13 +46,13 @@ export const RuleSetMenu: React.FC<Props> = ({ onRemove }) => {
             color="red"
             onClick={(e) => onClickDeleteMenu(e)}
           >
-            Remove this Rule Set
+            {i18n["RemoveTheRuleSet"]}
           </MenuItem>
         </MenuList>
       </Menu>
 
       <RemoveDialog
-        title="Remove the Rule Set"
+        title={i18n["remove_rule_set_confirmation_title"]}
         isOpen={isOpen}
         onClose={onClose}
         onPerform={onClickRemoveInDialog}

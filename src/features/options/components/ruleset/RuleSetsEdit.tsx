@@ -15,6 +15,7 @@ import { CSSTransition } from "react-transition-group";
 import { EditableTitle } from "@/components/forms/EditableTitle";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
 import { RulesEdit } from "@/features/options/components/rule/RulesEdit";
+import { useI18n } from "@/hooks/useI18n";
 import { push } from "@/modules/core/array";
 import { RuleSets } from "@/modules/core/rules";
 import { useRuleSetsEdit } from "../../hooks/useRuleSetsEdit";
@@ -37,6 +38,8 @@ export const RuleSetsEdit: React.FC<Props> = ({
   ruleSets: originalRuleSets,
   onChange,
 }) => {
+  const i18n = useI18n();
+
   const [accordionOpenStates, setAccordionOpenStates] = useState<number[][]>(
     []
   );
@@ -112,7 +115,7 @@ export const RuleSetsEdit: React.FC<Props> = ({
           size="sm"
           onClick={addRuleSet}
         >
-          Add a Rule Set
+          {i18n["AddARuleSet"]}
         </Button>
       </Box>
     </>

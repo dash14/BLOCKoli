@@ -9,6 +9,7 @@ import {
   AlertDialogOverlay,
   Button,
 } from "@chakra-ui/react";
+import { useI18n } from "@/hooks/useI18n";
 
 type Props = {
   title?: string;
@@ -23,6 +24,7 @@ export const RemoveDialog: React.FC<Props> = ({
   onClose,
   onPerform,
 }) => {
+  const i18n = useI18n();
   const cancelRef = useRef<HTMLButtonElement>(null);
   return (
     <AlertDialog
@@ -38,14 +40,14 @@ export const RemoveDialog: React.FC<Props> = ({
         <AlertDialogHeader>{title ?? "Remove"}</AlertDialogHeader>
         <AlertDialogCloseButton />
         <AlertDialogBody fontSize={14}>
-          Are you sure you want to remove?
+          {i18n["remove_confirmation"]}
         </AlertDialogBody>
         <AlertDialogFooter>
           <Button ref={cancelRef} variant="outline" onClick={onClose}>
-            Cancel
+            {i18n["Cancel"]}
           </Button>
           <Button colorScheme="red" ml={3} onClick={onPerform}>
-            Remove
+            {i18n["Remove"]}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

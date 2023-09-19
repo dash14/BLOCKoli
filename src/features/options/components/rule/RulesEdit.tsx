@@ -3,12 +3,13 @@ import { Button } from "@chakra-ui/react";
 import { css } from "@emotion/react";
 import { CSSTransition } from "react-transition-group";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
+import { useRulesEdit } from "@/features/options/hooks/useRulesEdit";
+import { useI18n } from "@/hooks/useI18n";
 import {
   RULE_ID_EDITING,
   RuleWithId,
   newRuleTemplate,
 } from "@/modules/core/rules";
-import { useRulesEdit } from "../../hooks/useRulesEdit";
 import { RuleContainer } from "./RuleContainer";
 import { RuleEdit } from "./RuleEdit";
 
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
+  const i18n = useI18n();
   const { isAllowAdd, addRule, updateRule, removeRule, cancelEdit } =
     useRulesEdit(rules, onChange);
 
@@ -78,7 +80,7 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
             size="sm"
             onClick={addRule}
           >
-            Add a Rule
+            {i18n["AddARule"]}
           </Button>
         </RuleContainer>
       </CSSTransition>
