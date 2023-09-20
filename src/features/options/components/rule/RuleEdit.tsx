@@ -162,6 +162,58 @@ export const RuleEdit: React.FC<Props> = ({
           </Text>
         </HStack>
         <VStack marginLeft="20px" alignItems="start" gap={isEditing ? 5 : 2}>
+          {/* Request Domains */}
+          <Box>
+            <FormControl css={styles.formControl}>
+              <FormLabel css={styles.label}>{i18n["RequestDomains"]}</FormLabel>
+              {isEditing ? (
+                <Input
+                  value={requestDomainsText}
+                  onChange={(e) => updateRequestDomains(e.target.value)}
+                  variant="outline"
+                  placeholder="www.example.com, ..."
+                  width={410}
+                />
+              ) : (
+                <Tags
+                  empty={i18n["NotSpecified"]}
+                  values={rule.condition.requestDomains}
+                  marginTop="2px"
+                />
+              )}
+              <Box marginLeft={2}>
+                <RequestDomainsHint />
+              </Box>
+            </FormControl>
+          </Box>
+
+          {/* Initiator Domains */}
+          <Box>
+            <FormControl css={styles.formControl}>
+              <FormLabel css={styles.label}>
+                {i18n["InitiatorDomains"]}
+              </FormLabel>
+              {isEditing ? (
+                <Input
+                  value={initiatorDomainsText}
+                  onChange={(e) => updateInitiatorDomains(e.target.value)}
+                  variant="outline"
+                  placeholder="www.example.com, ..."
+                  width={410}
+                />
+              ) : (
+                <Tags
+                  empty={i18n["NotSpecified"]}
+                  values={rule.condition.initiatorDomains}
+                  marginTop="2px"
+                />
+              )}
+              <Box marginLeft={2}>
+                <InitiatorDomainsHint />
+              </Box>
+            </FormControl>
+          </Box>
+
           {/* Request Methods */}
           <FormControl css={styles.formControl}>
             <FormLabel css={styles.label}>{i18n["RequestMethods"]}</FormLabel>
@@ -258,58 +310,6 @@ export const RuleEdit: React.FC<Props> = ({
                 .
               </Text>
             )}
-          </Box>
-
-          {/* Request Domains */}
-          <Box>
-            <FormControl css={styles.formControl}>
-              <FormLabel css={styles.label}>{i18n["RequestDomains"]}</FormLabel>
-              {isEditing ? (
-                <Input
-                  value={requestDomainsText}
-                  onChange={(e) => updateRequestDomains(e.target.value)}
-                  variant="outline"
-                  placeholder="www.example.com, ..."
-                  width={410}
-                />
-              ) : (
-                <Tags
-                  empty={i18n["NotSpecified"]}
-                  values={rule.condition.requestDomains}
-                  marginTop="2px"
-                />
-              )}
-              <Box marginLeft={2}>
-                <RequestDomainsHint />
-              </Box>
-            </FormControl>
-          </Box>
-
-          {/* Initiator Domains */}
-          <Box>
-            <FormControl css={styles.formControl}>
-              <FormLabel css={styles.label}>
-                {i18n["InitiatorDomains"]}
-              </FormLabel>
-              {isEditing ? (
-                <Input
-                  value={initiatorDomainsText}
-                  onChange={(e) => updateInitiatorDomains(e.target.value)}
-                  variant="outline"
-                  placeholder="www.example.com, ..."
-                  width={410}
-                />
-              ) : (
-                <Tags
-                  empty={i18n["NotSpecified"]}
-                  values={rule.condition.initiatorDomains}
-                  marginTop="2px"
-                />
-              )}
-              <Box marginLeft={2}>
-                <InitiatorDomainsHint />
-              </Box>
-            </FormControl>
           </Box>
 
           {/* Resource Types */}
