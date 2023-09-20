@@ -58,41 +58,48 @@ const Options: React.FC = () => {
         </Select>
       </HStack>
       <Container
-        maxW="960px"
+        width="930px"
+        minW="930px"
+        maxW="100%"
+        borderWidth="1px"
+        borderRadius="lg"
+        marginY={6}
+        padding={8}
         css={css({ visibility: loaded ? "visible" : "hidden" })}
       >
-        <Box borderWidth="1px" borderRadius="lg" marginY="6" padding="8">
-          <Heading as="h1" fontSize={28}>
-            {i18n["Options"]}
-          </Heading>
+        <Heading as="h1" fontSize={28}>
+          {i18n["Options"]}
+        </Heading>
 
-          <HStack marginY={10}>
-            <Text fontSize={18} marginRight={10}>
-              {i18n["EnableRules"]}
-            </Text>
-            <Switch
-              isChecked={enabled}
-              onChange={(e) => changeState(e.target.checked)}
-            />
-          </HStack>
+        <HStack marginY={10}>
+          <Text fontSize={18} marginRight={10}>
+            {i18n["EnableRules"]}
+          </Text>
+          <Switch
+            isChecked={enabled}
+            onChange={(e) => changeState(e.target.checked)}
+          />
+        </HStack>
 
-          <Heading as="h2" fontSize={18} fontWeight="normal" marginBottom={4}>
-            {i18n["RuleSets"]}:
-          </Heading>
+        <Heading as="h2" fontSize={18} fontWeight="normal" marginBottom={4}>
+          {i18n["RuleSets"]}:
+        </Heading>
 
-          <RuleSetsEdit ruleSets={ruleSets} onChange={updateRuleSets} />
-        </Box>
+        <RuleSetsEdit ruleSets={ruleSets} onChange={updateRuleSets} />
       </Container>
 
       <Container
-        maxW="930px"
+        width="930px"
+        minW="930px"
+        maxW="100%"
         marginY={4}
         color="#444"
         backgroundColor="#edf2f7"
+        border="1px solid #edf2f7"
         fontSize={14}
         paddingX={4}
         paddingY={2}
-        borderRadius="0.5rem"
+        borderRadius="lg"
       >
         <Text as="div">{i18n["Notice"]}:</Text>
         <UnorderedList>
