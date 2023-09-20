@@ -13,6 +13,7 @@ type Props = {
   ruleSets: RuleSets;
   getMatchedRule: () => Promise<MatchedRule[]>;
   optionsUrl: string;
+  titleFontAdjuster?: number;
 };
 
 export const Main: React.FC<Props> = ({
@@ -21,6 +22,7 @@ export const Main: React.FC<Props> = ({
   ruleSets,
   getMatchedRule,
   optionsUrl,
+  titleFontAdjuster = 0,
 }) => {
   const i18n = useI18n();
   const [matchedRules, setMatchedRules] = useState<MatchedRule[]>([]);
@@ -41,7 +43,7 @@ export const Main: React.FC<Props> = ({
       ) : (
         <>
           <HStack marginTop="20px" justifyContent="space-between">
-            <Text fontSize={18}>{i18n["EnableRules"]}</Text>
+            <Text fontSize={18 + titleFontAdjuster}>{i18n["EnableRules"]}</Text>
             <Switch
               isChecked={isServiceEnabled}
               onChange={(e) => changeServiceState(e.target.checked)}
@@ -49,12 +51,21 @@ export const Main: React.FC<Props> = ({
           </HStack>
 
           <Box marginTop="10px">
-            <ConfigureRulesLink optionsUrl={optionsUrl} />
+            <ConfigureRulesLink
+              optionsUrl={optionsUrl}
+              fontSize={16 + titleFontAdjuster}
+            />
           </Box>
 
           {/* Table title */}
-          <HStack marginTop="10px" justifyContent="space-between">
-            <Text fontSize="14px">{i18n["MatchedRulesInTabs"]}</Text>
+          <HStack
+            marginTop="10px"
+            alignItems="baseline"
+            justifyContent="space-between"
+          >
+            <Text fontSize={14 + titleFontAdjuster}>
+              {i18n["MatchedRulesInTabs"]}
+            </Text>
             <IconButton
               icon={<RepeatIcon />}
               aria-label="Refresh"

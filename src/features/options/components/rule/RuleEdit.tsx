@@ -161,7 +161,12 @@ export const RuleEdit: React.FC<Props> = ({
             ({i18n["explain_condition"]})
           </Text>
         </HStack>
-        <VStack marginLeft="20px" alignItems="start" gap={isEditing ? 5 : 2}>
+        <VStack
+          className="conditions"
+          marginLeft="20px"
+          alignItems="start"
+          gap={isEditing ? 5 : 2}
+        >
           {/* Request Domains */}
           <Box>
             <FormControl css={styles.formControl}>

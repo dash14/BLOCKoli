@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Container,
   Box,
@@ -16,6 +17,7 @@ import { Copyright } from "@/components/brand/Copyright";
 import { ExternalLink } from "@/components/parts/ExternalLink";
 import { RuleSetsEdit } from "@/features/options/components/ruleset/RuleSetsEdit";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
+import { useTitleFontAdjuster } from "@/hooks/useTitleFontAdjuster";
 import { useI18n } from "../hooks/useI18n";
 
 const Options: React.FC = () => {
@@ -30,6 +32,8 @@ const Options: React.FC = () => {
     language,
     setLanguage,
   } = useRequestBlockClient();
+
+  const { titleFontAdjuster } = useTitleFontAdjuster(language);
 
   return (
     <Box className={language}>
@@ -72,7 +76,7 @@ const Options: React.FC = () => {
         </Heading>
 
         <HStack marginY={10}>
-          <Text fontSize={18} marginRight={10}>
+          <Text fontSize={18 + titleFontAdjuster} marginRight={10}>
             {i18n["EnableRules"]}
           </Text>
           <Switch
@@ -81,7 +85,12 @@ const Options: React.FC = () => {
           />
         </HStack>
 
-        <Heading as="h2" fontSize={18} fontWeight="normal" marginBottom={4}>
+        <Heading
+          as="h2"
+          fontSize={18 + titleFontAdjuster}
+          fontWeight="normal"
+          marginBottom={4}
+        >
           {i18n["RuleSets"]}:
         </Heading>
 

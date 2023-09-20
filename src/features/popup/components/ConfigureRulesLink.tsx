@@ -1,15 +1,18 @@
 import { ExternalLinkIcon, SettingsIcon } from "@chakra-ui/icons";
-import { Link, Text } from "@chakra-ui/react";
+import { ChakraProps, Link, Text } from "@chakra-ui/react";
 import { useI18n } from "@/hooks/useI18n";
 
 type Props = {
   optionsUrl: string;
-};
+} & ChakraProps;
 
-export const ConfigureRulesLink: React.FC<Props> = ({ optionsUrl }) => {
+export const ConfigureRulesLink: React.FC<Props> = ({
+  optionsUrl,
+  ...props
+}) => {
   const i18n = useI18n();
   return (
-    <Text fontSize={16}>
+    <Text fontSize={16} {...props}>
       <Link
         href={optionsUrl}
         color="blue.500"

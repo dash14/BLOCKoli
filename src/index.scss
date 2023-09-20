@@ -16,6 +16,9 @@
   src: url(/public/fonts/MPLUSRounded1c-Regular.ttf) format("truetype");
 }
 
-div.ja {
+.ja {
   font-family: 'BIZ UD Gothic', sans-serif;
+  .conditions label {
+    letter-spacing: -0.04rem;
+  }
 }
