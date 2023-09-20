@@ -8,11 +8,17 @@ const chrome = new ChromeApiFactory();
 const optionsUrl = chrome.runtime().getURL("options.html");
 
 const Popup: React.FC = () => {
-  const { loaded, enabled, ruleSets, changeState, getMatchedRule } =
+  const { loaded, enabled, ruleSets, changeState, getMatchedRule, language } =
     useRequestBlockClient();
 
   return (
-    <Box width="360px" height="320px" padding="0" position="relative">
+    <Box
+      className={language}
+      width="360px"
+      height="320px"
+      padding="0"
+      position="relative"
+    >
       <Header />
 
       {loaded && (

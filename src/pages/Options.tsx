@@ -7,6 +7,7 @@ import {
   Text,
   UnorderedList,
   ListItem,
+  Select,
 } from "@chakra-ui/react";
 import { css } from "@emotion/react";
 import { Brand } from "@/components/brand/Brand";
@@ -20,20 +21,41 @@ import { useI18n } from "../hooks/useI18n";
 const Options: React.FC = () => {
   const i18n = useI18n();
 
-  const { loaded, enabled, changeState, ruleSets, updateRuleSets } =
-    useRequestBlockClient();
+  const {
+    loaded,
+    enabled,
+    changeState,
+    ruleSets,
+    updateRuleSets,
+    language,
+    setLanguage,
+  } = useRequestBlockClient();
 
   return (
-    <>
+    <Box className={language}>
       <HStack
         as="header"
         backgroundColor="#f6ffe7"
         borderBottom="1px solid #d6dFc7"
         padding="8px 24px"
         alignItems="center"
+        justifyContent="space-between"
       >
-        <BrandIcon marginRight="4px" />
-        <Brand as="h1" fontSize={36} />
+        <HStack>
+          <BrandIcon marginRight="4px" />
+          <Brand as="h1" fontSize={36} />
+        </HStack>
+        <Select
+          size="xs"
+          variant="outline"
+          borderColor="#C4D3AB"
+          width={110}
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+        >
+          <option value="en">English</option>
+          <option value="ja">日本語 (ja)</option>
+        </Select>
       </HStack>
       <Container
         maxW="960px"
@@ -88,7 +110,7 @@ const Options: React.FC = () => {
       <Container as="footer" textAlign="center" marginBottom={4}>
         <Copyright />
       </Container>
-    </>
+    </Box>
   );
 };
 

@@ -4,6 +4,7 @@ import { MessageProxyFactory } from "@/modules/chrome/message/MessageProxy";
 import { RuleSets } from "@/modules/core/rules";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import logging from "@/modules/utils/logging";
+import { updateI18nLanguage } from "./useI18n";
 
 const log = logging.getLogger("client");
 
@@ -11,6 +12,7 @@ export function useRequestBlockClient() {
   const [loaded, setLoaded] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [ruleSets, setRuleSets] = useState<RuleSets>([]);
+  const [language, setLanguageState] = useState<string>("en");
 
   const service = new MessageProxyFactory().create<RequestBlock.Service>(
     RequestBlock.ServiceId
@@ -28,6 +30,9 @@ export function useRequestBlockClient() {
     (async () => {
       setEnabled(await service.isEnabled());
       setRuleSets(await service.getRuleSets());
+      const lang = await service.getLanguage();
+      updateI18nLanguage(lang);
+      setLanguageState(lang);
       setLoaded(true);
     })();
 
@@ -57,12 +62,20 @@ export function useRequestBlockClient() {
     return await service.getMatchedRules();
   };
 
+  const setLanguage = async (lang: string) => {
+    updateI18nLanguage(lang);
+    setLanguageState(lang);
+    await service.setLanguage(lang);
+  };
+
   return {
     loaded,
     enabled,
     ruleSets,
+    language,
     changeState,
     updateRuleSets,
     getMatchedRule,
+    setLanguage,
   };
 }

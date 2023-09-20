@@ -23,7 +23,8 @@ export class Main {
       store,
       chrome.runtime(),
       chrome.declarativeNetRequest(),
-      chrome.action()
+      chrome.action(),
+      chrome.i18n()
     );
 
     // Start

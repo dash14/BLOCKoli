@@ -16,4 +16,6 @@ export interface Service extends ServiceBase<Events> {
   getRuleSets(): Promise<RuleSets>;
   updateRuleSets(ruleSets: RuleSets): Promise<RuleSets>;
   getMatchedRules(): Promise<MatchedRule[]>;
+  getLanguage(): Promise<string>;
+  setLanguage(lang: string): Promise<void>;
 }

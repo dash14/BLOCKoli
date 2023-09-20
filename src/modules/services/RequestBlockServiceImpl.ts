@@ -2,6 +2,7 @@ import isEqual from "lodash-es/isEqual";
 import {
   ChromeActionApi,
   ChromeDeclarativeNetRequestApi,
+  ChromeI18nApi,
   ChromeRuntimeApi,
 } from "@/modules/chrome/api";
 import { Rule as ApiRule } from "@/modules/chrome/api";
@@ -36,19 +37,22 @@ export class RequestBlockServiceImpl
   private runtime: ChromeRuntimeApi;
   private declarativeNetRequest: ChromeDeclarativeNetRequestApi;
   private action: ChromeActionApi;
+  private i18n: ChromeI18nApi;
 
   constructor(
     emitter: EventEmitter<RequestBlock.Events>,
     store: ServiceConfigurationStore,
     runtime: ChromeRuntimeApi,
     declarativeNetRequest: ChromeDeclarativeNetRequestApi,
-    action: ChromeActionApi
+    action: ChromeActionApi,
+    i18n: ChromeI18nApi
   ) {
     super(emitter);
     this.store = store;
     this.runtime = runtime;
     this.declarativeNetRequest = declarativeNetRequest;
     this.action = action;
+    this.i18n = i18n;
   }
 
   public async start(): Promise<void> {
@@ -203,6 +207,20 @@ export class RequestBlockServiceImpl
       });
     });
     return pointers;
+  }
+
+  public async getLanguage(): Promise<string> {
+    const defaultLang = this.i18n.getUILanguage();
+    const lang = (await this.store.loadLanguage()) ?? defaultLang;
+    return lang;
+  }
+
+  public async setLanguage(lang: string): Promise<void> {
+    const defaultLang = this.i18n.getUILanguage();
+    // If the language is the same as the default language,
+    // specify undefined, which means to adapt to the environment.
+    const value = defaultLang === lang ? undefined : lang;
+    await this.store.saveLanguage(value);
   }
 }
 

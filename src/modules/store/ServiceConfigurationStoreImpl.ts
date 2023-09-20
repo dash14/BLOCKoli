@@ -38,4 +38,16 @@ export class ServiceConfigurationStoreImpl
     const ruleSets = await this.storage.get<RuleSets>("ruleSets");
     return ruleSets ?? [];
   }
+
+  async saveLanguage(lang: string | undefined): Promise<void> {
+    if (lang) {
+      await this.storage.set("language", lang);
+    } else {
+      await this.storage.remove("language");
+    }
+  }
+
+  async loadLanguage(): Promise<string | undefined> {
+    return await this.storage.get<string | undefined>("language");
+  }
 }

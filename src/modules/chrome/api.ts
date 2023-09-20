@@ -30,6 +30,21 @@ export interface ChromeStorageApi {
   remove(key: string): Promise<void>;
 }
 
+export interface ChromeI18nApi {
+  /**
+   * Gets the browser UI language of the browser. This is different from i18n.getAcceptLanguages which returns the preferred user languages.
+   * @since Chrome 35.
+   */
+  getUILanguage(): string;
+
+  /**
+   * Gets the localized string for the specified message. If the message is missing, this method returns an empty string (''). If the format of the getMessage() call is wrong — for example, messageName is not a string or the substitutions array has more than 9 elements — this method returns undefined.
+   * @param messageName The name of the message, as specified in the messages.json file.
+   * @param substitutions Optional. Up to 9 substitution strings, if the message requires any.
+   */
+  getMessage(messageName: string, substitutions?: string | string[]): string;
+}
+
 export interface RuleCondition {
   /**
    * The rule will only match network requests when the domain matches one from the list of requestDomains.
