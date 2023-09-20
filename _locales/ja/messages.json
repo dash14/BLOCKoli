@@ -18,7 +18,7 @@
     "message": "を参照してください。"
   },
   "notice_2": {
-    "message": "この拡張機能の作者(dash14.ack)は、この Chrome 拡張の使用によって生じたいかなる損失及び損害に対しても一切の責任を負いません。"
+    "message": "この拡張機能の作製者は、この Chrome 拡張の使用によって生じたいかなる損失及び損害に対しても一切の責任を負いません。"
   },
   "AddARuleSet": {
     "message": "ルールセットを追加する"
@@ -96,64 +96,61 @@
     "message": "指定なし"
   },
   "hint_Note": {
-    "message": "Note"
+    "message": "注"
   },
   "hint_InitiatorDomains_1": {
-    "message": "Specify the origination of the request as a comma-separated list."
+    "message": "リクエスト元のドメインをカンマ区切りのリストで指定します。"
   },
   "hint_InitiatorDomains_2": {
-    "message": "The rule will only match network requests originating from the list of initiator domains. If the list is empty, the rule is applied to requests from all domains."
+    "message": "このルールは、指定したリスト内のいずれかのドメインから発信されたネットワークリクエストにマッチします。リストが空の場合、ルールはすべてのドメインからのリクエストに適用されます。"
   },
   "hint_InitiatorDomains_note_1": {
-    "message": "This matches against the request initiator and not the request url."
+    "message": "これはリクエストの URL ではなく、リクエストのイニシエータ（リクエスト元のURL）に対してマッチします。"
   },
   "hint_UseRegex_title": {
-    "message": "Rules that use regex"
+    "message": "正規表現の利用"
   },
   "hint_UseRegex_1": {
-    "message": "Regular expression to match against the network request url. This follows the"
+    "message": "ネットワークリクエストの URL に対してマッチさせる正規表現を指定します。構文は"
   },
   "hint_UseRegex_2": {
-    "message": "."
+    "message": "に従います。"
   },
   "hint_UseRegex_note_1": {
-    "message": "The regexFilter must be composed of only ASCII characters. This is matched against a url where the host is encoded in the punycode format (in case of internationalized domains) and any other non-ascii characters are url encoded in utf-8."
+    "message": "このフィルタは ASCII 文字のみで構成されなければなりません。これは、ホストが punycode 形式（国際化されたドメインの場合）でエンコードされ、その他の非 ASCII 文字が utf-8 でエンコードされた URL に対してマッチします。"
   },
   "hint_UseRegex_note_2": {
-    "message": "The total number of regex rules of each type cannot exceed 1000."
+    "message": "正規表現ルールの総数は 1000 個までです。"
   },
   "hint_UseRegex_note_3": {
-    "message": "Each rule must be less than 2KB once compiled. This roughly correlates with the complexity of the rule. If you try to load a rule that exceeds this limit, you will see a warning like the one below and the rule will be ignored."
-  },
-  "hint_UseRegex_note_3_message": {
-    "message": "rules_1.json: Rule with id 1 specified a more complext regex than allowed as part of the \"regexFilter\" key."
+    "message": "各ルールは、コンパイル後のサイズが 2KB 未満でなければなりません。これはルールの複雑さにほぼ相関します。この制限を超えるルールを読み込もうとすると、以下のような警告が表示され、そのルールは無視されます。"
   },
   "hint_RequestDomains_1": {
-    "message": "Specify the domains in the request url as a comma-separated list."
+    "message": "リクエストURLのドメインをカンマ区切りで指定します。"
   },
   "hint_RequestDomains_2": {
-    "message": "The rule will only match network requests when the domain matches one from this list. If the list is omitted, the rule is applied to requests from all domains."
+    "message": "このルールは、リクエスト先のドメインがこのリストのいずれかと一致する場合にマッチします。リストが省略された場合、ルールはすべてのドメインからのリクエストに適用されます。"
   },
   "hint_Domains_note_1": {
-    "message": "Sub-domains like \"a.example.com\" are also allowed."
+    "message": "\"a.example.com\" のようなサブドメインも指定可能です。"
   },
   "hint_Domains_note_2": {
-    "message": "The entries must consist of only ascii characters."
+    "message": "各ドメインは ASCII 文字のみで構成されなければなりません。"
   },
   "hint_Domains_note_3": {
-    "message": "Use punycode encoding for internationalized domains."
+    "message": "国際化ドメインには punycode エンコーディングを使用します。"
   },
   "hint_Domains_note_4": {
-    "message": "Sub-domains of the listed domains are also matched."
+    "message": "指定されたドメインのサブドメインにも一致します。"
   },
   "hint_RequestMethods_1": {
-    "message": "List of HTTP request methods which the rule can match."
+    "message": "ルールにマッチさせたい HTTP リクエストメソッドのリストです。"
   },
   "hint_RequestMethods_note_1": {
-    "message": "Specifying a requestMethods rule condition will also exclude non-HTTP(s) requests."
+    "message": "リクエストメソッドの条件を指定すると、HTTP(S) 以外のリクエストも除外されます。"
   },
   "hint_ResourceTypes_1": {
-    "message": "List of resource types which the rule can match."
+    "message": "ルールにマッチさせたいリソース種別のリストです。"
   },
   "ConfigureRules": {
     "message": "ルールの設定"

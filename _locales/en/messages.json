@@ -18,7 +18,7 @@
     "message": "in the API reference for more information about the limits."
   },
   "notice_2": {
-    "message": "Under no circumstances will the author of this extension, dash14.ack, is not responsible for any loss, damage or inconvenience caused by the use of this extension."
+    "message": "Under no circumstances will the author of this extension is not responsible for any loss, damage or inconvenience caused by the use of this extension."
   },
   "AddARuleSet": {
     "message": "Add a Rule Set"
@@ -99,7 +99,7 @@
     "message": "Note"
   },
   "hint_InitiatorDomains_1": {
-    "message": "Specify the origination of the request as a comma-separated list."
+    "message": "Specify the originating domain of the request as a comma-separated list."
   },
   "hint_InitiatorDomains_2": {
     "message": "The rule will only match network requests originating from the list of initiator domains. If the list is empty, the rule is applied to requests from all domains."
@@ -117,16 +117,13 @@
     "message": "."
   },
   "hint_UseRegex_note_1": {
-    "message": "The regexFilter must be composed of only ASCII characters. This is matched against a url where the host is encoded in the punycode format (in case of internationalized domains) and any other non-ascii characters are url encoded in utf-8."
+    "message": "This filter must be composed of only ASCII characters. This is matched against a url where the host is encoded in the punycode format (in case of internationalized domains) and any other non-ascii characters are url encoded in utf-8."
   },
   "hint_UseRegex_note_2": {
-    "message": "The total number of regex rules of each type cannot exceed 1000."
+    "message": "The total number of regex rules cannot exceed 1000."
   },
   "hint_UseRegex_note_3": {
     "message": "Each rule must be less than 2KB once compiled. This roughly correlates with the complexity of the rule. If you try to load a rule that exceeds this limit, you will see a warning like the one below and the rule will be ignored."
-  },
-  "hint_UseRegex_note_3_message": {
-    "message": "rules_1.json: Rule with id 1 specified a more complext regex than allowed as part of the \"regexFilter\" key."
   },
   "hint_RequestDomains_1": {
     "message": "Specify the domains in the request url as a comma-separated list."
@@ -150,7 +147,7 @@
     "message": "List of HTTP request methods which the rule can match."
   },
   "hint_RequestMethods_note_1": {
-    "message": "Specifying a requestMethods rule condition will also exclude non-HTTP(s) requests."
+    "message": "Specifying a Request Methods rule condition will also exclude non-HTTP(s) requests."
   },
   "hint_ResourceTypes_1": {
     "message": "List of resource types which the rule can match."
