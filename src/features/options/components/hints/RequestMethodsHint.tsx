@@ -5,7 +5,7 @@ import { useI18n } from "@/hooks/useI18n";
 export const RequestMethodsHint: React.FC = () => {
   const i18n = useI18n();
   return (
-    <HintPopover title={i18n["RequestMethods"]} width={400}>
+    <HintPopover title={i18n["RequestMethods"]} width={350}>
       {i18n["hint_RequestMethods_1"]}
       <Box marginTop={1}>{i18n["hint_Note"]}:</Box>
       <UnorderedList marginLeft={5}>

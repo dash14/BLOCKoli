@@ -24,7 +24,8 @@ export const RegexHint: React.FC = () => {
             border="1px solid #ddd"
             padding="6px 10px"
           >
-            {i18n["hint_UseRegex_note_3_message"]}
+            rules_1.json: Rule with id 1 specified a more complext regex than
+            allowed as part of the "regexFilter" key.
           </Box>
         </ListItem>
       </UnorderedList>

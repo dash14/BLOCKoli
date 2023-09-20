@@ -238,7 +238,10 @@ export const RuleEdit: React.FC<Props> = ({
                 rule.condition.isRegexFilter &&
                 rule.condition.urlFilter && <Text as="span">" (regex)"</Text>
               )}
-              <RegexHint />
+              {(isEditing ||
+                (rule.condition.urlFilter && rule.condition.isRegexFilter)) && (
+                <RegexHint />
+              )}
             </HStack>
             {(isEditing || rule.condition.urlFilter) && (
               <Text as="div" css={styles.note}>

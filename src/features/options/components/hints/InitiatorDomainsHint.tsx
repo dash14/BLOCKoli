@@ -5,7 +5,7 @@ import { useI18n } from "@/hooks/useI18n";
 export const InitiatorDomainsHint: React.FC = () => {
   const i18n = useI18n();
   return (
-    <HintPopover title={i18n["InitiatorDomains"]} width={400}>
+    <HintPopover title={i18n["InitiatorDomains"]} width={450}>
       {i18n["hint_InitiatorDomains_1"]}
       <br />
       {i18n["hint_InitiatorDomains_2"]}

@@ -32,7 +32,9 @@ export const HintPopover: React.FC<Props> = ({ width, title, children }) => {
         <PopoverArrow />
         <PopoverCloseButton />
         <PopoverHeader fontSize={14}>{title}</PopoverHeader>
-        <PopoverBody fontSize={14}>{children}</PopoverBody>
+        <PopoverBody fontSize={14} paddingX={4} paddingY={3}>
+          {children}
+        </PopoverBody>
       </PopoverContent>
     </Popover>
   );
