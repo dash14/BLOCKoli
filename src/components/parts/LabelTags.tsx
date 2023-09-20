@@ -6,12 +6,14 @@ type Props = {
   empty: string;
   options: { label: string; value: string }[];
   values?: string[];
+  emptyWidth?: number;
 } & ChakraProps;
 
 export const LabelTags: React.FC<Props> = ({
   empty,
   options,
   values,
+  emptyWidth,
   ...props
 }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -50,7 +52,9 @@ export const LabelTags: React.FC<Props> = ({
       {...props}
     >
       {labels.length === 0 ? (
-        <DisableTag>{empty}</DisableTag>
+        <DisableTag width={`${emptyWidth}px`} justifyContent="center">
+          {empty}
+        </DisableTag>
       ) : (
         labels.map((label) => <Tag key={label}>{label}</Tag>)
       )}

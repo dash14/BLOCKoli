@@ -90,10 +90,10 @@
     "message": "Resource Types"
   },
   "ALL": {
-    "message": "(ALL)"
+    "message": "ALL"
   },
   "NotSpecified": {
-    "message": "(Not specified)"
+    "message": "Not specified"
   },
   "hint_Note": {
     "message": "Note"

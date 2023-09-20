@@ -19,7 +19,6 @@ import {
 import { css } from "@emotion/react";
 import { MultipleSelect } from "@/components/forms/MultipleSelect";
 import { DisableTag } from "@/components/parts/DisableTag";
-import { ExternalLink } from "@/components/parts/ExternalLink";
 import { LabelTags } from "@/components/parts/LabelTags";
 import { Tags } from "@/components/parts/Tags";
 import { useRuleEdit } from "@/features/options/hooks/useRuleEdit";
@@ -179,6 +178,7 @@ export const RuleEdit: React.FC<Props> = ({
                 <Tags
                   empty={i18n["NotSpecified"]}
                   values={rule.condition.requestDomains}
+                  emptyWidth={115}
                   marginTop="2px"
                 />
               )}
@@ -206,6 +206,7 @@ export const RuleEdit: React.FC<Props> = ({
                 <Tags
                   empty={i18n["NotSpecified"]}
                   values={rule.condition.initiatorDomains}
+                  emptyWidth={115}
                   marginTop="2px"
                 />
               )}
@@ -232,6 +233,7 @@ export const RuleEdit: React.FC<Props> = ({
                 empty={i18n["ALL"]}
                 options={requestMethodOptions}
                 values={rule.condition.requestMethods}
+                emptyWidth={115}
                 marginTop="2px"
               />
             )}
@@ -265,7 +267,9 @@ export const RuleEdit: React.FC<Props> = ({
                     {rule.condition.urlFilter ? (
                       <Tag>{rule.condition.urlFilter}</Tag>
                     ) : (
-                      <DisableTag>{i18n["NotSpecified"]}</DisableTag>
+                      <DisableTag width="115px">
+                        {i18n["NotSpecified"]}
+                      </DisableTag>
                     )}
                   </Box>
                 )}
@@ -323,6 +327,7 @@ export const RuleEdit: React.FC<Props> = ({
                 empty={i18n["ALL"]}
                 options={resourceTypeOptions}
                 values={rule.condition.resourceTypes}
+                emptyWidth={115}
                 marginTop="2px"
               />
             )}

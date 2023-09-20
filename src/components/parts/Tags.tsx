@@ -4,11 +4,21 @@ import { DisableTag } from "./DisableTag";
 type Props = {
   empty: string;
   values: string[] | undefined;
+  emptyWidth?: number;
 } & ChakraProps;
 
-export const Tags: React.FC<Props> = ({ empty, values, ...props }) => {
+export const Tags: React.FC<Props> = ({
+  empty,
+  values,
+  emptyWidth,
+  ...props
+}) => {
   if (!values || values.length === 0) {
-    return <DisableTag {...props}>{empty}</DisableTag>;
+    return (
+      <DisableTag width={`${emptyWidth}px`} {...props}>
+        {empty}
+      </DisableTag>
+    );
   }
   return (
     <HStack {...props}>
