@@ -31,10 +31,11 @@ import {
   RuleActionType,
 } from "@/modules/core/rules";
 import { InitiatorDomainsHint } from "../hints/InitiatorDomainsHint";
-import { RegexHint } from "../hints/RegexHint";
 import { RequestDomainsHint } from "../hints/RequestDomainsHint";
 import { RequestMethodsHint } from "../hints/RequestMethodsHint";
 import { ResourceTypesHint } from "../hints/ResourceTypesHint";
+import { URLFilterWithRegexHint } from "../hints/URLFilterWithRegexHint";
+import { URLFilterHint } from "../hints/UrlFilterHint";
 import { ControlButtons } from "./ControlButtons";
 import { RuleContainer } from "./RuleContainer";
 import { RuleMenu } from "./RuleMenu";
@@ -241,40 +242,48 @@ export const RuleEdit: React.FC<Props> = ({
 
           {/* URL Filter */}
           <Box>
-            <HStack alignItems="start">
-              <FormControl
-                css={styles.formControl}
-                isInvalid={!!regexInvalidReason}
-              >
-                <FormLabel css={styles.label}>{i18n["URLFilter"]}</FormLabel>
-                <Box>
-                  {isEditing ? (
-                    <Input
-                      value={rule.condition.urlFilter ?? ""}
-                      onChange={(e) => updateUrlFilter(e.target.value)}
-                      width={410}
-                      variant="outline"
-                      placeholder={
-                        rule.condition.isRegexFilter
-                          ? "^https?://www\\.example\\.com/api/"
-                          : "||www.example.com*^123"
-                      }
-                    />
+            <FormControl
+              css={styles.formControl}
+              isInvalid={!!regexInvalidReason}
+            >
+              <FormLabel css={styles.label}>{i18n["URLFilter"]}</FormLabel>
+              <HStack gap={0} alignItems="start">
+                {isEditing ? (
+                  <Input
+                    value={rule.condition.urlFilter ?? ""}
+                    onChange={(e) => updateUrlFilter(e.target.value)}
+                    width={410}
+                    variant="outline"
+                    placeholder={
+                      rule.condition.isRegexFilter
+                        ? "^https?://www\\.example\\.com/api/"
+                        : "||www.example.com*^123"
+                    }
+                  />
+                ) : (
+                  <Box marginTop="2px">
+                    {rule.condition.urlFilter ? (
+                      <Tag>{rule.condition.urlFilter}</Tag>
+                    ) : (
+                      <DisableTag>{i18n["NotSpecified"]}</DisableTag>
+                    )}
+                  </Box>
+                )}
+                <Box marginLeft={2}>
+                  {rule.condition.isRegexFilter ? (
+                    <URLFilterWithRegexHint />
                   ) : (
-                    <Box marginTop="2px">
-                      {rule.condition.urlFilter ? (
-                        <Tag>{rule.condition.urlFilter}</Tag>
-                      ) : (
-                        <DisableTag>{i18n["NotSpecified"]}</DisableTag>
-                      )}
-                    </Box>
+                    <URLFilterHint />
                   )}
-                  <FormErrorMessage marginTop={1}>
-                    {regexInvalidReason}
-                  </FormErrorMessage>
                 </Box>
-              </FormControl>
-              {isEditing ? (
+              </HStack>
+              <FormErrorMessage marginTop={1}>
+                {regexInvalidReason}
+              </FormErrorMessage>
+            </FormControl>
+
+            {isEditing ? (
+              <HStack css={styles.note} alignItems="start">
                 <FormControl paddingTop="2px" width="auto">
                   <Checkbox
                     defaultChecked={rule.condition.isRegexFilter}
@@ -286,29 +295,14 @@ export const RuleEdit: React.FC<Props> = ({
                     {i18n["UseRegex"]}
                   </Checkbox>
                 </FormControl>
-              ) : (
-                rule.condition.isRegexFilter &&
-                rule.condition.urlFilter && <Text as="span">" (regex)"</Text>
-              )}
-              {(isEditing ||
-                (rule.condition.urlFilter && rule.condition.isRegexFilter)) && (
-                <RegexHint />
-              )}
-            </HStack>
-            {(isEditing || rule.condition.urlFilter) && (
-              <Text as="div" css={styles.note}>
-                For available formats, see{" "}
-                {rule.condition.isRegexFilter ? (
-                  <ExternalLink href="https://developer.chrome.com/docs/extensions/reference/declarativeNetRequest/#property-RuleCondition-regexFilter">
-                    API reference (regexFilter)
-                  </ExternalLink>
-                ) : (
-                  <ExternalLink href="https://developer.chrome.com/docs/extensions/reference/declarativeNetRequest/#filter-matching-charactgers">
-                    API reference (urlFilter)
-                  </ExternalLink>
-                )}
-                .
-              </Text>
+              </HStack>
+            ) : (
+              rule.condition.isRegexFilter &&
+              rule.condition.urlFilter && (
+                <HStack css={styles.note}>
+                  <Text as="span"> ({i18n["UseRegex"]})</Text>
+                </HStack>
+              )
             )}
           </Box>
 

@@ -107,22 +107,40 @@
   "hint_InitiatorDomains_note_1": {
     "message": "これはリクエストの URL ではなく、リクエストのイニシエータ（リクエスト元のURL）に対してマッチします。"
   },
-  "hint_UseRegex_title": {
-    "message": "正規表現の利用"
+  "hint_URLFilter_1": {
+    "message": "ネットワークリクエスト URL とマッチするパターン文字列。"
   },
-  "hint_UseRegex_1": {
-    "message": "ネットワークリクエストの URL に対してマッチさせる正規表現を指定します。構文は"
+  "hint_URLFilter_2": {
+    "message": "利用可能な書式については"
   },
-  "hint_UseRegex_2": {
-    "message": "に従います。"
+  "hint_URLFilter_3": {
+    "message": "を参照してください。"
   },
-  "hint_UseRegex_note_1": {
+  "hint_URLFilter_note_1_1": {
     "message": "このフィルタは ASCII 文字のみで構成されなければなりません。これは、ホストが punycode 形式（国際化されたドメインの場合）でエンコードされ、その他の非 ASCII 文字が utf-8 でエンコードされた URL に対してマッチします。"
   },
-  "hint_UseRegex_note_2": {
+  "hint_URLFilter_note_1_2": {
+    "message": "例えば、リクエストの URL が http://abc.рф?q=ф の場合、このフィルタは url http://abc.xn--p1ai/?q=%D1%84 に対してマッチします。"
+  },
+  "hint_URLFilterWithRegex_title": {
+    "message": "URL フィルタ (正規表現を利用)"
+  },
+  "hint_URLFilterWithRegex_1": {
+    "message": "ネットワークリクエストの URL に対してマッチさせる正規表現を指定します。構文は"
+  },
+  "hint_URLFilterWithRegex_2": {
+    "message": "に従います。"
+  },
+  "hint_URLFilterWithRegex_note_1_1": {
+    "message": "このフィルタは ASCII 文字のみで構成されなければなりません。これは、ホストが punycode 形式（国際化されたドメインの場合）でエンコードされ、その他の非 ASCII 文字が utf-8 でエンコードされた URL に対してマッチします。"
+  },
+  "hint_URLFilterWithRegex_note_1_2": {
+    "message": "例えば、リクエストの URL が http://abc.рф?q=ф の場合、このフィルタは url http://abc.xn--p1ai/?q=%D1%84 に対してマッチします。"
+  },
+  "hint_URLFilterWithRegex_note_2": {
     "message": "正規表現ルールの総数は 1000 個までです。"
   },
-  "hint_UseRegex_note_3": {
+  "hint_URLFilterWithRegex_note_3": {
     "message": "各ルールは、コンパイル後のサイズが 2KB 未満でなければなりません。これはルールの複雑さにほぼ相関します。この制限を超えるルールを読み込もうとすると、以下のような警告が表示され、そのルールは無視されます。"
   },
   "hint_RequestDomains_1": {
