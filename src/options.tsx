@@ -10,7 +10,7 @@ const styles = {
     },
     ".chakra-react-select__menu-portal": {
       zIndex: "100",
-      marginTop: "-30px",
+      marginTop: "-7px",
     },
     ".chakra-collapse": {
       overflow: "visible !important",
