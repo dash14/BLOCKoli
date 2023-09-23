@@ -174,7 +174,7 @@
     "message": "ルールの設定"
   },
   "MatchedRulesInTabs": {
-    "message": "タブ内でマッチしたルール (5分以内)"
+    "message": "タブ内でマッチしたルール"
   },
   "table_MatchedRules_column_timestamp": {
     "message": "時刻"

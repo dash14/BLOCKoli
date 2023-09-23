@@ -174,7 +174,7 @@
     "message": "Configure rules"
   },
   "MatchedRulesInTabs": {
-    "message": "Matched rules in tabs (within 5 minutes)"
+    "message": "Matched rules in tabs"
   },
   "table_MatchedRules_column_timestamp": {
     "message": "timestamp"
