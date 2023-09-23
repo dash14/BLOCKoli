@@ -73,7 +73,7 @@ export const RuleSetsEdit: React.FC<Props> = ({
     <>
       {ruleSets.length === 0 && (
         <Text fontSize={16} marginLeft={10}>
-          (empty)
+          {i18n["empty_ruleset"]}
         </Text>
       )}
       <SlideTransitionGroup style={listTransitionCss}>

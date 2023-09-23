@@ -8,6 +8,9 @@
   "RuleSets": {
     "message": "ルールセット一覧"
   },
+  "empty_ruleset": {
+    "message": "(ルールセットがありません。下のボタンをクリックして追加してください。)"
+  },
   "Notice": {
     "message": "注意事項"
   },
@@ -181,5 +184,11 @@
   },
   "table_MatchedRules_column_rule": {
     "message": "ルール名・番号"
+  },
+  "initial_setup_message_1": {
+    "message": "ルールが設定されていません。"
+  },
+  "initial_setup_message_2": {
+    "message": "まず、以下のページからルールを設定してください。"
   }
 }

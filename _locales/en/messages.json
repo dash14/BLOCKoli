@@ -8,6 +8,9 @@
   "RuleSets": {
     "message": "Rule Sets"
   },
+  "empty_ruleset": {
+    "message": "(There are no rule sets available. Click the button below to add it.)"
+  },
   "Notice": {
     "message": "Notice"
   },
@@ -181,5 +184,11 @@
   },
   "table_MatchedRules_column_rule": {
     "message": "rule"
+  },
+  "initial_setup_message_1": {
+    "message": "No rules are defined."
+  },
+  "initial_setup_message_2": {
+    "message": "First, please set up the rules on the page linked below."
   }
 }
