@@ -52,7 +52,10 @@ export const LabelTags: React.FC<Props> = ({
       {...props}
     >
       {labels.length === 0 ? (
-        <DisableTag width={`${emptyWidth}px`} justifyContent="center">
+        <DisableTag
+          width={emptyWidth && `${emptyWidth}px`}
+          justifyContent="center"
+        >
           {empty}
         </DisableTag>
       ) : (

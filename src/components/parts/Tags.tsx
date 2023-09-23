@@ -15,7 +15,7 @@ export const Tags: React.FC<Props> = ({
 }) => {
   if (!values || values.length === 0) {
     return (
-      <DisableTag width={`${emptyWidth}px`} {...props}>
+      <DisableTag width={emptyWidth && `${emptyWidth}px`} {...props}>
         {empty}
       </DisableTag>
     );
