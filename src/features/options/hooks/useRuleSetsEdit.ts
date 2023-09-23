@@ -11,7 +11,8 @@ import {
 
 export function useRuleSetsEdit(
   originalRuleSets: RuleSets,
-  onChange: (ruleSets: RuleSets) => void
+  onChange: (ruleSets: RuleSets) => void,
+  onRemoveRuleSetAt: (index: number) => void
 ) {
   const [ruleSets, setRuleSets] = useState<RuleSets>(originalRuleSets);
 
@@ -47,6 +48,7 @@ export function useRuleSetsEdit(
     if (rules.length === 0) {
       // add -> cancel
       setRuleSets(removeAt(ruleSets, ruleSetIndex));
+      onRemoveRuleSetAt(ruleSetIndex);
     } else {
       const ruleSet = { ...ruleSets[ruleSetIndex], rules } as RuleSet;
       const newRuleSets = replaceAt(ruleSets, ruleSetIndex, ruleSet);
@@ -55,16 +57,16 @@ export function useRuleSetsEdit(
     }
   }
 
-  function removeRuleSet(index: number) {
-    const ruleSet = ruleSets[index];
+  function removeRuleSet(ruleSetIndex: number) {
+    const ruleSet = ruleSets[ruleSetIndex];
     if (ruleSet.rules.filter((r) => r.id !== RULE_ID_EDITING).length === 0) {
-      // new rule set: same as cancel
-      setRuleSets(removeAt(ruleSets, index));
+      setRuleSets(removeAt(ruleSets, ruleSetIndex));
     } else {
-      const newRuleSets = removeAt(ruleSets, index);
+      const newRuleSets = removeAt(ruleSets, ruleSetIndex);
       setRuleSets(newRuleSets);
       onChange(filterAvailableRuleSets(newRuleSets)); // filter editing
     }
+    onRemoveRuleSetAt(ruleSetIndex);
   }
 
   function updateRuleSetTitle(title: string, index: number) {

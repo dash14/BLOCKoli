@@ -15,8 +15,9 @@ import { CSSTransition } from "react-transition-group";
 import { EditableTitle } from "@/components/forms/EditableTitle";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
 import { RulesEdit } from "@/features/options/components/rule/RulesEdit";
+import { useArrayKey } from "@/hooks/useArrayKey";
 import { useI18n } from "@/hooks/useI18n";
-import { push } from "@/modules/core/array";
+import { push, removeAt } from "@/modules/core/array";
 import { RuleSets } from "@/modules/core/rules";
 import { useRuleSetsEdit } from "../../hooks/useRuleSetsEdit";
 import { RuleSetMenu } from "./RuleSetMenu";
@@ -43,6 +44,25 @@ export const RuleSetsEdit: React.FC<Props> = ({
   const [accordionOpenStates, setAccordionOpenStates] = useState<number[][]>(
     []
   );
+  const {
+    elementKeys,
+    resetElementLength,
+    pushElementKey,
+    removeElementKeyAt,
+  } = useArrayKey(originalRuleSets.length);
+
+  const addRuleSet = () => {
+    addRuleSetInHook();
+    // open new accordion
+    setAccordionOpenStates(push(accordionOpenStates, [0]));
+    // assign id for list rendering
+    pushElementKey();
+  };
+
+  const onRemoveRuleSetAt = (index: number) => {
+    setAccordionOpenStates(removeAt(accordionOpenStates, index));
+    removeElementKeyAt(index);
+  };
 
   const {
     ruleSets,
@@ -50,7 +70,7 @@ export const RuleSetsEdit: React.FC<Props> = ({
     updateRules,
     removeRuleSet,
     updateRuleSetTitle,
-  } = useRuleSetsEdit(originalRuleSets, onChange);
+  } = useRuleSetsEdit(originalRuleSets, onChange, onRemoveRuleSetAt);
 
   useEffect(() => {
     if (ruleSets.length === 0) {
@@ -59,15 +79,10 @@ export const RuleSetsEdit: React.FC<Props> = ({
       } else {
         setAccordionOpenStates(originalRuleSets.map(() => []));
       }
+      resetElementLength(originalRuleSets.length);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [originalRuleSets]);
-
-  function addRuleSet() {
-    addRuleSetInHook();
-    // open new accordion
-    setAccordionOpenStates(push(accordionOpenStates, [0]));
-  }
 
   return (
     <>
@@ -78,12 +93,16 @@ export const RuleSetsEdit: React.FC<Props> = ({
       )}
       <SlideTransitionGroup style={listTransitionCss}>
         {ruleSets.map((ruleSet, ruleSetIndex) => (
-          <CSSTransition key={ruleSetIndex} timeout={250} classNames="slide">
+          <CSSTransition
+            key={elementKeys[ruleSetIndex]}
+            timeout={250}
+            classNames="slide"
+          >
             <Accordion
               defaultIndex={accordionOpenStates[ruleSetIndex]}
               allowMultiple
             >
-              <AccordionItem key={ruleSetIndex} borderWidth="1px">
+              <AccordionItem borderWidth="1px">
                 <AccordionButton as="div" cursor="pointer" paddingLeft={2}>
                   <Box flex="1">
                     <EditableTitle
