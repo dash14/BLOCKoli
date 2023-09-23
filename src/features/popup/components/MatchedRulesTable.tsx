@@ -69,15 +69,9 @@ export const MatchedRulesTable: React.FC<Props> = ({
                   paddingY="4px"
                   overflowX="hidden"
                   textOverflow="ellipsis"
-                  title={
-                    rule.rule
-                      ? `${rule.rule.ruleSetName} #${rule.rule.number}`
-                      : "unknown"
-                  }
+                  title={`${rule.rule.ruleSetName} #${rule.rule.number}`}
                 >
-                  {rule.rule
-                    ? `${rule.rule.ruleSetName} #${rule.rule.number}`
-                    : "unknown"}
+                  {`${rule.rule.ruleSetName} #${rule.rule.number}`}
                 </Td>
                 <Td width="20px" paddingLeft="6px" paddingRight="10px">
                   {rule.rule ? (

@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Box } from "@chakra-ui/react";
 import { Header } from "@/features/popup/components/Header";
 import { Main } from "@/features/popup/components/Main";

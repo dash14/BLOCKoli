@@ -92,10 +92,10 @@ export class RequestBlockServiceImpl
   }
 
   public async getRuleSets(): Promise<RuleSets> {
-    log.debug("getRuleSets");
-
     // Load from store
-    return await this.store.loadRuleSets();
+    const ruleSets = await this.store.loadRuleSets();
+    log.debug("loadRuleSets from store", ruleSets);
+    return ruleSets;
   }
 
   public async updateRuleSets(ruleSets: RuleSets): Promise<RuleSets> {
@@ -155,11 +155,14 @@ export class RequestBlockServiceImpl
     const results: MatchedRule[] = [];
     matchedRules.map((rule) => {
       const ruleId = rule.rule.ruleId;
-      results.push({
-        ruleId,
-        rule: pointers.get(ruleId),
-        timeStamp: rule.timeStamp,
-      });
+      const matchedRule = pointers.get(ruleId);
+      if (matchedRule) {
+        results.push({
+          ruleId,
+          rule: matchedRule,
+          timeStamp: rule.timeStamp,
+        });
+      }
     });
     log.debug("Matched rule:", results);
     return results;

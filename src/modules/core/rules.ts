@@ -143,6 +143,6 @@ export interface RulePointer {
 
 export interface MatchedRule {
   ruleId: number;
-  rule?: RulePointer;
+  rule: RulePointer;
   timeStamp: number;
 }
