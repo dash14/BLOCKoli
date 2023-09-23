@@ -26,7 +26,21 @@ export function useRuleSetsEdit(
   }, [originalRuleSets]);
 
   function addRuleSet() {
-    setRuleSets(push(ruleSets, cloneDeep(newRuleSetTemplate)));
+    const newRuleSet = cloneDeep(newRuleSetTemplate);
+    const nameWithNumPattern = new RegExp(`^${newRuleSet.name} (\\d+)`);
+
+    const maxNumber =
+      ruleSets
+        .map((ruleSet) => {
+          const result = nameWithNumPattern.exec(ruleSet.name);
+          return result ? parseInt(result[1], 10) : null;
+        })
+        .filter(Boolean)
+        .reduce((max, value) => Math.max(max ?? 0, value ?? 0), 0) ?? 0;
+
+    newRuleSet.name = `${newRuleSet.name} ${maxNumber + 1}`;
+
+    setRuleSets(push(ruleSets, newRuleSet));
   }
 
   function updateRules(rules: Rule[], ruleSetIndex: number) {
