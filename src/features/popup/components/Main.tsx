@@ -29,7 +29,7 @@ export const Main: React.FC<Props> = ({
 
   const updateMatchedRules = () => {
     getMatchedRule().then((matchedRules) => {
-      setMatchedRules(matchedRules);
+      setMatchedRules(matchedRules.reverse());
     });
   };
 
