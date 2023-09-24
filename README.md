@@ -17,6 +17,7 @@ The following features are available:
 * Define the conditions for blocking or allowing (exceptions to blocking) network requests that occur on the browser as rules
 * Enable or disable entire rules
 * Display a list of blocked or passed rules in a browser tab
+* Unlike other blocker extensions, this extension is secure, not requiring permissions to read browsing history or data from the sites you visit
 
 The conditions for blocking or allowing, definable as rules, are as follows:
 * Request Domains
