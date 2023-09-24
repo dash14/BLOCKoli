@@ -9,9 +9,10 @@ const [major, minor, patch, label = "0"] = version
   // split into version parts
   .split(/[.-]/);
 
-export default defineManifest(async (env) => ({
+export default defineManifest({
   manifest_version: 3,
-  name: env.mode === "staging" ? "[INTERNAL] BLOCKoli" : "BLOCKoli",
+  name: "__MSG_appName__",
+  description: "__MSG_appDesc__",
   version: `${major}.${minor}.${patch}.${label}`,
   version_name: version,
   default_locale: "en",
@@ -30,4 +31,4 @@ export default defineManifest(async (env) => ({
     48: "images/icon48.png",
     128: "images/icon128.png",
   },
-}));
+});

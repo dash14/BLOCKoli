@@ -1,4 +1,12 @@
 {
+  "appName": {
+    "message": "BLOCKoli",
+    "description": "The description of the extension, displayed in the web store."
+  },
+  "appDesc": {
+    "message": "ドメイン・URL・リクエストメソッドなどのルールで、Web ネットワークリクエストをブロックまたは許可します。",
+    "description": "The description of the extension, displayed in the web store."
+  },
   "Options": {
     "message": "設定"
   },
