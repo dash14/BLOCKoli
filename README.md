@@ -43,7 +43,7 @@ If you find any bugs and/or want to contribute, feel free to submit issues or pu
 ## Support me 🌟
 
 I love to hear from people using it, giving me the motivation to keep working on this project.  
-If you find this library helpful, please consider giving it a star ⭐ on GitHub!
+If you find this extension helpful, please consider giving it a star ⭐ on GitHub!
 
 You may GitHub Sponsors or Buy Me a Coffee if you would like to show some support for this open-source project. It will be greatly appreciated!
 
