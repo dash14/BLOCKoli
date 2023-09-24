@@ -1,4 +1,4 @@
-# BLOCKoli
+# BLOCKoli - Web request blocker
 
 [日本語 (Japanese)](./README.ja.md)
 
