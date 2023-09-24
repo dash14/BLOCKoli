@@ -1,5 +1,7 @@
 # BLOCKoli
 
+[日本語 (Japanese)](./README.ja.md)
+
 BLOCKoli (pronounced /blɑ'kəli/, like the "R" in broccoli with an "L") is
 a Chrome extension that allows you to block or allow web network requests with
 easy configuration.
