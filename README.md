@@ -1,12 +1,19 @@
 # BLOCKoli - Web request blocker
 
+[English](./README.md) •
 [日本語 (Japanese)](./README.ja.md)
 
 BLOCKoli (pronounced /blɑ'kəli/, like the "R" in broccoli with an "L") is
 a Chrome extension that allows you to block or allow web network requests with
 easy configuration.
 
-![BLOCKoli](./images/brand.png)
+[Chrome Web Store - BLOCKoli](https://chrome.google.com/webstore/detail/blockoli/fekkdhfmnpifpdgipnkjgfaalcffdeih)
+
+[![BLOCKoli](./images/brand.png)](https://chrome.google.com/webstore/detail/blockoli/fekkdhfmnpifpdgipnkjgfaalcffdeih)
+
+[![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/dash14/BLOCKoli/main?label=Version)](./package.json)
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/fekkdhfmnpifpdgipnkjgfaalcffdeih?label=Chrome%20Web%20Store)](https://chrome.google.com/webstore/detail/blockoli/fekkdhfmnpifpdgipnkjgfaalcffdeih)
+[![GitHub](https://img.shields.io/github/license/dash14/BLOCKoli)](./LICENSE)
 
 For example, it is useful in the following situations:
 * In user support operations for web services, block modification requests (POST, PATCH, PUT, DELETE) to the target web site to prevent inadvertent modification of user data.
