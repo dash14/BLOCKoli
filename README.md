@@ -20,11 +20,13 @@ For example, it is useful in the following situations:
 * In web development, block specific requests and make them fail to check the system behavior.
 * When using a pay-as-you-go network, suppress communication charges by blocking request for image and media resources.
 
-The following features are available:
-* Define the conditions for blocking or allowing (exceptions to blocking) network requests that occur on the browser as rules
-* Enable or disable entire rules
-* Display a list of blocked or passed rules in a browser tab
-* Unlike other blocker extensions, this extension is secure, not requiring permissions to read browsing history or data from the sites you visit
+Features:
+* Rule definition with flexibility
+  * Rules can be defined to block or allow (exceptions to block) network requests based on domain, URL, request method, and resource type
+* Safe as only minimal permissions are required
+  * Unlike many other network blocking extensions, this extension does not require permissions to read and change all your data on all websites or to read your browsing history
+* Work results can be checked
+  * Users can view a list of rules that blocked or allowed requests within a specific tab
 
 The conditions for blocking or allowing, definable as rules, are as follows:
 * Request Domains

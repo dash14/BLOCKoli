@@ -4,7 +4,7 @@ import { FaGithub } from "react-icons/fa";
 export const Copyright: React.FC = () => {
   return (
     <HStack justifyContent="center" alignItems="center">
-      <Text as="span">MIT Licensed | Copyright &copy; 2023 dash14.ack</Text>
+      <Text as="span">Copyright &copy; 2023 dash14.ack</Text>
       <Link
         href="https://github.com/dash14/BLOCKoli"
         target="_blank"
