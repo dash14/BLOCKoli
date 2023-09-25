@@ -84,16 +84,11 @@ const Options: React.FC = () => {
           />
         </HStack>
 
-        <Heading
-          as="h2"
-          fontSize={18 + titleFontAdjuster}
-          fontWeight="normal"
-          marginBottom={4}
-        >
-          {i18n["RuleSets"]}:
-        </Heading>
-
-        <RuleSetsEdit ruleSets={ruleSets} onChange={updateRuleSets} />
+        <RuleSetsEdit
+          ruleSets={ruleSets}
+          titleFontAdjuster={titleFontAdjuster}
+          onChange={updateRuleSets}
+        />
       </Container>
 
       <Container

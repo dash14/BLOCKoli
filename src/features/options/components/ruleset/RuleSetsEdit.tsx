@@ -9,6 +9,7 @@ import {
   Box,
   Button,
   Text,
+  Heading,
 } from "@chakra-ui/react";
 import { css } from "@emotion/react";
 import { CSSTransition } from "react-transition-group";
@@ -24,6 +25,7 @@ import { RuleSetMenu } from "./RuleSetMenu";
 
 type Props = {
   ruleSets: RuleSets;
+  titleFontAdjuster: number;
   onChange: (ruleSets: RuleSets) => void;
 };
 
@@ -37,6 +39,7 @@ const listTransitionCss = css(`
 
 export const RuleSetsEdit: React.FC<Props> = ({
   ruleSets: originalRuleSets,
+  titleFontAdjuster,
   onChange,
 }) => {
   const i18n = useI18n();
@@ -86,11 +89,19 @@ export const RuleSetsEdit: React.FC<Props> = ({
 
   return (
     <>
-      {ruleSets.length === 0 && (
-        <Text fontSize={16} marginLeft={10}>
-          {i18n["empty_ruleset"]}
-        </Text>
+      {ruleSets.length > 0 ? (
+        <Heading
+          as="h2"
+          fontSize={18 + titleFontAdjuster}
+          fontWeight="normal"
+          marginBottom={4}
+        >
+          {i18n["RuleSets"]}:
+        </Heading>
+      ) : (
+        <Text fontSize={18 + titleFontAdjuster}>{i18n["empty_ruleset"]}</Text>
       )}
+
       <SlideTransitionGroup style={listTransitionCss}>
         {ruleSets.map((ruleSet, ruleSetIndex) => (
           <CSSTransition

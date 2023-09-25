@@ -17,7 +17,7 @@
     "message": "Rule Sets"
   },
   "empty_ruleset": {
-    "message": "(There are no rule sets available. Click the button below to add it.)"
+    "message": "There are no rule sets available. Click the button below to add it."
   },
   "Notice": {
     "message": "Notice"
