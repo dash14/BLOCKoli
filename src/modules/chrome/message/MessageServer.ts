@@ -80,6 +80,7 @@ export class MessageServer<T extends ServiceBase>
             `Not found "${request.method}" in "${request.service}" service.`
           ),
         });
+        return false;
       }
 
       let result;
