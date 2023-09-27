@@ -100,6 +100,8 @@ export const RuleEdit: React.FC<Props> = ({
     }),
   };
 
+  const controlWidth = 420;
+
   return (
     <RuleContainer isEditing={isEditing}>
       <Box position="absolute" top={1} right={1}>
@@ -177,7 +179,7 @@ export const RuleEdit: React.FC<Props> = ({
                   onChange={(e) => updateRequestDomains(e.target.value)}
                   variant="outline"
                   placeholder="www.example.com, ..."
-                  width={410}
+                  width={controlWidth}
                 />
               ) : (
                 <Tags
@@ -204,7 +206,7 @@ export const RuleEdit: React.FC<Props> = ({
                   onChange={(e) => updateInitiatorDomains(e.target.value)}
                   variant="outline"
                   placeholder="www.example.com, ..."
-                  width={410}
+                  width={controlWidth}
                 />
               ) : (
                 <Tags
@@ -223,7 +225,7 @@ export const RuleEdit: React.FC<Props> = ({
           <FormControl css={styles.formControl}>
             <FormLabel css={styles.label}>{i18n["RequestMethods"]}</FormLabel>
             {isEditing ? (
-              <Box width={410}>
+              <Box width={controlWidth}>
                 <MultipleSelect
                   placeholder={i18n["ALL"]}
                   options={requestMethodOptions}
@@ -257,7 +259,7 @@ export const RuleEdit: React.FC<Props> = ({
                   <Input
                     value={rule.condition.urlFilter ?? ""}
                     onChange={(e) => updateUrlFilter(e.target.value)}
-                    width={410}
+                    width={controlWidth}
                     variant="outline"
                     placeholder={
                       rule.condition.isRegexFilter
@@ -317,7 +319,7 @@ export const RuleEdit: React.FC<Props> = ({
           <FormControl css={styles.formControl}>
             <FormLabel css={styles.label}>{i18n["ResourceTypes"]}</FormLabel>
             {isEditing ? (
-              <Box width={410}>
+              <Box width={controlWidth}>
                 <MultipleSelect
                   placeholder={i18n["ALL"]}
                   options={resourceTypeOptions}
