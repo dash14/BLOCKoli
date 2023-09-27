@@ -9,7 +9,7 @@ import {
   ListItem,
   Select,
 } from "@chakra-ui/react";
-import { css } from "@emotion/react";
+import { css, Global } from "@emotion/react";
 import { Brand } from "@/components/brand/Brand";
 import { BrandIcon } from "@/components/brand/BrandIcon";
 import { Copyright } from "@/components/brand/Copyright";
@@ -34,8 +34,24 @@ const Options: React.FC = () => {
 
   const { titleFontAdjuster } = useTitleFontAdjuster(language);
 
+  // To prevent flickering when displaying pages,
+  // fade and turn off all transitions until loaded.
+  const globalStyle = css`
+    .options {
+      transition: opacity 0.2s linear;
+      opacity: 1;
+    }
+    .options.loading {
+      opacity: 0;
+    }
+    .options.loading * {
+      transition: none;
+    }
+  `;
+
   return (
-    <Box className={language}>
+    <Box className={`options ${language}${loaded ? "" : " loading"}`}>
+      <Global styles={globalStyle} />
       <HStack
         as="header"
         backgroundColor="#f6ffe7"
