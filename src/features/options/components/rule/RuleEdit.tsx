@@ -147,7 +147,13 @@ export const RuleEdit: React.FC<Props> = ({
                 <CheckCircleIcon color="green" boxSize={4} />
               )}
               <Text as="span" fontSize={16}>
-                {rule.action.type}
+                {
+                  i18n[
+                    rule.action.type === RuleActionType.BLOCK
+                      ? "action_block"
+                      : "action_allow"
+                  ]
+                }
               </Text>
             </HStack>
           )}
