@@ -84,6 +84,7 @@ export const RuleEdit: React.FC<Props> = ({
     formControl: css({
       display: "flex",
       flexDirection: "row",
+      flexWrap: "wrap",
       width: "auto",
       alignItems: "start",
     }),
@@ -292,8 +293,14 @@ export const RuleEdit: React.FC<Props> = ({
                   )}
                 </Box>
               </HStack>
-              <FormErrorMessage marginTop={1}>
-                {regexInvalidReason}
+              <FormErrorMessage
+                css={styles.note}
+                width={controlWidth}
+                marginTop={1}
+              >
+                {regexInvalidReason === "syntaxError"
+                  ? i18n["error_regex_reason_syntaxError"]
+                  : regexInvalidReason}
               </FormErrorMessage>
             </FormControl>
 

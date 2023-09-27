@@ -91,6 +91,9 @@
   "UseRegex": {
     "message": "正規表現を利用"
   },
+  "error_regex_reason_syntaxError": {
+    "message": "正規表現の文法エラーです。記載を確認してください。"
+  },
   "RequestDomains": {
     "message": "リクエスト先ドメイン"
   },
