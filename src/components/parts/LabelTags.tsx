@@ -7,6 +7,7 @@ type Props = {
   options: { label: string; value: string }[];
   values?: string[];
   emptyWidth?: number;
+  maxWidth: number;
 } & ChakraProps;
 
 export const LabelTags: React.FC<Props> = ({
@@ -14,6 +15,7 @@ export const LabelTags: React.FC<Props> = ({
   options,
   values,
   emptyWidth,
+  maxWidth,
   ...props
 }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -23,23 +25,34 @@ export const LabelTags: React.FC<Props> = ({
     .filter((o) => values?.includes(o.value))
     .map((o) => o.label);
 
+  const gap = 5;
+
   useEffect(() => {
     // Adjust width dynamically
     const element = ref.current as HTMLDivElement;
     const observer = new ResizeObserver(() => {
-      const newWidth = Array.from(element.children).reduce((newWidth, elm) => {
+      const widthList = Array.from(element.children).map((elm) => {
         const div = elm as HTMLDivElement;
-        return Math.max(div.offsetLeft + div.offsetWidth, newWidth);
-      }, 0);
-      if (newWidth > 0) {
-        setWidth(newWidth + 1); // 1: additional margin
+        return div.getBoundingClientRect().width;
+      });
+      if (widthList.length === 0) return;
+      let currentWidth = widthList.shift() ?? 0;
+      for (const width of widthList) {
+        const newWidth = currentWidth + gap + width;
+        if (newWidth > maxWidth) {
+          break;
+        }
+        currentWidth = newWidth;
       }
+      setWidth(Math.ceil(currentWidth));
     });
-    observer.observe(element);
+    // observer.observe(element);
+    Array.from(element.children).forEach((elm) => observer.observe(elm));
+
     return () => {
       observer.disconnect();
     };
-  }, [ref]);
+  }, [ref, maxWidth]);
 
   return (
     <HStack
@@ -48,7 +61,7 @@ export const LabelTags: React.FC<Props> = ({
       flexWrap="wrap"
       flex="1"
       maxWidth={width}
-      gap="5px"
+      gap={`${gap}px`}
       {...props}
     >
       {labels.length === 0 ? (

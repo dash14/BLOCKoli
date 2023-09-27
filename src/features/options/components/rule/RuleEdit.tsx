@@ -236,6 +236,7 @@ export const RuleEdit: React.FC<Props> = ({
                 empty={i18n["ALL"]}
                 options={requestMethodOptions}
                 values={rule.condition.requestMethods}
+                maxWidth={550}
                 marginTop="2px"
               />
             )}
@@ -329,6 +330,7 @@ export const RuleEdit: React.FC<Props> = ({
                 empty={i18n["ALL"]}
                 options={resourceTypeOptions}
                 values={rule.condition.resourceTypes}
+                maxWidth={550}
                 marginTop="2px"
               />
             )}
