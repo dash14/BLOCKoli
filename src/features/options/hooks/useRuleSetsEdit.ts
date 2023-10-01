@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
 import cloneDeep from "lodash-es/cloneDeep";
 import { push, removeAt, replaceAt } from "@/modules/core/array";
-import {
-  RULE_ID_EDITING,
-  Rule,
-  RuleSet,
-  RuleSets,
-  newRuleSetTemplate,
-} from "@/modules/core/rules";
+import { RULE_ID_EDITING, Rule, RuleSet, RuleSets } from "@/modules/core/rules";
+import { newRuleSetTemplate } from "@/modules/rules/template";
 
 export function useRuleSetsEdit(
   originalRuleSets: RuleSets,

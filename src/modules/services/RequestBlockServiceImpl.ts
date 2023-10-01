@@ -7,20 +7,18 @@ import {
 } from "@/modules/chrome/api";
 import { Rule as ApiRule } from "@/modules/chrome/api";
 import {
-  MatchedRule,
   RULE_ID_UNSAVED,
   RuleActionType,
-  RulePointer,
   RuleSets,
 } from "@/modules/core/rules";
 import { EventEmitter, ServiceBase } from "@/modules/core/service";
 import { convertToApiRule } from "@/modules/rules/convert";
+import { MatchedRule, RulePointer } from "@/modules/rules/matched";
+import { getReservedRules } from "@/modules/rules/reserved";
 import { toRuleList, walkRules } from "@/modules/rules/rulesets";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import logging from "@/modules/utils/logging";
-
-import { getReservedRules } from "../rules/reserved";
 
 const log = logging.getLogger("RequestBlock");
 

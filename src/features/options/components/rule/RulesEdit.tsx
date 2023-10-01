@@ -5,11 +5,8 @@ import { CSSTransition } from "react-transition-group";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
 import { useRulesEdit } from "@/features/options/hooks/useRulesEdit";
 import { useI18n } from "@/hooks/useI18n";
-import {
-  RULE_ID_EDITING,
-  RuleWithId,
-  newRuleTemplate,
-} from "@/modules/core/rules";
+import { RULE_ID_EDITING, RuleWithId } from "@/modules/core/rules";
+import { newRuleTemplate } from "@/modules/rules/template";
 import { RuleContainer } from "./RuleContainer";
 import { RuleEdit } from "./RuleEdit";
 

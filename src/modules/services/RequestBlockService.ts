@@ -1,6 +1,7 @@
-import { MatchedRule, RuleSets } from "@/modules/core/rules";
+import { RuleSets } from "@/modules/core/rules";
 import { ServiceBase } from "@/modules/core/service";
 import { State } from "@/modules/core/state";
+import { MatchedRule } from "@/modules/rules/matched";
 
 export const ServiceId = "RequestBlock";
 

@@ -6,8 +6,8 @@ import {
   RULE_ID_UNSAVED,
   Rule,
   RuleWithId,
-  newRuleTemplate,
 } from "@/modules/core/rules";
+import { newRuleTemplate } from "@/modules/rules/template";
 
 export function useRulesEdit(
   rules: RuleWithId[],

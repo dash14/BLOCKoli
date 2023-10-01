@@ -119,30 +119,3 @@ export type RuleSets = RuleSet[];
 
 export const RULE_ID_EDITING = -1;
 export const RULE_ID_UNSAVED = 0;
-
-export const newRuleTemplate: RuleWithId = {
-  id: RULE_ID_EDITING,
-  action: {
-    type: RuleActionType.BLOCK,
-  },
-  condition: {},
-};
-
-export const newRuleSetTemplate: RuleSet = {
-  name: "My Rule Set",
-  rules: [newRuleTemplate],
-};
-
-// matched rules info
-
-export interface RulePointer {
-  ruleSetName: string;
-  number: number;
-  isBlocking: boolean;
-}
-
-export interface MatchedRule {
-  ruleId: number;
-  rule: RulePointer;
-  timeStamp: number;
-}
