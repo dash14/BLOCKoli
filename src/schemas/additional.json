@@ -2,7 +2,7 @@
     "definitions": {
         "Domain": {
             "minLength": 1,
-            "pattern": "^[ -~]+$"
+            "pattern": "^[!-~]+$"
         },
         "RuleCondition": {
             "properties": {

@@ -63,7 +63,7 @@
     "Domain": {
       "type": "string",
       "minLength": 1,
-      "pattern": "^[ -~]+$"
+      "pattern": "^[!-~]+$"
     },
     "RuleCondition": {
       "title": "RuleCondition",

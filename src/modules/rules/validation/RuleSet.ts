@@ -135,7 +135,8 @@ export function replaceErrorMessages(errors: RuleSetValidationError[]) {
       "should have required property 'requestMethods'",
     "must have required property 'resourceTypes'":
       "should have required property 'resourceTypes'",
-    'must match pattern "^[ -~]+$"': "must not contain non-ascii code",
+    'must match pattern "^[!-~]+$"':
+      "must not contain non-ascii code and space",
     'must match pattern "^[ -~]*$"': "must not contain non-ascii code",
   };
   const actionKeys = Object.keys(replacesForAction);

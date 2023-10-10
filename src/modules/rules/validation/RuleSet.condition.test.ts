@@ -149,7 +149,29 @@ describe("validateRuleSet: RuleSet#condition", () => {
             ruleSetField: "rules",
             ruleNumber: 0,
             ruleField: "condition.requestDomains",
-            message: "must not contain non-ascii code",
+            message: "must not contain non-ascii code and space",
+          },
+        ],
+      });
+    });
+
+    it("[invalid] contain space", () => {
+      const targetRule = {
+        action: { type: "block" },
+        condition: {
+          requestDomains: ["www.example .com"],
+        },
+      };
+      const ruleSet = ruleToRuleSet(targetRule);
+      const result = validateRuleSet(ruleSet);
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [
+          {
+            ruleSetField: "rules",
+            ruleNumber: 0,
+            ruleField: "condition.requestDomains",
+            message: "must not contain non-ascii code and space",
           },
         ],
       });
@@ -221,7 +243,29 @@ describe("validateRuleSet: RuleSet#condition", () => {
             ruleSetField: "rules",
             ruleNumber: 0,
             ruleField: "condition.initiatorDomains",
-            message: "must not contain non-ascii code",
+            message: "must not contain non-ascii code and space",
+          },
+        ],
+      });
+    });
+
+    it("[invalid] contain space", () => {
+      const targetRule = {
+        action: { type: "block" },
+        condition: {
+          initiatorDomains: ["www.example .com"],
+        },
+      };
+      const ruleSet = ruleToRuleSet(targetRule);
+      const result = validateRuleSet(ruleSet);
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [
+          {
+            ruleSetField: "rules",
+            ruleNumber: 0,
+            ruleField: "condition.initiatorDomains",
+            message: "must not contain non-ascii code and space",
           },
         ],
       });
