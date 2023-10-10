@@ -2,6 +2,7 @@ import { ChromeStorageApi } from "@/modules/chrome/api";
 import { RuleSets } from "@/modules/core/rules";
 import { State } from "@/modules/core/state";
 import { RESERVED_RULE_ID_MAX } from "@/modules/rules/reserved";
+import { StoredRuleSets } from "../rules/stored";
 import { ServiceConfigurationStore } from "./ServiceConfigurationStore";
 
 export class ServiceConfigurationStoreImpl
@@ -34,8 +35,8 @@ export class ServiceConfigurationStoreImpl
     await this.storage.set("ruleSets", ruleSets);
   }
 
-  async loadRuleSets(): Promise<RuleSets> {
-    const ruleSets = await this.storage.get<RuleSets>("ruleSets");
+  async loadRuleSets(): Promise<StoredRuleSets> {
+    const ruleSets = await this.storage.get<StoredRuleSets>("ruleSets");
     return ruleSets ?? [];
   }
 

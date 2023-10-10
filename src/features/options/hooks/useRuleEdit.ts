@@ -7,7 +7,7 @@ import {
   Rule,
   RuleActionType,
 } from "@/modules/core/rules";
-import { RuleValidator } from "@/modules/rules/validation";
+import { RuleValidator } from "@/modules/rules/validation/edit";
 
 const ruleValidator = new RuleValidator(createRegexValidator());
 

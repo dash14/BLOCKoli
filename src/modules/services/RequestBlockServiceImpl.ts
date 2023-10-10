@@ -6,11 +6,7 @@ import {
   ChromeRuntimeApi,
 } from "@/modules/chrome/api";
 import { Rule as ApiRule } from "@/modules/chrome/api";
-import {
-  RULE_ID_UNSAVED,
-  RuleActionType,
-  RuleSets,
-} from "@/modules/core/rules";
+import { RuleActionType } from "@/modules/core/rules";
 import { EventEmitter, ServiceBase } from "@/modules/core/service";
 import { convertToApiRule } from "@/modules/rules/convert";
 import { MatchedRule, RulePointer } from "@/modules/rules/matched";
@@ -19,6 +15,7 @@ import { toRuleList, walkRules } from "@/modules/rules/rulesets";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import logging from "@/modules/utils/logging";
+import { RULE_ID_UNSAVED, StoredRuleSets } from "../rules/stored";
 
 const log = logging.getLogger("RequestBlock");
 
@@ -89,14 +86,16 @@ export class RequestBlockServiceImpl
     return (await this.store.loadState()) === "enable";
   }
 
-  public async getRuleSets(): Promise<RuleSets> {
+  public async getRuleSets(): Promise<StoredRuleSets> {
     // Load from store
     const ruleSets = await this.store.loadRuleSets();
     log.debug("loadRuleSets from store", ruleSets);
     return ruleSets;
   }
 
-  public async updateRuleSets(ruleSets: RuleSets): Promise<RuleSets> {
+  public async updateRuleSets(
+    ruleSets: StoredRuleSets
+  ): Promise<StoredRuleSets> {
     log.debug("updateRuleSets");
 
     const prevRuleSets = await this.getRuleSets();
@@ -119,7 +118,7 @@ export class RequestBlockServiceImpl
     return ruleSets;
   }
 
-  private async applyRuleSets(ruleSets: RuleSets): Promise<void> {
+  private async applyRuleSets(ruleSets: StoredRuleSets): Promise<void> {
     const rules: ApiRule[] = [
       ...getReservedRules(this.runtime.getId()),
       ...convertToApiRule(toRuleList(ruleSets)),
@@ -186,7 +185,7 @@ export class RequestBlockServiceImpl
     this.action.setIcon({ path: DISABLED_ICON });
   }
 
-  private async assignRuleId(ruleSets: RuleSets): Promise<void> {
+  private async assignRuleId(ruleSets: StoredRuleSets): Promise<void> {
     let nextId = await this.store.loadNextRuleId();
     ruleSets.forEach((ruleSet) => {
       ruleSet.rules.forEach((rule) => {
@@ -198,7 +197,7 @@ export class RequestBlockServiceImpl
     await this.store.saveNextRuleId(nextId);
   }
 
-  private convertToRulePointers(ruleSets: RuleSets): RulePointers {
+  private convertToRulePointers(ruleSets: StoredRuleSets): RulePointers {
     const pointers = new Map<number, RulePointer>();
     walkRules(ruleSets, (rule, index, ruleSet) => {
       pointers.set(rule.id, {

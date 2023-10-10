@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import cloneDeep from "lodash-es/cloneDeep";
 import { push, removeAt, replaceAt } from "@/modules/core/array";
+import { Rule } from "@/modules/core/rules";
 import {
   RULE_ID_EDITING,
   RULE_ID_UNSAVED,
-  Rule,
-  RuleWithId,
-} from "@/modules/core/rules";
+  StoredRule,
+} from "@/modules/rules/stored";
 import { newRuleTemplate } from "@/modules/rules/template";
 
 export function useRulesEdit(
-  rules: RuleWithId[],
-  onChange: (rules: RuleWithId[]) => void
+  rules: StoredRule[],
+  onChange: (rules: StoredRule[]) => void
 ) {
   const [isAllowAdd, setIsAllowAdd] = useState(true);
 
@@ -24,7 +24,7 @@ export function useRulesEdit(
   }
 
   function updateRule(rule: Rule, index: number) {
-    const updated = rule as RuleWithId;
+    const updated = rule as StoredRule;
     if (updated.id === RULE_ID_EDITING) {
       updated.id = RULE_ID_UNSAVED;
     }

@@ -1,9 +1,4 @@
-import {
-  RequestMethod,
-  ResourceType,
-  RuleAction,
-  Rules,
-} from "@/modules/core/rules";
+import { RequestMethod, ResourceType, RuleAction } from "@/modules/core/rules";
 
 export interface ChromeRuntimeApi {
   getId(): string;
@@ -136,7 +131,7 @@ export interface IsRegexSupportedResult {
 
 export interface ChromeDeclarativeNetRequestApi {
   updateDynamicRules(options: UpdateRuleOptions): Promise<void>;
-  getDynamicRules(): Promise<Rules>;
+  getDynamicRules(): Promise<Rule[]>;
   removeAllDynamicRules(): Promise<void>;
   getMatchedRulesInActiveTab(): Promise<MatchedRuleInfo[]>;
   isRegexSupported(options: RegexOptions): Promise<IsRegexSupportedResult>;

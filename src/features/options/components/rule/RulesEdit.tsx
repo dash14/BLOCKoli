@@ -5,14 +5,14 @@ import { CSSTransition } from "react-transition-group";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
 import { useRulesEdit } from "@/features/options/hooks/useRulesEdit";
 import { useI18n } from "@/hooks/useI18n";
-import { RULE_ID_EDITING, RuleWithId } from "@/modules/core/rules";
+import { RULE_ID_EDITING, StoredRule } from "@/modules/rules/stored";
 import { newRuleTemplate } from "@/modules/rules/template";
 import { RuleContainer } from "./RuleContainer";
 import { RuleEdit } from "./RuleEdit";
 
 type Props = {
-  rules: RuleWithId[];
-  onChange: (rules: RuleWithId[]) => void;
+  rules: StoredRule[];
+  onChange: (rules: StoredRule[]) => void;
 };
 
 export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
