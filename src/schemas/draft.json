@@ -1,0 +1,169 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "RuleActionType": {
+            "description": "Describes the kind of action to take if a given RuleCondition matches.",
+            "title": "RuleActionType",
+            "enum": [
+                "allow",
+                "block"
+            ],
+            "type": "string"
+        },
+        "RuleAction": {
+            "title": "RuleAction",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "$ref": "#/definitions/RuleActionType",
+                    "description": "The type of action to perform.",
+                    "title": "type"
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "type"
+            ]
+        },
+        "RequestMethod": {
+            "description": "This describes the HTTP request method of a network request.",
+            "title": "RequestMethod",
+            "enum": [
+                "connect",
+                "delete",
+                "get",
+                "head",
+                "options",
+                "patch",
+                "post",
+                "put"
+            ],
+            "type": "string"
+        },
+        "ResourceType": {
+            "description": "This describes the resource type of the network request.",
+            "title": "ResourceType",
+            "enum": [
+                "csp_report",
+                "font",
+                "image",
+                "main_frame",
+                "media",
+                "object",
+                "other",
+                "ping",
+                "script",
+                "stylesheet",
+                "sub_frame",
+                "websocket",
+                "xmlhttprequest"
+            ],
+            "type": "string"
+        },
+        "Domain": {
+            "type": "string"
+        },
+        "RuleCondition": {
+            "title": "RuleCondition",
+            "type": "object",
+            "properties": {
+                "requestDomains": {
+                    "description": "The rule will only match network requests when the domain matches one from the list of requestDomains.\nIf the list is omitted, the rule is applied to requests from all domains.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "requestDomains"
+                },
+                "initiatorDomains": {
+                    "description": "The rule will only match network requests originating from the list of initiatorDomains.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "initiatorDomains"
+                },
+                "urlFilter": {
+                    "description": "The pattern which is matched against the network request url.",
+                    "type": "string",
+                    "title": "urlFilter"
+                },
+                "isRegexFilter": {
+                    "description": "Whether to use regular expressions in the urlFilter.",
+                    "type": "boolean",
+                    "title": "isRegexFilter"
+                },
+                "requestMethods": {
+                    "description": "List of HTTP request methods which the rule can match.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/RequestMethod"
+                    },
+                    "title": "requestMethods"
+                },
+                "resourceTypes": {
+                    "description": "List of resource types which the rule can match.\nAn empty list is not allowed.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ResourceType"
+                    },
+                    "title": "resourceTypes"
+                }
+            },
+            "additionalProperties": false
+        },
+        "Rule": {
+            "title": "Rule",
+            "type": "object",
+            "properties": {
+                "action": {
+                    "$ref": "#/definitions/RuleAction",
+                    "title": "action"
+                },
+                "condition": {
+                    "$ref": "#/definitions/RuleCondition",
+                    "title": "condition"
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "action",
+                "condition"
+            ]
+        },
+        "Rules": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/Rule"
+            }
+        },
+        "RuleSet": {
+            "title": "RuleSet",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "title": "name"
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Rule"
+                    },
+                    "title": "rules"
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "name",
+                "rules"
+            ]
+        },
+        "RuleSets": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/RuleSet"
+            }
+        }
+    }
+}
