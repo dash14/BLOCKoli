@@ -14,7 +14,9 @@ function getAjv() {
   return ajv;
 }
 
-export function createValidator(validationType: "RuleSet" | "RuleSets") {
+export function createValidator(
+  validationType: "RuleSet" | "RuleSets" | "Rule"
+) {
   const ajv = getAjv();
   return ajv.compile(schema.definitions[validationType]);
 }

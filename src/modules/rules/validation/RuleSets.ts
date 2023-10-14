@@ -1,11 +1,11 @@
 import { RuleSets } from "@/modules/core/rules";
 import { uniqueObjects } from "@/modules/utils/unique";
+import { replaceErrorMessages } from "./Rule";
 import {
   RuleSetInstancePath,
   RuleSetValidationError,
   parseRuleSetInstancePath,
-  replaceErrorMessages,
-  validateContainAtLeastOneRule,
+  validateContainAtLeastOneRuleInRuleSet,
 } from "./RuleSet";
 import { createValidator } from "./schema";
 
@@ -43,7 +43,8 @@ export function validateRuleSets(json: object): RuleSetsValidationResult {
     const evaluated = json as unknown as RuleSets;
     const errors = evaluated
       .map((ruleSet, i) => {
-        const [valid, ruleSetErrors] = validateContainAtLeastOneRule(ruleSet);
+        const [valid, ruleSetErrors] =
+          validateContainAtLeastOneRuleInRuleSet(ruleSet);
         if (valid) {
           return true;
         } else {
@@ -93,6 +94,6 @@ function parseInstancePath(path: string): RuleSetsInstancePath {
 
   return {
     ruleSetNumber,
-    ...parseRuleSetInstancePath("/" + paths.join("/")),
+    ...parseRuleSetInstancePath(paths),
   };
 }

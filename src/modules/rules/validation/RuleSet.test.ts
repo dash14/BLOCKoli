@@ -104,4 +104,47 @@ describe("validateRuleSet: RuleSet", () => {
       });
     });
   });
+
+  describe("A ruleNumber is specified in the Rule error", () => {
+    it("[invalid] not array", () => {
+      const ruleSet = {
+        name: "rule set",
+        rules: [
+          // valid
+          {
+            action: { type: "block" },
+            condition: { requestMethods: ["post"] },
+          },
+          // invalid
+          {
+            action: { type: "block" },
+            condition: { resourceTypes: "invalid" },
+          },
+          // invalid
+          {
+            action: { type: "invalid" },
+            condition: { requestMethods: ["post"] },
+          },
+        ],
+      };
+      const result = validateRuleSet(ruleSet);
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [
+          {
+            ruleSetField: "rules",
+            ruleNumber: 1,
+            ruleField: "condition.resourceTypes",
+            message: "must be array",
+          },
+          {
+            ruleSetField: "rules",
+            ruleNumber: 2,
+            ruleField: "action.type",
+            message: "must be either 'block' or 'allow'",
+          },
+        ],
+      });
+    });
+  });
 });

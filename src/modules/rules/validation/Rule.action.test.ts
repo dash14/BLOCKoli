@@ -1,42 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { Rule, RuleSet } from "@/modules/core/rules";
-import { validateRuleSet } from "./RuleSet";
+import { validateRule } from "./Rule";
 
-function ruleToRuleSet(rule: unknown): RuleSet {
-  return { name: "rule set", rules: [rule as Rule] };
-}
-
-describe("validateRuleSet: RuleSet#action", () => {
+describe("validateRule: Rule#action", () => {
   const validCondition = {
     requestDomains: ["www.example.com"],
   };
   describe("Rule `action' field", () => {
     it("[invalid] not specified", () => {
-      const targetRule = { condition: validCondition };
-      const ruleSet = ruleToRuleSet(targetRule);
-      const result = validateRuleSet(ruleSet);
+      const rule = { condition: validCondition };
+      const result = validateRule(rule);
       expect(result).toStrictEqual({
         valid: false,
-        errors: [
-          {
-            ruleSetField: "rules",
-            ruleNumber: 0,
-            message: "must have required property 'action'",
-          },
-        ],
+        errors: [{ message: "must have required property 'action'" }],
       });
     });
 
     it("[invalid] not object", () => {
-      const targetRule = { action: [], condition: validCondition };
-      const ruleSet = ruleToRuleSet(targetRule);
-      const result = validateRuleSet(ruleSet);
+      const rule = { action: [], condition: validCondition };
+      const result = validateRule(rule);
       expect(result).toStrictEqual({
         valid: false,
         errors: [
           {
-            ruleSetField: "rules",
-            ruleNumber: 0,
             ruleField: "action",
             message: "must be object",
           },
@@ -49,15 +34,14 @@ describe("validateRuleSet: RuleSet#action", () => {
     const validActions = ["block", "allow"];
     validActions.forEach((actionType) => {
       it(`[valid] '${actionType}'`, () => {
-        const targetRule = {
+        const rule = {
           action: { type: actionType },
           condition: validCondition,
         };
-        const ruleSet = ruleToRuleSet(targetRule);
-        const result = validateRuleSet(ruleSet);
+        const result = validateRule(rule);
         expect(result).toStrictEqual({
           valid: true,
-          evaluated: ruleSet,
+          evaluated: rule,
         });
       });
     });
@@ -65,18 +49,15 @@ describe("validateRuleSet: RuleSet#action", () => {
     const invalidActions = ["", "invalid"];
     invalidActions.forEach((actionType) => {
       it(`[invalid] '${actionType}'`, () => {
-        const targetRule = {
+        const rule = {
           action: { type: actionType },
           condition: validCondition,
         };
-        const ruleSet = ruleToRuleSet(targetRule);
-        const result = validateRuleSet(ruleSet);
+        const result = validateRule(rule);
         expect(result).toStrictEqual({
           valid: false,
           errors: [
             {
-              ruleSetField: "rules",
-              ruleNumber: 0,
               ruleField: "action.type",
               message: "must be either 'block' or 'allow'",
             },
@@ -86,18 +67,15 @@ describe("validateRuleSet: RuleSet#action", () => {
     });
 
     it(`[invalid] not specified`, () => {
-      const targetRule = {
+      const rule = {
         action: {},
         condition: validCondition,
       };
-      const ruleSet = ruleToRuleSet(targetRule);
-      const result = validateRuleSet(ruleSet);
+      const result = validateRule(rule);
       expect(result).toStrictEqual({
         valid: false,
         errors: [
           {
-            ruleSetField: "rules",
-            ruleNumber: 0,
             ruleField: "action",
             message: "must have required property 'type'",
           },
