@@ -291,6 +291,26 @@ describe("validateRule: Rule#condition", () => {
         ],
       });
     });
+
+    it("[invalid] invalid regex", () => {
+      const rule = {
+        action: { type: "block" },
+        condition: {
+          urlFilter: "www\\.[a-z",
+          isRegexFilter: true,
+        },
+      };
+      const result = validateRule(rule);
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [
+          {
+            ruleField: "condition.urlFilter",
+            message: "must not be an invalid regular expression",
+          },
+        ],
+      });
+    });
   });
 
   describe("Rule `condition.isRegexFilter' field", () => {

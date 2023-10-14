@@ -4,8 +4,8 @@ import {
   RuleInstancePath,
   RuleValidationError,
   replaceErrorMessages,
-  validateContainAtLeastOneRule,
   parseRuleInstancePath,
+  validateWithoutSchema,
 } from "./Rule";
 import { createValidator } from "./schema";
 
@@ -70,13 +70,15 @@ export function validateContainAtLeastOneRuleInRuleSet(
 ): [boolean, RuleSetValidationError[]] {
   const errors: RuleSetValidationError[] = [];
   ruleSet.rules.forEach((rule, i) => {
-    const [valid, error] = validateContainAtLeastOneRule(rule);
-    if (!valid) {
-      errors.push({
-        ruleSetField: "rules",
-        ruleNumber: i,
-        ...error,
-      });
+    const result = validateWithoutSchema(rule);
+    if (!result.valid) {
+      for (const error of result.errors) {
+        errors.push({
+          ruleSetField: "rules",
+          ruleNumber: i,
+          ...error,
+        });
+      }
     }
   });
   return [errors.length === 0, errors];

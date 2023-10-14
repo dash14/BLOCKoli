@@ -26,6 +26,8 @@ export interface RuleInstancePath {
   ruleField?: string | undefined;
 }
 
+type ValidationResult = [true, undefined] | [false, RuleValidationError];
+
 // ------------------------------------
 // Functions
 // ------------------------------------
@@ -36,12 +38,7 @@ export function validateRule(json: object): RuleValidationResult {
 
   if (valid) {
     const evaluated = json as unknown as Rule;
-    const [valid, error] = validateContainAtLeastOneRule(evaluated);
-    if (valid) {
-      return { valid: true, evaluated };
-    } else {
-      return { valid: false, errors: [error] };
-    }
+    return validateWithoutSchema(evaluated);
   } else {
     const errors: RuleValidationError[] =
       validate.errors?.map((err) => {
@@ -57,19 +54,21 @@ export function validateRule(json: object): RuleValidationResult {
   }
 }
 
-export function validateContainAtLeastOneRule(
-  rule: Rule
-): [true, undefined] | [false, RuleValidationError] {
-  if (Object.keys(rule.condition).length === 0) {
-    return [
-      false,
-      {
-        ruleField: "condition",
-        message: "must contain at least one rule",
-      },
-    ];
+export function validateWithoutSchema(rule: Rule): RuleValidationResult {
+  const [isValid1, error1] = validateContainAtLeastOneRule(rule);
+  const [isValid2, error2] = validateRegexpFilter(rule);
+
+  if (isValid1 && isValid2) {
+    return { valid: true, evaluated: rule };
   }
-  return [true, undefined];
+  const errors = [];
+  if (!isValid1) {
+    errors.push(error1);
+  }
+  if (!isValid2) {
+    errors.push(error2);
+  }
+  return { valid: false, errors };
 }
 
 export function parseRuleInstancePath(paths: string[]): RuleInstancePath {
@@ -147,4 +146,34 @@ function parseInstancePath(path: string): RuleInstancePath {
   paths.shift();
 
   return parseRuleInstancePath(paths);
+}
+
+function validateContainAtLeastOneRule(rule: Rule): ValidationResult {
+  if (Object.keys(rule.condition).length === 0) {
+    return [
+      false,
+      {
+        ruleField: "condition",
+        message: "must contain at least one rule",
+      },
+    ];
+  }
+  return [true, undefined];
+}
+
+function validateRegexpFilter(rule: Rule): ValidationResult {
+  if (rule.condition.urlFilter && rule.condition.isRegexFilter) {
+    try {
+      new RegExp(rule.condition.urlFilter);
+    } catch (e) {
+      return [
+        false,
+        {
+          ruleField: "condition.urlFilter",
+          message: "must not be an invalid regular expression",
+        },
+      ];
+    }
+  }
+  return [true, undefined];
 }
