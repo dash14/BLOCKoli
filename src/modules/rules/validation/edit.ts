@@ -27,7 +27,7 @@ export class RuleValidator {
 
   public async validate(rule: Rule): Promise<RuleValidationResult> {
     if (rule.condition.isRegexFilter && rule.condition.urlFilter) {
-      const result = await this.regexValidator(rule.condition.urlFilter, false);
+      const result = await this.regexValidator(rule.condition.urlFilter, true);
       if (!result.isSupported) {
         return {
           isValid: false,
