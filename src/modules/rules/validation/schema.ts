@@ -1,9 +1,8 @@
-// @ts-ignore
-import * as validations from "@/schemas/validate";
+import { SchemaValidator } from "@/schemas/validate.mjs";
+import * as validations from "@/schemas/validate.mjs";
 
 export function createValidator(
   validationType: "RuleSet" | "RuleSets" | "Rule"
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): any {
+): SchemaValidator {
   return validations[validationType];
 }

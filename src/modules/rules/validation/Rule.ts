@@ -41,7 +41,7 @@ export function validateRule(json: object): RuleValidationResult {
     return validateWithoutSchema(evaluated);
   } else {
     const errors: RuleValidationError[] =
-      validate.errors?.map((err: { instancePath: string; message: string }) => {
+      validate.errors?.map((err) => {
         return {
           ...parseInstancePath(err.instancePath),
           message: err.message,
