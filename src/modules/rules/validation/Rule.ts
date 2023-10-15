@@ -26,49 +26,49 @@ export interface RuleInstancePath {
   ruleField?: string | undefined;
 }
 
-type ValidationResult = [true, undefined] | [false, RuleValidationError];
+export type ValidationResult<
+  T extends RuleValidationError = RuleValidationError
+> = [true, undefined] | [false, T[]];
 
 // ------------------------------------
 // Functions
 // ------------------------------------
 
 export function validateRule(json: object): RuleValidationResult {
-  const validate = createValidator("Rule");
-  const valid = validate(json);
+  const [valid, errors] = combineValidationResult(
+    validateWithSchema(json),
+    validateWithoutSchema(json)
+  );
 
   if (valid) {
     const evaluated = json as unknown as Rule;
-    return validateWithoutSchema(evaluated);
+    const [valid, errors] = validateAdditional(evaluated);
+    return valid ? { valid, evaluated } : { valid, errors };
   } else {
-    const errors: RuleValidationError[] =
-      validate.errors?.map((err) => {
-        return {
-          ...parseInstancePath(err.instancePath),
-          message: err.message,
-        };
-      }) ?? [];
-    return {
-      valid: false,
-      errors: replaceErrorMessages(uniqueObjects(errors)),
-    };
+    return { valid, errors };
   }
 }
 
-export function validateWithoutSchema(rule: Rule): RuleValidationResult {
-  const [isValid1, error1] = validateContainAtLeastOneRule(rule);
-  const [isValid2, error2] = validateRegexpFilter(rule);
+export function validateWithoutSchema(json: object): ValidationResult {
+  return validateRegexpFilter(json);
+}
 
-  if (isValid1 && isValid2) {
-    return { valid: true, evaluated: rule };
+export function validateAdditional(rule: Rule): ValidationResult {
+  return validateContainAtLeastOneRule(rule);
+}
+
+export function combineValidationResult<T extends RuleValidationError>(
+  result1: ValidationResult<T>,
+  result2: ValidationResult<T>
+): ValidationResult<T> {
+  const [valid1, errors1] = result1;
+  const [valid2, errors2] = result2;
+
+  if (valid1 && valid2) {
+    return [true, undefined];
+  } else {
+    return [false, (errors1 ?? []).concat(errors2 ?? [])];
   }
-  const errors = [];
-  if (!isValid1) {
-    errors.push(error1);
-  }
-  if (!isValid2) {
-    errors.push(error2);
-  }
-  return { valid: false, errors };
 }
 
 export function parseRuleInstancePath(paths: string[]): RuleInstancePath {
@@ -148,6 +148,23 @@ function parseInstancePath(path: string): RuleInstancePath {
   return parseRuleInstancePath(paths);
 }
 
+function validateWithSchema(json: object): ValidationResult {
+  const validate = createValidator("Rule");
+  const valid = validate(json);
+  if (valid) {
+    return [valid, undefined];
+  } else {
+    const errors: RuleValidationError[] =
+      validate.errors?.map((err) => {
+        return {
+          ...parseInstancePath(err.instancePath),
+          message: err.message,
+        };
+      }) ?? [];
+    return [valid, replaceErrorMessages(uniqueObjects(errors))];
+  }
+}
+
 function isEmptyArray(ary?: string[]): boolean {
   return !ary || ary.length === 0;
 }
@@ -169,26 +186,32 @@ function validateContainAtLeastOneRule(rule: Rule): ValidationResult {
   if (isRuleConditionEmpty(rule)) {
     return [
       false,
-      {
-        ruleField: "condition",
-        message: "must contain at least one rule",
-      },
+      [
+        {
+          ruleField: "condition",
+          message: "must contain at least one rule",
+        },
+      ],
     ];
   }
   return [true, undefined];
 }
 
-function validateRegexpFilter(rule: Rule): ValidationResult {
-  if (rule.condition.urlFilter && rule.condition.isRegexFilter) {
+function validateRegexpFilter(json: object): ValidationResult {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rule = json as any;
+  if (rule?.condition?.urlFilter && rule?.condition?.isRegexFilter) {
     try {
       new RegExp(rule.condition.urlFilter);
     } catch (e) {
       return [
         false,
-        {
-          ruleField: "condition.urlFilter",
-          message: "must not be an invalid regular expression",
-        },
+        [
+          {
+            ruleField: "condition.urlFilter",
+            message: "must not be an invalid regular expression",
+          },
+        ],
       ];
     }
   }

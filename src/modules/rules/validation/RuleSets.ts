@@ -1,13 +1,5 @@
 import { RuleSets } from "@/modules/core/rules";
-import { uniqueObjects } from "@/modules/utils/unique";
-import { replaceErrorMessages } from "./Rule";
-import {
-  RuleSetInstancePath,
-  RuleSetValidationError,
-  parseRuleSetInstancePath,
-  validateWithoutSchemaInRuleSet,
-} from "./RuleSet";
-import { createValidator } from "./schema";
+import { RuleSetValidationError, validateRuleSet } from "./RuleSet";
 
 // ------------------------------------
 // Types
@@ -27,72 +19,31 @@ export type RuleSetsValidationResult =
       errors: RuleSetsValidationError[];
     };
 
-interface RuleSetsInstancePath extends RuleSetInstancePath {
-  ruleSetNumber?: number | undefined;
-}
-
 // ------------------------------------
 // Exported functions
 // ------------------------------------
 
 export function validateRuleSets(json: object): RuleSetsValidationResult {
-  const validate = createValidator("RuleSets");
-  const valid = validate(json);
+  if (!(json instanceof Array)) {
+    return { valid: false, errors: [{ message: "must be array" }] };
+  }
+  const ruleSets = json as object[];
 
+  const results = ruleSets.map((ruleSet) => validateRuleSet(ruleSet));
+  const valid = results.every((r) => r.valid);
   if (valid) {
-    const evaluated = json as unknown as RuleSets;
-    const errors = evaluated
-      .map((ruleSet, i) => {
-        const [valid, ruleSetErrors] = validateWithoutSchemaInRuleSet(ruleSet);
-        if (valid) {
-          return true;
-        } else {
-          return {
-            ruleSetNumber: i,
-            ...ruleSetErrors,
-          };
-        }
-      })
-      .filter((v) => v !== true) as RuleSetsValidationError[];
-
-    if (errors.length === 0) {
-      return { valid: true, evaluated };
-    } else {
-      return { valid: false, errors };
-    }
+    return { valid, evaluated: json as RuleSets };
   } else {
-    const errors: RuleSetsValidationError[] =
-      validate.errors?.map((err) => {
-        return {
-          ...parseInstancePath(err.instancePath),
-          message: err.message,
-        };
-      }) ?? [];
-    return {
-      valid: false,
-      errors: replaceErrorMessages(uniqueObjects(errors)),
-    };
+    const errors: RuleSetsValidationError[] = [];
+    results.forEach((result, ruleSetNumber) => {
+      if (result.valid) return;
+      result.errors.forEach((error) => {
+        errors.push({
+          ruleSetNumber,
+          ...error,
+        });
+      });
+    });
+    return { valid: false, errors };
   }
-}
-
-// ------------------------------------
-// Local functions
-// ------------------------------------
-
-function parseInstancePath(path: string): RuleSetsInstancePath {
-  // path is like: "/0/rules/0/condition"
-  const paths = path.split("/");
-  paths.shift();
-  const nextItem = paths.shift();
-  if (nextItem === undefined) return {};
-
-  const ruleSetNumber = parseInt(nextItem, 10);
-  if (!isFinite(ruleSetNumber)) {
-    return {};
-  }
-
-  return {
-    ruleSetNumber,
-    ...parseRuleSetInstancePath(paths),
-  };
 }

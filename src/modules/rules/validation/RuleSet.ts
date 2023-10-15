@@ -5,7 +5,10 @@ import {
   RuleValidationError,
   replaceErrorMessages,
   parseRuleInstancePath,
-  validateWithoutSchema,
+  validateWithoutSchema as validateRuleWithoutSchema,
+  combineValidationResult,
+  validateAdditional as validateRuleAdditional,
+  ValidationResult,
 } from "./Rule";
 import { createValidator } from "./schema";
 
@@ -39,52 +42,40 @@ export interface RuleSetInstancePath extends RuleInstancePath {
 // ------------------------------------
 
 export function validateRuleSet(json: object): RuleSetValidationResult {
-  const validate = createValidator("RuleSet");
-  const valid = validate(json);
+  const [valid, errors] = combineValidationResult<RuleSetValidationError>(
+    validateWithSchema(json),
+    validateWithoutSchema(json)
+  );
+  errors?.sort((a, b) => {
+    if (a.ruleNumber === b.ruleNumber) {
+      return 0;
+    } else {
+      return (a.ruleNumber ?? 0) - (b.ruleNumber ?? 0);
+    }
+  });
 
   if (valid) {
     const evaluated = json as unknown as RuleSet;
-    const [valid, errors] = validateWithoutSchemaInRuleSet(evaluated);
-    if (valid) {
-      return { valid: true, evaluated };
-    } else {
-      return { valid: false, errors };
-    }
+    const [valid, errors] = validateAdditional(evaluated);
+    return valid ? { valid, evaluated } : { valid, errors };
   } else {
-    const errors: RuleSetValidationError[] =
-      validate.errors?.map((err) => {
-        return {
-          ...parseInstancePath(err.instancePath),
-          message: err.message,
-        };
-      }) ?? [];
-    return {
-      valid: false,
-      errors: replaceErrorMessages(uniqueObjects(errors)),
-    };
+    return { valid, errors };
   }
 }
 
-export function validateWithoutSchemaInRuleSet(
-  ruleSet: RuleSet
-): [boolean, RuleSetValidationError[]] {
-  const errors: RuleSetValidationError[] = [];
-  ruleSet.rules.forEach((rule, i) => {
-    const result = validateWithoutSchema(rule);
-    if (!result.valid) {
-      for (const error of result.errors) {
-        errors.push({
-          ruleSetField: "rules",
-          ruleNumber: i,
-          ...error,
-        });
-      }
-    }
-  });
-  return [errors.length === 0, errors];
+// ------------------------------------
+// Local functions
+// ------------------------------------
+
+function parseInstancePath(path: string): RuleSetInstancePath {
+  // path is like: "rules/0/condition"
+  const paths = path.split("/");
+  paths.shift();
+
+  return parseRuleSetInstancePath(paths);
 }
 
-export function parseRuleSetInstancePath(paths: string[]): RuleSetInstancePath {
+function parseRuleSetInstancePath(paths: string[]): RuleSetInstancePath {
   // path is like: ["rules", "0", "condition"]
   let nextItem = paths.shift();
   if (nextItem === undefined) return {};
@@ -108,14 +99,66 @@ export function parseRuleSetInstancePath(paths: string[]): RuleSetInstancePath {
   };
 }
 
-// ------------------------------------
-// Local functions
-// ------------------------------------
+function validateWithSchema(
+  json: object
+): ValidationResult<RuleSetValidationError> {
+  const validate = createValidator("RuleSet");
+  const valid = validate(json);
 
-function parseInstancePath(path: string): RuleSetInstancePath {
-  // path is like: "rules/0/condition"
-  const paths = path.split("/");
-  paths.shift();
+  if (valid) {
+    return [valid, undefined];
+  } else {
+    const errors: RuleSetValidationError[] =
+      validate.errors?.map((err) => {
+        return {
+          ...parseInstancePath(err.instancePath),
+          message: err.message,
+        };
+      }) ?? [];
+    return [valid, replaceErrorMessages(uniqueObjects(errors))];
+  }
+}
 
-  return parseRuleSetInstancePath(paths);
+function validateWithoutSchema(
+  json: object
+): ValidationResult<RuleSetValidationError> {
+  const errors: RuleSetValidationError[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ruleSet = json as any;
+  const rules = ruleSet?.rules;
+  if (!(rules instanceof Array)) {
+    return [false, []]; // delegate validation with schema
+  }
+  rules.forEach((rule: object, i: number) => {
+    const [resultValid, resultErrors] = validateRuleWithoutSchema(rule);
+    if (!resultValid) {
+      for (const error of resultErrors) {
+        errors.push({
+          ruleSetField: "rules",
+          ruleNumber: i,
+          ...error,
+        });
+      }
+    }
+  });
+  return errors.length === 0 ? [true, undefined] : [false, errors];
+}
+
+function validateAdditional(
+  ruleSet: RuleSet
+): ValidationResult<RuleSetValidationError> {
+  const errors: RuleSetValidationError[] = [];
+  ruleSet.rules.forEach((rule, i) => {
+    const [resultValid, resultErrors] = validateRuleAdditional(rule);
+    if (!resultValid) {
+      for (const error of resultErrors) {
+        errors.push({
+          ruleSetField: "rules",
+          ruleNumber: i,
+          ...error,
+        });
+      }
+    }
+  });
+  return errors.length === 0 ? [true, undefined] : [false, errors];
 }

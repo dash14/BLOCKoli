@@ -50,5 +50,30 @@ describe("validateRuleSet: RuleSet", () => {
         errors: [{ message: "must NOT have additional properties" }],
       });
     });
+
+    it("[invalid] multiple error", () => {
+      const rule = {
+        action: { type: RuleActionType.BLOCK },
+        condition: {
+          requestDomains: ["www. .com"], // with schema
+          urlFilter: "test[", // without schema
+          isRegexFilter: true,
+        },
+      };
+      const result = validateRule(rule);
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [
+          {
+            ruleField: "condition.requestDomains",
+            message: "must not contain non-ascii code and space",
+          },
+          {
+            ruleField: "condition.urlFilter",
+            message: "must not be an invalid regular expression",
+          },
+        ],
+      });
+    });
   });
 });

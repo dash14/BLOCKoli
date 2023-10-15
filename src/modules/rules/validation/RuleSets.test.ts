@@ -57,7 +57,11 @@ describe("validateRuleSets: RuleSets", () => {
           rules: [
             {
               action: { type: "allow" },
-              condition: { resourceTypes: ["invalid"] },
+              condition: {
+                resourceTypes: ["invalid"],
+                urlFilter: "test[",
+                isRegexFilter: true,
+              },
             },
           ],
         },
@@ -79,6 +83,13 @@ describe("validateRuleSets: RuleSets", () => {
             ruleNumber: 0,
             ruleField: "condition.resourceTypes",
             message: "must be equal to one of the allowed values",
+          },
+          {
+            ruleSetNumber: 1,
+            ruleSetField: "rules",
+            ruleNumber: 0,
+            ruleField: "condition.urlFilter",
+            message: "must not be an invalid regular expression",
           },
         ],
       });

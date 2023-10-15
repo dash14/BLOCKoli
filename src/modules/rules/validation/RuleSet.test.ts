@@ -122,6 +122,11 @@ describe("validateRuleSet: RuleSet", () => {
           },
           // invalid
           {
+            action: { type: "allow" },
+            condition: { urlFilter: "test[", isRegexFilter: true },
+          },
+          // invalid
+          {
             action: { type: "invalid" },
             condition: { requestMethods: ["post"] },
           },
@@ -140,6 +145,12 @@ describe("validateRuleSet: RuleSet", () => {
           {
             ruleSetField: "rules",
             ruleNumber: 2,
+            ruleField: "condition.urlFilter",
+            message: "must not be an invalid regular expression",
+          },
+          {
+            ruleSetField: "rules",
+            ruleNumber: 3,
             ruleField: "action.type",
             message: "must be either 'block' or 'allow'",
           },
