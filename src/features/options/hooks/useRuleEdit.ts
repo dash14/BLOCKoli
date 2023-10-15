@@ -58,7 +58,7 @@ export function useRuleEdit(
 
   function cancel() {
     setIsEditing(false);
-    setRuleObject(initialRule);
+    resetRuleObject();
     onCancel();
   }
 
@@ -152,6 +152,14 @@ export function useRuleEdit(
     }
     setValidationErrors(errors);
     setIsValid(result.valid);
+  }
+
+  function resetRuleObject() {
+    const rule = initialRule;
+    setRuleObject(rule);
+    setRequestDomainsText(rule.condition.requestDomains?.join(",") ?? "");
+    setInitiatorDomainsText(rule.condition.initiatorDomains?.join(",") ?? "");
+    validate(rule);
   }
 
   return {
