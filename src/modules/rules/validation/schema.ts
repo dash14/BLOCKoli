@@ -1,22 +1,9 @@
-import Ajv from "ajv";
-import schema from "@/schemas/schema.json";
-
-let ajv: Ajv | null = null;
-
-function getAjv() {
-  if (!ajv) {
-    ajv = new Ajv({ allErrors: true });
-    for (const [key, definition] of Object.entries(schema.definitions)) {
-      if (key === "RuleSets") continue;
-      ajv.addSchema(definition, `#/definitions/${key}`);
-    }
-  }
-  return ajv;
-}
+// @ts-ignore
+import * as validations from "@/schemas/validate";
 
 export function createValidator(
   validationType: "RuleSet" | "RuleSets" | "Rule"
-) {
-  const ajv = getAjv();
-  return ajv.compile(schema.definitions[validationType]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any {
+  return validations[validationType];
 }
