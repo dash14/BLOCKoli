@@ -116,6 +116,10 @@
             "title": "Rule",
             "type": "object",
             "properties": {
+                "id": {
+                    "type": "number",
+                    "title": "id"
+                },
                 "action": {
                     "$ref": "#/definitions/RuleAction",
                     "title": "action"

@@ -77,7 +77,7 @@ export const RuleEdit: React.FC<Props> = ({
     requestDomainsText,
     initiatorDomainsText,
     isValid,
-    regexInvalidReason,
+    validationErrors,
   } = useRuleEdit(initialRule, onChange, onCancel, onRemove);
 
   const styles = {
@@ -258,7 +258,7 @@ export const RuleEdit: React.FC<Props> = ({
           <Box>
             <FormControl
               css={styles.formControl}
-              isInvalid={!!regexInvalidReason}
+              isInvalid={validationErrors.urlFilter.length > 0}
             >
               <FormLabel css={styles.label}>{i18n["URLFilter"]}</FormLabel>
               <HStack gap={0} alignItems="start">
@@ -298,9 +298,9 @@ export const RuleEdit: React.FC<Props> = ({
                 width={controlWidth}
                 marginTop={1}
               >
-                {regexInvalidReason === "syntaxError"
-                  ? i18n["error_regex_reason_syntaxError"]
-                  : regexInvalidReason}
+                {validationErrors.urlFilter.map((error) => (
+                  <div key={error}>{error}</div>
+                ))}
               </FormErrorMessage>
             </FormControl>
 

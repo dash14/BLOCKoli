@@ -5,7 +5,7 @@ import {
   RuleSetInstancePath,
   RuleSetValidationError,
   parseRuleSetInstancePath,
-  validateContainAtLeastOneRuleInRuleSet,
+  validateWithoutSchemaInRuleSet,
 } from "./RuleSet";
 import { createValidator } from "./schema";
 
@@ -43,8 +43,7 @@ export function validateRuleSets(json: object): RuleSetsValidationResult {
     const evaluated = json as unknown as RuleSets;
     const errors = evaluated
       .map((ruleSet, i) => {
-        const [valid, ruleSetErrors] =
-          validateContainAtLeastOneRuleInRuleSet(ruleSet);
+        const [valid, ruleSetErrors] = validateWithoutSchemaInRuleSet(ruleSet);
         if (valid) {
           return true;
         } else {

@@ -44,7 +44,7 @@ export function validateRuleSet(json: object): RuleSetValidationResult {
 
   if (valid) {
     const evaluated = json as unknown as RuleSet;
-    const [valid, errors] = validateContainAtLeastOneRuleInRuleSet(evaluated);
+    const [valid, errors] = validateWithoutSchemaInRuleSet(evaluated);
     if (valid) {
       return { valid: true, evaluated };
     } else {
@@ -65,7 +65,7 @@ export function validateRuleSet(json: object): RuleSetValidationResult {
   }
 }
 
-export function validateContainAtLeastOneRuleInRuleSet(
+export function validateWithoutSchemaInRuleSet(
   ruleSet: RuleSet
 ): [boolean, RuleSetValidationError[]] {
   const errors: RuleSetValidationError[] = [];

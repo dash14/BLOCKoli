@@ -6,10 +6,15 @@ import {
   ResourceType,
   Rule,
   RuleActionType,
+  RuleCondition,
 } from "@/modules/core/rules";
 import { RuleValidator } from "@/modules/rules/validation/edit";
 
 const ruleValidator = new RuleValidator(createRegexValidator());
+
+type ValidationErrors = Required<{
+  [K in keyof RuleCondition]: string[];
+}>;
 
 export function useRuleEdit(
   initialRule: Rule,
@@ -26,14 +31,22 @@ export function useRuleEdit(
     rule.condition.initiatorDomains?.join(",") ?? ""
   );
   const [isValid, setIsValid] = useState(false);
-  const [regexInvalidReason, setRegexInvalidReason] = useState("");
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
+    requestDomains: [],
+    initiatorDomains: [],
+    urlFilter: [],
+    isRegexFilter: [],
+    requestMethods: [],
+    resourceTypes: [],
+  });
 
   useEffect(() => {
     // For incomplete data, enter edit mode.
-    ruleValidator.validate(rule).then(({ isValid }) => {
-      if (!isValid) {
+    ruleValidator.validate(rule).then(({ valid }) => {
+      if (!valid) {
         setIsEditing(true);
       }
+      setIsValid(valid);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -120,15 +133,25 @@ export function useRuleEdit(
 
   async function validate(newRule: Rule) {
     const result = await ruleValidator.validate(newRule);
-    if (result.isValid) {
-      setRegexInvalidReason("");
-      setIsValid(true);
-    } else {
-      if (result.reason?.isInvalidUrlFilter) {
-        setRegexInvalidReason(result.reason?.urlFilterReason ?? "");
-      }
-      setIsValid(false);
+    const errors: ValidationErrors = {
+      requestDomains: [],
+      initiatorDomains: [],
+      urlFilter: [],
+      isRegexFilter: [],
+      requestMethods: [],
+      resourceTypes: [],
+    };
+    if (!result.valid) {
+      Object.keys(errors).forEach((key) => {
+        const field = key as keyof ValidationErrors;
+        errors[field] = result.errors
+          .filter((err) => err.ruleField?.endsWith(field))
+          .map((err) => err.message as string)
+          .filter(Boolean);
+      });
     }
+    setValidationErrors(errors);
+    setIsValid(result.valid);
   }
 
   return {
@@ -148,6 +171,6 @@ export function useRuleEdit(
     requestDomainsText,
     initiatorDomainsText,
     isValid,
-    regexInvalidReason,
+    validationErrors,
   };
 }

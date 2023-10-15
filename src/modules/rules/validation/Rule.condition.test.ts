@@ -43,6 +43,30 @@ describe("validateRule: Rule#condition", () => {
       });
     });
 
+    it("[invalid] all fields are empty", () => {
+      const rule = {
+        action: { type: "block" },
+        condition: {
+          requestDomains: [],
+          initiatorDomains: [],
+          urlFilter: "",
+          isRegexFilter: true,
+          requestMethods: [],
+          resourceTypes: [],
+        },
+      };
+      const result = validateRule(rule);
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [
+          {
+            message: "must contain at least one rule",
+            ruleField: "condition",
+          },
+        ],
+      });
+    });
+
     it("[invalid] has invalid field", () => {
       const rule = {
         action: { type: "block" },
@@ -81,7 +105,7 @@ describe("validateRule: Rule#condition", () => {
     it("[valid] empty", () => {
       const rule = {
         action: { type: "block" },
-        condition: { requestDomains: [] },
+        condition: { requestDomains: [], urlFilter: "test" },
       };
       const result = validateRule(rule);
       expect(result).toStrictEqual({
@@ -164,7 +188,7 @@ describe("validateRule: Rule#condition", () => {
     it("[valid] empty", () => {
       const rule = {
         action: { type: "block" },
-        condition: { initiatorDomains: [] },
+        condition: { initiatorDomains: [], urlFilter: "test" },
       };
       const result = validateRule(rule);
       expect(result).toStrictEqual({
@@ -247,7 +271,7 @@ describe("validateRule: Rule#condition", () => {
     it("[valid] empty", () => {
       const rule = {
         action: { type: "block" },
-        condition: { urlFilter: "" },
+        condition: { urlFilter: "", requestDomains: ["example.com"] },
       };
       const result = validateRule(rule);
       expect(result).toStrictEqual({
@@ -318,7 +342,7 @@ describe("validateRule: Rule#condition", () => {
       it(`[valid] ${value.toString()}`, () => {
         const rule = {
           action: { type: "block" },
-          condition: { isRegexFilter: value },
+          condition: { isRegexFilter: value, urlFilter: "test" },
         };
         const result = validateRule(rule);
         expect(result).toStrictEqual({
@@ -376,7 +400,7 @@ describe("validateRule: Rule#condition", () => {
     it("[valid] empty", () => {
       const rule = {
         action: { type: "block" },
-        condition: { requestMethods: [] },
+        condition: { requestMethods: [], urlFilter: "test" },
       };
       const result = validateRule(rule);
       expect(result).toStrictEqual({
@@ -479,7 +503,7 @@ describe("validateRule: Rule#condition", () => {
     it("[valid] empty", () => {
       const rule = {
         action: { type: "block" },
-        condition: { resourceTypes: [] },
+        condition: { resourceTypes: [], urlFilter: "test" },
       };
       const result = validateRule(rule);
       expect(result).toStrictEqual({

@@ -102,6 +102,7 @@ export interface RuleCondition {
 }
 
 export interface Rule {
+  id?: number;
   action: RuleAction;
   condition: RuleCondition;
 }

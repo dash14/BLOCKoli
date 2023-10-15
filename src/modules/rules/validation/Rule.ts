@@ -41,7 +41,7 @@ export function validateRule(json: object): RuleValidationResult {
     return validateWithoutSchema(evaluated);
   } else {
     const errors: RuleValidationError[] =
-      validate.errors?.map((err) => {
+      validate.errors?.map((err: { instancePath: string; message: string }) => {
         return {
           ...parseInstancePath(err.instancePath),
           message: err.message,
@@ -148,8 +148,25 @@ function parseInstancePath(path: string): RuleInstancePath {
   return parseRuleInstancePath(paths);
 }
 
+function isEmptyArray(ary?: string[]): boolean {
+  return !ary || ary.length === 0;
+}
+
+function isRuleConditionEmpty(rule: Rule): boolean {
+  const condition = rule.condition;
+  if (Object.keys(condition).length === 0) return true;
+
+  return (
+    isEmptyArray(condition.requestDomains) &&
+    isEmptyArray(condition.initiatorDomains) &&
+    !condition.urlFilter &&
+    isEmptyArray(condition.requestMethods) &&
+    isEmptyArray(condition.resourceTypes)
+  );
+}
+
 function validateContainAtLeastOneRule(rule: Rule): ValidationResult {
-  if (Object.keys(rule.condition).length === 0) {
+  if (isRuleConditionEmpty(rule)) {
     return [
       false,
       {

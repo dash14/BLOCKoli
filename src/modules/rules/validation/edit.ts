@@ -1,23 +1,6 @@
 import { RegexValidator } from "@/modules/core/regex";
 import { Rule } from "@/modules/core/rules";
-
-export type RuleValidationResult =
-  | {
-      isValid: true;
-    }
-  | {
-      isValid: false;
-      reason: {
-        isInvalidUrlFilter: false;
-      };
-    }
-  | {
-      isValid: false;
-      reason: {
-        isInvalidUrlFilter: true;
-        urlFilterReason: string;
-      };
-    };
+import { RuleValidationResult, validateRule } from "./Rule";
 
 export class RuleValidator {
   private regexValidator: RegexValidator;
@@ -26,36 +9,24 @@ export class RuleValidator {
   }
 
   public async validate(rule: Rule): Promise<RuleValidationResult> {
-    if (rule.condition.isRegexFilter && rule.condition.urlFilter) {
-      const result = await this.regexValidator(rule.condition.urlFilter, true);
-      if (!result.isSupported) {
-        return {
-          isValid: false,
-          reason: {
-            isInvalidUrlFilter: true,
-            urlFilterReason: result.reason ?? "Not supported regex",
-          },
-        };
+    const result = validateRule(rule);
+    if (result.valid) {
+      // Ask Chrome to verify regular expressions as well.
+      if (rule.condition.isRegexFilter && rule.condition.urlFilter) {
+        const v = await this.regexValidator(rule.condition.urlFilter, true);
+        if (!v.isSupported) {
+          return {
+            valid: false,
+            errors: [
+              {
+                ruleField: "condition.urlFilter",
+                message: v.reason ?? "Not supported regex",
+              },
+            ],
+          };
+        }
       }
     }
-
-    if (
-      !!rule.condition.requestMethods?.length ||
-      !!rule.condition.requestDomains?.length ||
-      !!rule.condition.initiatorDomains?.length ||
-      !!rule.condition.urlFilter ||
-      !!rule.condition.resourceTypes?.length
-    ) {
-      return {
-        isValid: true,
-      };
-    } else {
-      return {
-        isValid: false,
-        reason: {
-          isInvalidUrlFilter: false,
-        },
-      };
-    }
+    return result;
   }
 }

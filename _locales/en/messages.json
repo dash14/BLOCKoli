@@ -91,9 +91,6 @@
   "UseRegex": {
     "message": "Use regex"
   },
-  "error_regex_reason_syntaxError": {
-    "message": "Regular expression syntax error. Please check the input."
-  },
   "RequestDomains": {
     "message": "Request Domains"
   },
