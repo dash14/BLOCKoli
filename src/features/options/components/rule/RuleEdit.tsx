@@ -4,7 +4,6 @@ import {
   Button,
   Checkbox,
   FormControl,
-  FormErrorMessage,
   FormLabel,
   HStack,
   Heading,
@@ -20,7 +19,6 @@ import { css } from "@emotion/react";
 import { MultipleSelect } from "@/components/forms/MultipleSelect";
 import { DisableTag } from "@/components/parts/DisableTag";
 import { LabelTags } from "@/components/parts/LabelTags";
-import { Tags } from "@/components/parts/Tags";
 import { useRuleEdit } from "@/features/options/hooks/useRuleEdit";
 import { useI18n } from "@/hooks/useI18n";
 import {
@@ -38,6 +36,8 @@ import { URLFilterWithRegexHint } from "../hints/URLFilterWithRegexHint";
 import { ControlButtons } from "./ControlButtons";
 import { RuleContainer } from "./RuleContainer";
 import { RuleMenu } from "./RuleMenu";
+import { FormErrorMessages } from "./controls/FormErrorMessage";
+import { InputDomains } from "./controls/InputDomains";
 
 type Props = {
   rule: Rule;
@@ -74,8 +74,6 @@ export const RuleEdit: React.FC<Props> = ({
     updateInitiatorDomains,
     isEditing,
     rule,
-    requestDomainsText,
-    initiatorDomainsText,
     isValid,
     validationErrors,
   } = useRuleEdit(initialRule, onChange, onCancel, onRemove);
@@ -178,26 +176,26 @@ export const RuleEdit: React.FC<Props> = ({
         >
           {/* Request Domains */}
           <Box>
-            <FormControl css={styles.formControl}>
+            <FormControl
+              css={styles.formControl}
+              isInvalid={validationErrors.requestDomains.length > 0}
+            >
               <FormLabel css={styles.label}>{i18n["RequestDomains"]}</FormLabel>
-              {isEditing ? (
-                <Input
-                  value={requestDomainsText}
-                  onChange={(e) => updateRequestDomains(e.target.value)}
-                  variant="outline"
-                  placeholder="www.example.com, ..."
-                  width={controlWidth}
-                />
-              ) : (
-                <Tags
-                  empty={i18n["NotSpecified"]}
-                  values={rule.condition.requestDomains}
-                  marginTop="2px"
-                />
-              )}
+              <InputDomains
+                isEditing={isEditing}
+                domains={rule.condition.requestDomains}
+                onChange={updateRequestDomains}
+                width={controlWidth}
+                i18n={i18n}
+              />
               <Box marginLeft={2}>
                 <RequestDomainsHint />
               </Box>
+              <FormErrorMessages
+                messages={validationErrors.requestDomains}
+                css={styles.note}
+                width={controlWidth}
+              />
             </FormControl>
           </Box>
 
@@ -207,21 +205,13 @@ export const RuleEdit: React.FC<Props> = ({
               <FormLabel css={styles.label}>
                 {i18n["InitiatorDomains"]}
               </FormLabel>
-              {isEditing ? (
-                <Input
-                  value={initiatorDomainsText}
-                  onChange={(e) => updateInitiatorDomains(e.target.value)}
-                  variant="outline"
-                  placeholder="www.example.com, ..."
-                  width={controlWidth}
-                />
-              ) : (
-                <Tags
-                  empty={i18n["NotSpecified"]}
-                  values={rule.condition.initiatorDomains}
-                  marginTop="2px"
-                />
-              )}
+              <InputDomains
+                isEditing={isEditing}
+                domains={rule.condition.initiatorDomains}
+                onChange={updateInitiatorDomains}
+                width={controlWidth}
+                i18n={i18n}
+              />
               <Box marginLeft={2}>
                 <InitiatorDomainsHint />
               </Box>
@@ -293,15 +283,12 @@ export const RuleEdit: React.FC<Props> = ({
                   )}
                 </Box>
               </HStack>
-              <FormErrorMessage
+              <FormErrorMessages
+                messages={validationErrors.urlFilter}
                 css={styles.note}
                 width={controlWidth}
                 marginTop={1}
-              >
-                {validationErrors.urlFilter.map((error) => (
-                  <div key={error}>{error}</div>
-                ))}
-              </FormErrorMessage>
+              />
             </FormControl>
 
             {isEditing ? (

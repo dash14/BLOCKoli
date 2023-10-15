@@ -2,7 +2,7 @@ import en from "@locales/en/messages.json";
 import ja from "@locales/ja/messages.json";
 
 type Getter = { get: (target: unknown, name: string) => string };
-type I18nMessageMap = Record<string, string>;
+export type I18nMessageMap = Record<string, string>;
 
 let language: string | null = null;
 

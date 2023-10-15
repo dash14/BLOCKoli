@@ -24,12 +24,6 @@ export function useRuleEdit(
 ) {
   const [isEditing, setIsEditing] = useState(false);
   const [rule, setRuleObject] = useState(initialRule);
-  const [requestDomainsText, setRequestDomainsText] = useState(
-    rule.condition.requestDomains?.join(",") ?? ""
-  );
-  const [initiatorDomainsText, setInitiatorDomainsText] = useState(
-    rule.condition.initiatorDomains?.join(",") ?? ""
-  );
   const [isValid, setIsValid] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
     requestDomains: [],
@@ -105,26 +99,14 @@ export function useRuleEdit(
     validate(newRule);
   }
 
-  function updateRequestDomains(text: string) {
-    setRequestDomainsText(text);
-    const domains = text
-      .split(",")
-      .map((text) => text.trim())
-      .filter(Boolean);
-
+  function updateRequestDomains(domains: string[]) {
     const newRule = cloneDeep(rule);
     newRule.condition.requestDomains = domains;
     setRuleObject(newRule);
     validate(newRule);
   }
 
-  function updateInitiatorDomains(text: string) {
-    setInitiatorDomainsText(text);
-    const domains = text
-      .split(",")
-      .map((text) => text.trim())
-      .filter(Boolean);
-
+  function updateInitiatorDomains(domains: string[]) {
     const newRule = cloneDeep(rule);
     newRule.condition.initiatorDomains = domains;
     setRuleObject(newRule);
@@ -157,8 +139,6 @@ export function useRuleEdit(
   function resetRuleObject() {
     const rule = initialRule;
     setRuleObject(rule);
-    setRequestDomainsText(rule.condition.requestDomains?.join(",") ?? "");
-    setInitiatorDomainsText(rule.condition.initiatorDomains?.join(",") ?? "");
     validate(rule);
   }
 
@@ -176,8 +156,6 @@ export function useRuleEdit(
     updateInitiatorDomains,
     isEditing,
     rule,
-    requestDomainsText,
-    initiatorDomainsText,
     isValid,
     validationErrors,
   };
