@@ -20,7 +20,7 @@ interface SuccessResponseMessage extends Message {
 interface ErrorResponseMessage extends Message {
   type: "response";
   success: false;
-  error: Error;
+  error: string;
 }
 
 export type ResponseMessage = SuccessResponseMessage | ErrorResponseMessage;

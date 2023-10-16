@@ -5,7 +5,12 @@ import { RequestBlockServiceImpl } from "@/modules/services/RequestBlockServiceI
 import { ServiceConfigurationStoreImpl } from "@/modules/store/ServiceConfigurationStoreImpl";
 
 export class Main {
+  private runState: boolean = false;
+
   public run() {
+    if (this.runState) return;
+    this.runState = true;
+
     // Message Server
     const server = new MessageServer<RequestBlockServiceImpl>(
       RequestBlock.ServiceId
