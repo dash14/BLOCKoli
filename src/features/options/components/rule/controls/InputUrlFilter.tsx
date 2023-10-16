@@ -10,6 +10,7 @@ type Props = {
   isRegexFilter?: boolean | undefined;
   onChange: (value: string) => void;
   width: number;
+  maxWidth: number;
   i18n: I18nMessageMap;
 };
 
@@ -19,6 +20,7 @@ export const InputUrlFilter: React.FC<Props> = ({
   isRegexFilter,
   onChange,
   width,
+  maxWidth,
   i18n,
 }) => {
   return isEditing ? (
@@ -36,7 +38,7 @@ export const InputUrlFilter: React.FC<Props> = ({
   ) : (
     <Box marginTop="2px">
       {urlFilter ? (
-        <Tag>{urlFilter}</Tag>
+        <Tag maxWidth={maxWidth}>{urlFilter}</Tag>
       ) : (
         <DisableTag>{i18n["NotSpecified"]}</DisableTag>
       )}

@@ -9,6 +9,7 @@ type Props = {
   requestMethods?: RequestMethod[] | undefined;
   onChange: (value: RequestMethod[]) => void;
   width: number;
+  maxWidth: number;
   i18n: I18nMessageMap;
 };
 
@@ -22,6 +23,7 @@ export const InputRequestMethods: React.FC<Props> = ({
   requestMethods,
   onChange,
   width,
+  maxWidth,
   i18n,
 }) => {
   return isEditing ? (
@@ -38,7 +40,7 @@ export const InputRequestMethods: React.FC<Props> = ({
       empty={i18n["ALL"]}
       options={requestMethodOptions}
       values={requestMethods}
-      maxWidth={550}
+      maxWidth={maxWidth}
       marginTop="2px"
     />
   );

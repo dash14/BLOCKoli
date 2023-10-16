@@ -9,6 +9,7 @@ type Props = {
   resourceTypes?: ResourceType[] | undefined;
   onChange: (value: ResourceType[]) => void;
   width: number;
+  maxWidth: number;
   i18n: I18nMessageMap;
 };
 
@@ -22,6 +23,7 @@ export const InputResourceTypes: React.FC<Props> = ({
   resourceTypes,
   onChange,
   width,
+  maxWidth,
   i18n,
 }) => {
   return isEditing ? (
@@ -38,7 +40,7 @@ export const InputResourceTypes: React.FC<Props> = ({
       empty={i18n["ALL"]}
       options={resourceTypeOptions}
       values={resourceTypes}
-      maxWidth={550}
+      maxWidth={maxWidth}
       marginTop="2px"
     />
   );

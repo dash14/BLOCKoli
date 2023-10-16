@@ -9,6 +9,7 @@ type Props = {
   domains?: string[] | undefined;
   onChange: (value: string[]) => void;
   width: number;
+  maxWidth: number;
   i18n: I18nMessageMap;
 };
 
@@ -17,6 +18,7 @@ export const InputDomains: React.FC<Props> = ({
   domains,
   onChange,
   width,
+  maxWidth,
   i18n,
 }) => {
   const [domainsText, setDomainsText] = useState(domains?.join(",") ?? "");
@@ -50,7 +52,7 @@ export const InputDomains: React.FC<Props> = ({
     <Tags
       empty={i18n["NotSpecified"]}
       values={domains ?? []}
-      maxWidth={550}
+      maxWidth={maxWidth}
       marginTop="2px"
     />
   );

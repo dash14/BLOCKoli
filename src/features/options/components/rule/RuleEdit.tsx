@@ -84,6 +84,7 @@ export const RuleEdit: React.FC<Props> = ({
   };
 
   const controlWidth = 420;
+  const controlMaxWidth = 550;
 
   return (
     <RuleContainer isEditing={isEditing}>
@@ -136,6 +137,7 @@ export const RuleEdit: React.FC<Props> = ({
               domains={rule.condition.requestDomains}
               onChange={updateRequestDomains}
               width={controlWidth}
+              maxWidth={controlMaxWidth}
               i18n={i18n}
             />
             <RequestDomainsHint marginLeft={2} />
@@ -158,6 +160,7 @@ export const RuleEdit: React.FC<Props> = ({
               domains={rule.condition.initiatorDomains}
               onChange={updateInitiatorDomains}
               width={controlWidth}
+              maxWidth={controlMaxWidth}
               i18n={i18n}
             />
             <InitiatorDomainsHint marginLeft={2} />
@@ -180,6 +183,7 @@ export const RuleEdit: React.FC<Props> = ({
               requestMethods={rule.condition.requestMethods}
               onChange={updateRequestMethods}
               width={controlWidth}
+              maxWidth={controlMaxWidth}
               i18n={i18n}
             />
             <RequestMethodsHint marginLeft={2} />
@@ -197,6 +201,7 @@ export const RuleEdit: React.FC<Props> = ({
                 urlFilter={rule.condition.urlFilter}
                 onChange={updateUrlFilter}
                 width={controlWidth}
+                maxWidth={controlMaxWidth}
                 i18n={i18n}
               />
               {rule.condition.isRegexFilter ? (
@@ -235,6 +240,7 @@ export const RuleEdit: React.FC<Props> = ({
               resourceTypes={rule.condition.resourceTypes}
               onChange={updateResourceTypes}
               width={controlWidth}
+              maxWidth={controlMaxWidth}
               i18n={i18n}
             />
             <ResourceTypesHint marginLeft={2} />
