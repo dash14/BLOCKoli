@@ -15,7 +15,7 @@ import {
   Tr,
 } from "@chakra-ui/react";
 import { useI18n } from "@/hooks/useI18n";
-import { MatchedRule } from "@/modules/core/rules";
+import { MatchedRule } from "@/modules/rules/matched";
 
 type Props = {
   matchedRules: MatchedRule[];

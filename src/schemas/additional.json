@@ -1,0 +1,35 @@
+{
+    "definitions": {
+        "Domain": {
+            "minLength": 1,
+            "pattern": "^[!-~]+$"
+        },
+        "RuleCondition": {
+            "properties": {
+                "requestDomains": {
+                    "items": {
+                        "$ref": "#/definitions/Domain"
+                    }
+                },
+                "initiatorDomains": {
+                    "items": {
+                        "$ref": "#/definitions/Domain"
+                    }
+                },
+                "urlFilter": {
+                    "pattern": "^[ -~]*$"
+                }
+            }
+        },
+        "RuleSet": {
+            "properties": {
+                "name": {
+                    "minLength": 1
+                },
+                "rules": {
+                    "minItems": 1
+                }
+            }
+        }
+    }
+}

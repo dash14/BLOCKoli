@@ -91,9 +91,6 @@
   "UseRegex": {
     "message": "正規表現を利用"
   },
-  "error_regex_reason_syntaxError": {
-    "message": "正規表現の文法エラーです。記載を確認してください。"
-  },
   "RequestDomains": {
     "message": "リクエスト先ドメイン"
   },
@@ -201,5 +198,78 @@
   },
   "initial_setup_message_2": {
     "message": "まず、以下のページからルールを設定してください。"
+  },
+
+  "must_not_have_additional_properties": {
+    "message": "対応していない追加プロパティが指定されています",
+    "description": "error message by validation with schema"
+  },
+  "must_not_have_fewer_than_1_characters": {
+    "message": "1文字以上を指定する必要があります",
+    "description": "error message by validation with schema"
+  },
+  "must_not_have_fewer_than_1_items": {
+    "message": "1つ以上の項目を指定する必要があります",
+    "description": "error message by validation with schema"
+  },
+  "must_be_array": {
+    "message": "配列である必要があります",
+    "description": "error message by validation with schema"
+  },
+  "must_be_boolean": {
+    "message": "真偽値である必要があります",
+    "description": "error message by validation with schema"
+  },
+  "must_be_either_block_or_allow": {
+    "message": "block' または 'allow' のいずれかである必要があります",
+    "description": "error message by validation with schema"
+  },
+  "must_be_equal_to_one_of_the_allowed_values": {
+    "message": "非対応の値が指定されています",
+    "description": "error message by validation with schema"
+  },
+  "must_be_object": {
+    "message": "オブジェクトである必要があります",
+    "description": "error message by validation with schema"
+  },
+  "must_be_string": {
+    "message": "文字列である必要があります",
+    "description": "error message by validation with schema"
+  },
+  "must_contain_at_least_one_rule": {
+    "message": "1つ以上のルールが含まれている必要があります",
+    "description": "error message by validation with schema"
+  },
+  "must_have_required_property_action": {
+    "message": "必須プロパティの 'action' が含まれていません",
+    "description": "error message by validation with schema"
+  },
+  "must_have_required_property_condition": {
+    "message": "必須プロパティの 'condition' が含まれていません",
+    "description": "error message by validation with schema"
+  },
+  "must_have_required_property_name": {
+    "message": "必須プロパティの 'name' が含まれていません",
+    "description": "error message by validation with schema"
+  },
+  "must_have_required_property_rules": {
+    "message": "必須プロパティの 'rules' が含まれていません",
+    "description": "error message by validation with schema"
+  },
+  "must_have_required_property_type": {
+    "message": "必須プロパティの 'type' が含まれていません",
+    "description": "error message by validation with schema"
+  },
+  "must_not_be_an_invalid_regular_expression": {
+    "message": "無効な正規表現が指定されています",
+    "description": "error message by validation with schema"
+  },
+  "must_not_contain_non_ascii_code": {
+    "message": "非ASCII文字は指定できません",
+    "description": "error message by validation with schema"
+  },
+  "must_not_contain_non_ascii_code_and_space": {
+    "message": "非ASCII文字やスペースは指定できません",
+    "description": "error message by validation with schema"
   }
 }

@@ -3,18 +3,18 @@ import cloneDeep from "lodash-es/cloneDeep";
 import { push, removeAt, replaceAt } from "@/modules/core/array";
 import {
   RULE_ID_EDITING,
-  Rule,
-  RuleSet,
-  RuleSets,
-  newRuleSetTemplate,
-} from "@/modules/core/rules";
+  StoredRule,
+  StoredRuleSet,
+  StoredRuleSets,
+} from "@/modules/rules/stored";
+import { newRuleSetTemplate } from "@/modules/rules/template";
 
 export function useRuleSetsEdit(
-  originalRuleSets: RuleSets,
-  onChange: (ruleSets: RuleSets) => void,
+  originalRuleSets: StoredRuleSets,
+  onChange: (ruleSets: StoredRuleSets) => void,
   onRemoveRuleSetAt: (index: number) => void
 ) {
-  const [ruleSets, setRuleSets] = useState<RuleSets>(originalRuleSets);
+  const [ruleSets, setRuleSets] = useState<StoredRuleSets>(originalRuleSets);
 
   useEffect(() => {
     if (ruleSets.length === 0) {
@@ -44,13 +44,13 @@ export function useRuleSetsEdit(
     setRuleSets(push(ruleSets, newRuleSet));
   }
 
-  function updateRules(rules: Rule[], ruleSetIndex: number) {
+  function updateRules(rules: StoredRule[], ruleSetIndex: number) {
     if (rules.length === 0) {
       // add -> cancel
       setRuleSets(removeAt(ruleSets, ruleSetIndex));
       onRemoveRuleSetAt(ruleSetIndex);
     } else {
-      const ruleSet = { ...ruleSets[ruleSetIndex], rules } as RuleSet;
+      const ruleSet = { ...ruleSets[ruleSetIndex], rules } as StoredRuleSet;
       const newRuleSets = replaceAt(ruleSets, ruleSetIndex, ruleSet);
       setRuleSets(newRuleSets);
       onChange(filterAvailableRuleSets(newRuleSets)); // filter editing
@@ -70,7 +70,7 @@ export function useRuleSetsEdit(
   }
 
   function updateRuleSetTitle(title: string, index: number) {
-    const ruleSet = { ...ruleSets[index], name: title } as RuleSet;
+    const ruleSet = { ...ruleSets[index], name: title } as StoredRuleSet;
     const newRuleSets = replaceAt(ruleSets, index, ruleSet);
     setRuleSets(newRuleSets);
     onChange(filterAvailableRuleSets(newRuleSets)); // filter editing
@@ -85,7 +85,7 @@ export function useRuleSetsEdit(
   };
 }
 
-function filterAvailableRuleSets(ruleSets: RuleSets): RuleSets {
+function filterAvailableRuleSets(ruleSets: StoredRuleSets): StoredRuleSets {
   return ruleSets
     .map((ruleSet) => {
       const rules = ruleSet.rules.filter((rule) => rule.id !== RULE_ID_EDITING);
@@ -95,9 +95,9 @@ function filterAvailableRuleSets(ruleSets: RuleSets): RuleSets {
 }
 
 function mergeEditingRuleSets(
-  filtered: RuleSets,
-  ruleSets: RuleSets
-): RuleSets {
+  filtered: StoredRuleSets,
+  ruleSets: StoredRuleSets
+): StoredRuleSets {
   const newRuleSets = cloneDeep(filtered);
   ruleSets.forEach((ruleSet, ruleSetIndex) => {
     if (newRuleSets[ruleSetIndex]) {

@@ -65,17 +65,19 @@ export const RESOURCE_TYPES = [
   ResourceType.OTHER,
 ];
 
+type Domain = string;
+
 export interface RuleCondition {
   /**
    * The rule will only match network requests when the domain matches one from the list of requestDomains.
    * If the list is omitted, the rule is applied to requests from all domains.
    */
-  requestDomains?: string[] | undefined;
+  requestDomains?: Domain[] | undefined;
 
   /**
    * The rule will only match network requests originating from the list of initiatorDomains.
    */
-  initiatorDomains?: string[] | undefined;
+  initiatorDomains?: Domain[] | undefined;
 
   /**
    * The pattern which is matched against the network request url.
@@ -100,15 +102,12 @@ export interface RuleCondition {
 }
 
 export interface Rule {
+  id?: number;
   action: RuleAction;
   condition: RuleCondition;
 }
 
-export interface RuleWithId extends Rule {
-  id: number;
-}
-
-export type Rules = RuleWithId[];
+export type Rules = Rule[];
 
 export interface RuleSet {
   name: string;
@@ -116,33 +115,3 @@ export interface RuleSet {
 }
 
 export type RuleSets = RuleSet[];
-
-export const RULE_ID_EDITING = -1;
-export const RULE_ID_UNSAVED = 0;
-
-export const newRuleTemplate: RuleWithId = {
-  id: RULE_ID_EDITING,
-  action: {
-    type: RuleActionType.BLOCK,
-  },
-  condition: {},
-};
-
-export const newRuleSetTemplate: RuleSet = {
-  name: "My Rule Set",
-  rules: [newRuleTemplate],
-};
-
-// matched rules info
-
-export interface RulePointer {
-  ruleSetName: string;
-  number: number;
-  isBlocking: boolean;
-}
-
-export interface MatchedRule {
-  ruleId: number;
-  rule: RulePointer;
-  timeStamp: number;
-}

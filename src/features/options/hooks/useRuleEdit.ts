@@ -6,10 +6,15 @@ import {
   ResourceType,
   Rule,
   RuleActionType,
+  RuleCondition,
 } from "@/modules/core/rules";
-import { RuleValidator } from "@/modules/rules/validation";
+import { RuleValidator } from "@/modules/rules/validation/edit";
 
 const ruleValidator = new RuleValidator(createRegexValidator());
+
+type ValidationErrors = Required<{
+  [K in keyof RuleCondition]: string[];
+}>;
 
 export function useRuleEdit(
   initialRule: Rule,
@@ -19,21 +24,23 @@ export function useRuleEdit(
 ) {
   const [isEditing, setIsEditing] = useState(false);
   const [rule, setRuleObject] = useState(initialRule);
-  const [requestDomainsText, setRequestDomainsText] = useState(
-    rule.condition.requestDomains?.join(",") ?? ""
-  );
-  const [initiatorDomainsText, setInitiatorDomainsText] = useState(
-    rule.condition.initiatorDomains?.join(",") ?? ""
-  );
   const [isValid, setIsValid] = useState(false);
-  const [regexInvalidReason, setRegexInvalidReason] = useState("");
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
+    requestDomains: [],
+    initiatorDomains: [],
+    urlFilter: [],
+    isRegexFilter: [],
+    requestMethods: [],
+    resourceTypes: [],
+  });
 
   useEffect(() => {
     // For incomplete data, enter edit mode.
-    ruleValidator.validate(rule).then(({ isValid }) => {
-      if (!isValid) {
+    ruleValidator.validate(rule).then(({ valid }) => {
+      if (!valid) {
         setIsEditing(true);
       }
+      setIsValid(valid);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -45,7 +52,7 @@ export function useRuleEdit(
 
   function cancel() {
     setIsEditing(false);
-    setRuleObject(initialRule);
+    resetRuleObject();
     onCancel();
   }
 
@@ -64,16 +71,16 @@ export function useRuleEdit(
     validate(newRule);
   }
 
-  function updateRequestMethods(value: string[]) {
+  function updateRequestMethods(value: RequestMethod[]) {
     const newRule = cloneDeep(rule);
-    newRule.condition.requestMethods = value as RequestMethod[];
+    newRule.condition.requestMethods = value;
     setRuleObject(newRule);
     validate(newRule);
   }
 
-  function updateResourceTypes(value: string[]) {
+  function updateResourceTypes(value: ResourceType[]) {
     const newRule = cloneDeep(rule);
-    newRule.condition.resourceTypes = value as ResourceType[];
+    newRule.condition.resourceTypes = value;
     setRuleObject(newRule);
     validate(newRule);
   }
@@ -92,26 +99,14 @@ export function useRuleEdit(
     validate(newRule);
   }
 
-  function updateRequestDomains(text: string) {
-    setRequestDomainsText(text);
-    const domains = text
-      .split(",")
-      .map((text) => text.trim())
-      .filter(Boolean);
-
+  function updateRequestDomains(domains: string[]) {
     const newRule = cloneDeep(rule);
     newRule.condition.requestDomains = domains;
     setRuleObject(newRule);
     validate(newRule);
   }
 
-  function updateInitiatorDomains(text: string) {
-    setInitiatorDomainsText(text);
-    const domains = text
-      .split(",")
-      .map((text) => text.trim())
-      .filter(Boolean);
-
+  function updateInitiatorDomains(domains: string[]) {
     const newRule = cloneDeep(rule);
     newRule.condition.initiatorDomains = domains;
     setRuleObject(newRule);
@@ -120,15 +115,31 @@ export function useRuleEdit(
 
   async function validate(newRule: Rule) {
     const result = await ruleValidator.validate(newRule);
-    if (result.isValid) {
-      setRegexInvalidReason("");
-      setIsValid(true);
-    } else {
-      if (result.reason?.isInvalidUrlFilter) {
-        setRegexInvalidReason(result.reason?.urlFilterReason ?? "");
-      }
-      setIsValid(false);
+    const errors: ValidationErrors = {
+      requestDomains: [],
+      initiatorDomains: [],
+      urlFilter: [],
+      isRegexFilter: [],
+      requestMethods: [],
+      resourceTypes: [],
+    };
+    if (!result.valid) {
+      Object.keys(errors).forEach((key) => {
+        const field = key as keyof ValidationErrors;
+        errors[field] = result.errors
+          .filter((err) => err.ruleField?.endsWith(field))
+          .map((err) => err.message as string)
+          .filter(Boolean);
+      });
     }
+    setValidationErrors(errors);
+    setIsValid(result.valid);
+  }
+
+  function resetRuleObject() {
+    const rule = initialRule;
+    setRuleObject(rule);
+    validate(rule);
   }
 
   return {
@@ -145,9 +156,7 @@ export function useRuleEdit(
     updateInitiatorDomains,
     isEditing,
     rule,
-    requestDomainsText,
-    initiatorDomainsText,
     isValid,
-    regexInvalidReason,
+    validationErrors,
   };
 }

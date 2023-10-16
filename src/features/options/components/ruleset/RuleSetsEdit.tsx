@@ -16,17 +16,17 @@ import { CSSTransition } from "react-transition-group";
 import { EditableTitle } from "@/components/forms/EditableTitle";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
 import { RulesEdit } from "@/features/options/components/rule/RulesEdit";
+import { useRuleSetsEdit } from "@/features/options/hooks/useRuleSetsEdit";
 import { useArrayKey } from "@/hooks/useArrayKey";
 import { useI18n } from "@/hooks/useI18n";
 import { push, removeAt } from "@/modules/core/array";
-import { RuleSets } from "@/modules/core/rules";
-import { useRuleSetsEdit } from "../../hooks/useRuleSetsEdit";
+import { StoredRuleSets } from "@/modules/rules/stored";
 import { RuleSetMenu } from "./RuleSetMenu";
 
 type Props = {
-  ruleSets: RuleSets;
+  ruleSets: StoredRuleSets;
   titleFontAdjuster: number;
-  onChange: (ruleSets: RuleSets) => void;
+  onChange: (ruleSets: StoredRuleSets) => void;
 };
 
 const listTransitionCss = css(`

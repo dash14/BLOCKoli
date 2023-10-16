@@ -48,9 +48,7 @@ export class MessageServer<T extends ServiceBase>
         sendResponse({
           type: "response",
           success: false,
-          error: new Error(
-            "Malformed message. message: " + JSON.stringify(message)
-          ),
+          error: "Malformed message. message: " + JSON.stringify(message),
         });
         return false;
       }
@@ -59,7 +57,7 @@ export class MessageServer<T extends ServiceBase>
         sendResponse({
           type: "response",
           success: false,
-          error: new Error("Message server is not started."),
+          error: "Message server is not started.",
         });
         return false;
       }
@@ -76,9 +74,7 @@ export class MessageServer<T extends ServiceBase>
         sendResponse({
           type: "response",
           success: false,
-          error: new Error(
-            `Not found "${request.method}" in "${request.service}" service.`
-          ),
+          error: `Not found "${request.method}" in "${request.service}" service.`,
         });
         return false;
       }
@@ -90,7 +86,7 @@ export class MessageServer<T extends ServiceBase>
         sendResponse({
           type: "response",
           success: false,
-          error: error instanceof Error ? error : new Error(String(error)),
+          error: String(error),
         });
         return false;
       }
@@ -108,7 +104,7 @@ export class MessageServer<T extends ServiceBase>
             sendResponse({
               type: "response",
               success: false,
-              error: error instanceof Error ? error : new Error(String(error)),
+              error: String(error),
             });
           });
         return true; // async

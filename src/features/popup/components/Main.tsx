@@ -3,7 +3,8 @@ import { RepeatIcon } from "@chakra-ui/icons";
 import { Box, HStack, IconButton, Switch, Text } from "@chakra-ui/react";
 import { MatchedRulesTable } from "@/features/popup/components/MatchedRulesTable";
 import { useI18n } from "@/hooks/useI18n";
-import { MatchedRule, RuleSets } from "@/modules/core/rules";
+import { RuleSets } from "@/modules/core/rules";
+import { MatchedRule } from "@/modules/rules/matched";
 import { ConfigureRulesLink } from "./ConfigureRulesLink";
 import { NoRules } from "./NoRules";
 

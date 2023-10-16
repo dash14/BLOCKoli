@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import isEqual from "lodash-es/isEqual";
 import { MessageProxyFactory } from "@/modules/chrome/message/MessageProxy";
-import { RuleSets } from "@/modules/core/rules";
+import { StoredRuleSets } from "@/modules/rules/stored";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import logging from "@/modules/utils/logging";
 import { updateI18nLanguage } from "./useI18n";
@@ -11,7 +11,7 @@ const log = logging.getLogger("client");
 export function useRequestBlockClient() {
   const [loaded, setLoaded] = useState(false);
   const [enabled, setEnabled] = useState(false);
-  const [ruleSets, setRuleSets] = useState<RuleSets>([]);
+  const [ruleSets, setRuleSets] = useState<StoredRuleSets>([]);
   const [language, setLanguageState] = useState<string>("en");
 
   const service = new MessageProxyFactory().create<RequestBlock.Service>(
@@ -51,7 +51,7 @@ export function useRequestBlockClient() {
     }
   };
 
-  const updateRuleSets = async (updatedRuleSets: RuleSets) => {
+  const updateRuleSets = async (updatedRuleSets: StoredRuleSets) => {
     if (!isEqual(updatedRuleSets, ruleSets)) {
       await service.updateRuleSets(updatedRuleSets);
       setRuleSets(updatedRuleSets);

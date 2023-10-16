@@ -1,7 +1,8 @@
 import { Rule as ApiRule } from "@/modules/chrome/api";
-import { RESOURCE_TYPES, RuleWithId } from "@/modules/core/rules";
+import { RESOURCE_TYPES } from "@/modules/core/rules";
+import { StoredRule } from "./stored";
 
-export function convertToApiRule(rules: RuleWithId[]): ApiRule[] {
+export function convertToApiRule(rules: StoredRule[]): ApiRule[] {
   return rules.map((rule) => {
     const apiRule = {
       id: rule.id,

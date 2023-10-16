@@ -1,12 +1,18 @@
-import { Box, ListItem, UnorderedList } from "@chakra-ui/react";
+import { Box, ChakraProps, ListItem, UnorderedList } from "@chakra-ui/react";
 import { ExternalLink } from "@/components/parts/ExternalLink";
 import { HintPopover } from "@/components/parts/HintPopover";
 import { useI18n } from "@/hooks/useI18n";
 
-export const URLFilterWithRegexHint: React.FC = () => {
+type Props = ChakraProps;
+
+export const URLFilterWithRegexHint: React.FC<Props> = (props) => {
   const i18n = useI18n();
   return (
-    <HintPopover title={i18n["hint_URLFilterWithRegex_title"]} width={500}>
+    <HintPopover
+      title={i18n["hint_URLFilterWithRegex_title"]}
+      contentWidth={500}
+      {...props}
+    >
       {i18n["hint_URLFilterWithRegex_1"]}{" "}
       <ExternalLink href="https://github.com/google/re2/wiki/Syntax">
         RE2 syntax

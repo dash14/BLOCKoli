@@ -13,7 +13,7 @@ export function createRegexValidator(): RegexValidator {
   } else {
     return async (regex: string, isCaseSensitive: boolean) => {
       try {
-        new RegExp(regex, isCaseSensitive ? "i" : "");
+        new RegExp(regex, isCaseSensitive ? "" : "i");
         return { isSupported: true };
       } catch (e) {
         return {

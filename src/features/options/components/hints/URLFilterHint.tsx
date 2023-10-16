@@ -1,12 +1,14 @@
-import { Box, ListItem, UnorderedList } from "@chakra-ui/react";
+import { Box, ChakraProps, ListItem, UnorderedList } from "@chakra-ui/react";
 import { ExternalLink } from "@/components/parts/ExternalLink";
 import { HintPopover } from "@/components/parts/HintPopover";
 import { useI18n } from "@/hooks/useI18n";
 
-export const URLFilterHint: React.FC = () => {
+type Props = ChakraProps;
+
+export const URLFilterHint: React.FC<Props> = (props) => {
   const i18n = useI18n();
   return (
-    <HintPopover title={i18n["URLFilter"]} width={450}>
+    <HintPopover title={i18n["URLFilter"]} contentWidth={450} {...props}>
       {i18n["hint_URLFilter_1"]}
       <br />
       {i18n["hint_URLFilter_2"]}

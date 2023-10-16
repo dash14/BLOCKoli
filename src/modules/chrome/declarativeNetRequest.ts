@@ -1,10 +1,10 @@
-import { Rules } from "@/modules/core/rules";
 import logging from "@/modules/utils/logging";
 import {
   ChromeDeclarativeNetRequestApi,
   IsRegexSupportedResult,
   MatchedRuleInfo,
   RegexOptions,
+  Rule,
   UpdateRuleOptions,
 } from "./api";
 
@@ -20,9 +20,9 @@ export class ChromeDeclarativeNetRequestApiImpl
     await chrome.declarativeNetRequest.updateDynamicRules(options);
   }
 
-  async getDynamicRules(): Promise<Rules> {
+  async getDynamicRules(): Promise<Rule[]> {
     const rules =
-      (await chrome.declarativeNetRequest.getDynamicRules()) as unknown as Rules;
+      (await chrome.declarativeNetRequest.getDynamicRules()) as unknown as Rule[];
     log.debug("getDynamicRules", rules);
     return rules;
   }
