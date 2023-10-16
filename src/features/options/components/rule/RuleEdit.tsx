@@ -185,7 +185,10 @@ export const RuleEdit: React.FC<Props> = ({
           </FormControl>
 
           {/* Initiator Domains */}
-          <FormControl css={styles.formControl}>
+          <FormControl
+            css={styles.formControl}
+            isInvalid={validationErrors.initiatorDomains.length > 0}
+          >
             <FormLabel css={styles.label}>{i18n["InitiatorDomains"]}</FormLabel>
             <InputDomains
               isEditing={isEditing}
@@ -195,10 +198,18 @@ export const RuleEdit: React.FC<Props> = ({
               i18n={i18n}
             />
             <InitiatorDomainsHint marginLeft={2} />
+            <FormErrorMessages
+              messages={validationErrors.initiatorDomains}
+              css={styles.note}
+              width={controlWidth}
+            />
           </FormControl>
 
           {/* Request Methods */}
-          <FormControl css={styles.formControl}>
+          <FormControl
+            css={styles.formControl}
+            isInvalid={validationErrors.requestMethods.length > 0}
+          >
             <FormLabel css={styles.label}>{i18n["RequestMethods"]}</FormLabel>
             <InputRequestMethods
               isEditing={isEditing}
@@ -249,7 +260,10 @@ export const RuleEdit: React.FC<Props> = ({
           </Box>
 
           {/* Resource Types */}
-          <FormControl css={styles.formControl}>
+          <FormControl
+            css={styles.formControl}
+            isInvalid={validationErrors.resourceTypes.length > 0}
+          >
             <FormLabel css={styles.label}>{i18n["ResourceTypes"]}</FormLabel>
             <InputResourceTypes
               isEditing={isEditing}
