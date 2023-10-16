@@ -198,5 +198,78 @@
   },
   "initial_setup_message_2": {
     "message": "First, please set up the rules on the page linked below."
+  },
+
+  "must_not_have_additional_properties": {
+    "message": "must NOT have additional properties",
+    "description": "error message by validation with schema"
+  },
+  "must_not_have_fewer_than_1_characters": {
+    "message": "must NOT have fewer than 1 characters",
+    "description": "error message by validation with schema"
+  },
+  "must_not_have_fewer_than_1_items": {
+    "message": "must NOT have fewer than 1 items",
+    "description": "error message by validation with schema"
+  },
+  "must_be_array": {
+    "message": "must be array",
+    "description": "error message by validation with schema"
+  },
+  "must_be_boolean": {
+    "message": "must be boolean",
+    "description": "error message by validation with schema"
+  },
+  "must_be_either_block_or_allow": {
+    "message": "must be either 'block' or 'allow'",
+    "description": "error message by validation with schema"
+  },
+  "must_be_equal_to_one_of_the_allowed_values": {
+    "message": "must be equal to one of the allowed values",
+    "description": "error message by validation with schema"
+  },
+  "must_be_object": {
+    "message": "must be object",
+    "description": "error message by validation with schema"
+  },
+  "must_be_string": {
+    "message": "must be string",
+    "description": "error message by validation with schema"
+  },
+  "must_contain_at_least_one_rule": {
+    "message": "must contain at least one rule",
+    "description": "error message by validation with schema"
+  },
+  "must_have_required_property_action": {
+    "message": "must have required property 'action'",
+    "description": "error message by validation with schema"
+  },
+  "must_have_required_property_condition": {
+    "message": "must have required property 'condition'",
+    "description": "error message by validation with schema"
+  },
+  "must_have_required_property_name": {
+    "message": "must have required property 'name'",
+    "description": "error message by validation with schema"
+  },
+  "must_have_required_property_rules": {
+    "message": "must have required property 'rules'",
+    "description": "error message by validation with schema"
+  },
+  "must_have_required_property_type": {
+    "message": "must have required property 'type'",
+    "description": "error message by validation with schema"
+  },
+  "must_not_be_an_invalid_regular_expression": {
+    "message": "must not be an invalid regular expression",
+    "description": "error message by validation with schema"
+  },
+  "must_not_contain_non_ascii_code": {
+    "message": "must not contain non-ascii code",
+    "description": "error message by validation with schema"
+  },
+  "must_not_contain_non_ascii_code_and_space": {
+    "message": "must not contain non-ascii code and space",
+    "description": "error message by validation with schema"
   }
 }

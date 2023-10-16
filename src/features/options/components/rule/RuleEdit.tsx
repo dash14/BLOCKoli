@@ -143,6 +143,7 @@ export const RuleEdit: React.FC<Props> = ({
               messages={validationErrors.requestDomains}
               css={styles.note}
               width={controlWidth}
+              i18n={i18n}
             />
           </FormControl>
 
@@ -164,6 +165,7 @@ export const RuleEdit: React.FC<Props> = ({
               messages={validationErrors.initiatorDomains}
               css={styles.note}
               width={controlWidth}
+              i18n={i18n}
             />
           </FormControl>
 
@@ -207,6 +209,7 @@ export const RuleEdit: React.FC<Props> = ({
                 css={styles.note}
                 width={controlWidth}
                 marginTop={1}
+                i18n={i18n}
               />
             </FormControl>
 
