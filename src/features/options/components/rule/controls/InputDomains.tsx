@@ -47,6 +47,11 @@ export const InputDomains: React.FC<Props> = ({
       width={width}
     />
   ) : (
-    <Tags empty={i18n["NotSpecified"]} values={domains} marginTop="2px" />
+    <Tags
+      empty={i18n["NotSpecified"]}
+      values={domains ?? []}
+      maxWidth={550}
+      marginTop="2px"
+    />
   );
 };
