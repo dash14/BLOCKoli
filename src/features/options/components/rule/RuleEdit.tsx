@@ -1,22 +1,16 @@
-import { CheckCircleIcon, EditIcon, NotAllowedIcon } from "@chakra-ui/icons";
 import {
   Box,
-  Button,
   FormControl,
   FormLabel,
   HStack,
   Heading,
-  Radio,
-  RadioGroup,
-  Stack,
-  Tag,
   Text,
   VStack,
 } from "@chakra-ui/react";
 import { css } from "@emotion/react";
 import { useRuleEdit } from "@/features/options/hooks/useRuleEdit";
 import { useI18n } from "@/hooks/useI18n";
-import { Rule, RuleActionType } from "@/modules/core/rules";
+import { Rule } from "@/modules/core/rules";
 import { InitiatorDomainsHint } from "../hints/InitiatorDomainsHint";
 import { RequestDomainsHint } from "../hints/RequestDomainsHint";
 import { RequestMethodsHint } from "../hints/RequestMethodsHint";
@@ -25,7 +19,8 @@ import { URLFilterHint } from "../hints/URLFilterHint";
 import { URLFilterWithRegexHint } from "../hints/URLFilterWithRegexHint";
 import { ControlButtons } from "./ControlButtons";
 import { RuleContainer } from "./RuleContainer";
-import { RuleMenu } from "./RuleMenu";
+import { ActionTypeRadioGroup } from "./controls/ActionTypeRadioGroup";
+import { EditMenu } from "./controls/EditMenu";
 import { FormErrorMessages } from "./controls/FormErrorMessage";
 import { InputDomains } from "./controls/InputDomains";
 import { InputRequestMethods } from "./controls/InputRequestMethods";
@@ -93,58 +88,25 @@ export const RuleEdit: React.FC<Props> = ({
   return (
     <RuleContainer isEditing={isEditing}>
       <Box position="absolute" top={1} right={1}>
-        {isEditing ? (
-          <Tag size="sm" backgroundColor="blue.500" color="white">
-            {i18n["Editing"]}
-          </Tag>
-        ) : (
-          <>
-            <Button
-              variant="ghost"
-              size="sm"
-              leftIcon={<EditIcon />}
-              onClick={enterEditMode}
-            >
-              {i18n["Edit"]}
-            </Button>
-            {isRemoveEnabled && <RuleMenu onRemove={remove} />}
-          </>
-        )}
+        <EditMenu
+          isEditing={isEditing}
+          isRemoveEnabled={isRemoveEnabled}
+          onClickEdit={enterEditMode}
+          onClickRemove={remove}
+          i18n={i18n}
+        />
       </Box>
       <Box>
         <Heading as="h4" size="sm" marginBottom={2}>
           {i18n["Action"]}
         </Heading>
         <Box marginLeft="20px">
-          {isEditing ? (
-            <RadioGroup value={rule.action.type} onChange={updateAction}>
-              <Stack direction="row">
-                <Radio value="block" colorScheme="red">
-                  {i18n["action_block"]}
-                </Radio>
-                <Radio value="allow" colorScheme="green">
-                  {i18n["action_allow"]}
-                </Radio>
-              </Stack>
-            </RadioGroup>
-          ) : (
-            <HStack gap={1}>
-              {rule.action.type === RuleActionType.BLOCK ? (
-                <NotAllowedIcon color="red" boxSize={4} />
-              ) : (
-                <CheckCircleIcon color="green" boxSize={4} />
-              )}
-              <Text as="span" fontSize={16}>
-                {
-                  i18n[
-                    rule.action.type === RuleActionType.BLOCK
-                      ? "action_block"
-                      : "action_allow"
-                  ]
-                }
-              </Text>
-            </HStack>
-          )}
+          <ActionTypeRadioGroup
+            isEditing={isEditing}
+            actionType={rule.action.type}
+            onChange={updateAction}
+            i18n={i18n}
+          />
         </Box>
       </Box>
 
