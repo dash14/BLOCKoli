@@ -60,7 +60,7 @@ export const LabelTags: React.FC<Props> = ({
       position="relative"
       flexWrap="wrap"
       flex="1"
-      maxWidth={width}
+      maxWidth={labels.length > 0 ? width : "auto"}
       gap={`${gap}px`}
       {...props}
     >

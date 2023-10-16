@@ -38,7 +38,7 @@ export const InputUrlFilter: React.FC<Props> = ({
       {urlFilter ? (
         <Tag>{urlFilter}</Tag>
       ) : (
-        <DisableTag width="80px">{i18n["NotSpecified"]}</DisableTag>
+        <DisableTag>{i18n["NotSpecified"]}</DisableTag>
       )}
     </Box>
   );
