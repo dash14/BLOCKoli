@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { QuestionIcon } from "@chakra-ui/icons";
 import {
+  ChakraProps,
   IconButton,
   Popover,
   PopoverArrow,
@@ -12,12 +13,17 @@ import {
 } from "@chakra-ui/react";
 
 type Props = {
-  width: number;
   title: string;
   children: ReactNode;
-};
+  contentWidth: number;
+} & ChakraProps;
 
-export const HintPopover: React.FC<Props> = ({ width, title, children }) => {
+export const HintPopover: React.FC<Props> = ({
+  contentWidth,
+  title,
+  children,
+  ...props
+}) => {
   return (
     <Popover>
       <PopoverTrigger>
@@ -26,9 +32,10 @@ export const HintPopover: React.FC<Props> = ({ width, title, children }) => {
           aria-label="hint"
           size="sm"
           variant="ghost"
+          {...props}
         />
       </PopoverTrigger>
-      <PopoverContent width={width}>
+      <PopoverContent width={contentWidth}>
         <PopoverArrow />
         <PopoverCloseButton />
         <PopoverHeader fontSize={14}>{title}</PopoverHeader>

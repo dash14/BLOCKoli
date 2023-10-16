@@ -1,4 +1,5 @@
 import { FormErrorMessage } from "@chakra-ui/form-control";
+import { VStack } from "@chakra-ui/layout";
 import { ChakraProps } from "@chakra-ui/system";
 
 type Props = {
@@ -7,7 +8,7 @@ type Props = {
 
 export const FormErrorMessages: React.FC<Props> = ({ messages, ...props }) => {
   return (
-    <FormErrorMessage {...props}>
+    <FormErrorMessage as={VStack} alignItems="start" gap={0} {...props}>
       {messages.map((error) => (
         <div key={error}>{error}</div>
       ))}

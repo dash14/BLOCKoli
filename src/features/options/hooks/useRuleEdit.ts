@@ -71,16 +71,16 @@ export function useRuleEdit(
     validate(newRule);
   }
 
-  function updateRequestMethods(value: string[]) {
+  function updateRequestMethods(value: RequestMethod[]) {
     const newRule = cloneDeep(rule);
-    newRule.condition.requestMethods = value as RequestMethod[];
+    newRule.condition.requestMethods = value;
     setRuleObject(newRule);
     validate(newRule);
   }
 
-  function updateResourceTypes(value: string[]) {
+  function updateResourceTypes(value: ResourceType[]) {
     const newRule = cloneDeep(rule);
-    newRule.condition.resourceTypes = value as ResourceType[];
+    newRule.condition.resourceTypes = value;
     setRuleObject(newRule);
     validate(newRule);
   }

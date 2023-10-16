@@ -1,11 +1,13 @@
-import { Box, ListItem, UnorderedList } from "@chakra-ui/react";
+import { Box, ChakraProps, ListItem, UnorderedList } from "@chakra-ui/react";
 import { HintPopover } from "@/components/parts/HintPopover";
 import { useI18n } from "@/hooks/useI18n";
 
-export const InitiatorDomainsHint: React.FC = () => {
+type Props = ChakraProps;
+
+export const InitiatorDomainsHint: React.FC<Props> = (props) => {
   const i18n = useI18n();
   return (
-    <HintPopover title={i18n["InitiatorDomains"]} width={450}>
+    <HintPopover title={i18n["InitiatorDomains"]} contentWidth={450} {...props}>
       {i18n["hint_InitiatorDomains_1"]}
       <br />
       {i18n["hint_InitiatorDomains_2"]}
