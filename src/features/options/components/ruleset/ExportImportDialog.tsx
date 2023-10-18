@@ -11,6 +11,7 @@ import {
 import { FaDownload, FaFileDownload, FaUpload } from "react-icons/fa";
 import { HiMiniArrowsUpDown } from "react-icons/hi2";
 import { FileInput } from "@/components/forms/FileInput";
+import { I18nMessageMap } from "@/hooks/useI18n";
 import {
   ImportConfirmationDialog,
   ImportConfirmationDialogHandle,
@@ -19,9 +20,14 @@ import {
 type Props = {
   onExport: () => void;
   onImport: (file: File) => void;
+  i18n: I18nMessageMap;
 };
 
-export const ExportImportDialog: React.FC<Props> = ({ onExport, onImport }) => {
+export const ExportImportDialog: React.FC<Props> = ({
+  onExport,
+  onImport,
+  i18n,
+}) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
@@ -35,6 +41,7 @@ export const ExportImportDialog: React.FC<Props> = ({ onExport, onImport }) => {
     if (result) {
       // import
       onImport(file);
+      onClose();
       input.value = "";
     } else {
       // cancel
@@ -50,7 +57,7 @@ export const ExportImportDialog: React.FC<Props> = ({ onExport, onImport }) => {
         size="sm"
         onClick={onOpen}
       >
-        Export and Import
+        {i18n["ExportAndImportRules"]}
       </Button>
 
       <AlertDialog
@@ -64,11 +71,11 @@ export const ExportImportDialog: React.FC<Props> = ({ onExport, onImport }) => {
 
             <AlertDialogBody paddingTop={10} paddingX={10}>
               <Heading as="h2" fontSize={16}>
-                <Icon as={FaDownload} /> Export to file:
+                <Icon as={FaDownload} /> {i18n["ExportRules"]}
               </Heading>
               <Box margin={2} marginLeft={6}>
                 <Box marginY={4} fontSize={14}>
-                  すべての設定をJSON形式でエクスポートします。
+                  {i18n["export_description"]}
                 </Box>
                 <Button
                   leftIcon={<Icon as={FaFileDownload} w={4} h={4} />}
@@ -76,18 +83,18 @@ export const ExportImportDialog: React.FC<Props> = ({ onExport, onImport }) => {
                   size="sm"
                   onClick={onExport}
                 >
-                  Export
+                  {i18n["Export"]}
                 </Button>
               </Box>
 
               <Heading as="h2" fontSize={16} marginTop={8}>
-                <Icon as={FaUpload} /> Import from file:
+                <Icon as={FaUpload} /> {i18n["ImportRules"]}
               </Heading>
               <Box margin={2} marginLeft={6}>
                 <Box marginY={4} fontSize={14}>
-                  エクスポートしたファイルを読み込み、設定に追加します。
+                  {i18n["import_description1"]}
                   <br />
-                  同じ名前のルールセットは上書きします。
+                  {i18n["import_description2"]}
                 </Box>
                 <FileInput
                   accept=".json"
@@ -113,7 +120,7 @@ export const ExportImportDialog: React.FC<Props> = ({ onExport, onImport }) => {
         </AlertDialogOverlay>
       </AlertDialog>
 
-      <ImportConfirmationDialog ref={openConfirmationDialogRef} />
+      <ImportConfirmationDialog ref={openConfirmationDialogRef} i18n={i18n} />
     </>
   );
 };

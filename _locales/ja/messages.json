@@ -200,6 +200,37 @@
     "message": "まず、以下のページからルールを設定してください。"
   },
 
+  "ExportAndImportRules": {
+    "message": "ルールのエクスポートとインポート"
+  },
+  "ExportRules": {
+    "message": "ルールのエクスポート"
+  },
+  "ImportRules": {
+    "message": "ルールのインポート"
+  },
+  "export_description": {
+    "message": "すべてのルールをJSON形式でエクスポートします。"
+  },
+  "Export": {
+    "message": "エクスポート"
+  },
+  "Import": {
+    "message": "インポート"
+  },
+  "import_description1": {
+    "message": "エクスポートしたファイルを読み込み、ルールとして追加します。"
+  },
+  "import_description2": {
+    "message": "同じ名前で定義されたルールセットが存在する場合、上書きします。"
+  },
+  "import_description3": {
+    "message": "指定されたファイルを読み込み、ルールとして追加します。"
+  },
+  "import_description4": {
+    "message": "実行してよろしいですか？"
+  },
+
   "must_not_have_additional_properties": {
     "message": "対応していない追加プロパティが指定されています",
     "description": "error message by validation with schema"

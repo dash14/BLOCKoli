@@ -117,7 +117,11 @@ const Options: React.FC = () => {
 
         <Box as="hr" marginY={6} marginX={0} />
 
-        <ExportImportDialog onExport={onExport} onImport={onImport} />
+        <ExportImportDialog
+          onExport={onExport}
+          onImport={onImport}
+          i18n={i18n}
+        />
       </Container>
 
       <Container

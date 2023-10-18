@@ -200,6 +200,37 @@
     "message": "First, please set up the rules on the page linked below."
   },
 
+  "ExportAndImportRules": {
+    "message": "Export and Import Rules"
+  },
+  "ExportRules": {
+    "message": "Export rules"
+  },
+  "ImportRules": {
+    "message": "Import rules"
+  },
+  "export_description": {
+    "message": "Export all rules to a file with JSON format."
+  },
+  "Export": {
+    "message": "Export"
+  },
+  "Import": {
+    "message": "Import"
+  },
+  "import_description1": {
+    "message": "Import the exported file and add it as rule sets."
+  },
+  "import_description2": {
+    "message": "If rule sets defined with the same name exist, they will be overwritten."
+  },
+  "import_description3": {
+    "message": "Reads the specified file and adds it as rule sets."
+  },
+  "import_description4": {
+    "message": "Are you sure you want to import?"
+  },
+
   "must_not_have_additional_properties": {
     "message": "must NOT have additional properties",
     "description": "error message by validation with schema"
