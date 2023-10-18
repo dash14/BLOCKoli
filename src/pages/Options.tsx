@@ -14,6 +14,7 @@ import { Brand } from "@/components/brand/Brand";
 import { BrandIcon } from "@/components/brand/BrandIcon";
 import { Copyright } from "@/components/brand/Copyright";
 import { ExternalLink } from "@/components/parts/ExternalLink";
+import { ExportImportDialog } from "@/features/options/components/ruleset/ExportImportDialog";
 import { RuleSetsEdit } from "@/features/options/components/ruleset/RuleSetsEdit";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
 import { useTitleFontAdjuster } from "@/hooks/useTitleFontAdjuster";
@@ -33,6 +34,14 @@ const Options: React.FC = () => {
   } = useRequestBlockClient();
 
   const { titleFontAdjuster } = useTitleFontAdjuster(language);
+
+  function onExport() {
+    console.log("export!");
+  }
+
+  function onImport(file: File) {
+    console.log("import!", file);
+  }
 
   // To prevent flickering when displaying pages,
   // fade and turn off all transitions until loaded.
@@ -105,6 +114,10 @@ const Options: React.FC = () => {
           titleFontAdjuster={titleFontAdjuster}
           onChange={updateRuleSets}
         />
+
+        <Box as="hr" marginY={6} marginX={0} />
+
+        <ExportImportDialog onExport={onExport} onImport={onImport} />
       </Container>
 
       <Container
