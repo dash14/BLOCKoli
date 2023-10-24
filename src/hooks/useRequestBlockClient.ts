@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import isEqual from "lodash-es/isEqual";
 import { MessageProxyFactory } from "@/modules/chrome/message/MessageProxy";
+import { ExportedRuleSets } from "@/modules/rules/export";
 import { StoredRuleSets } from "@/modules/rules/stored";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import logging from "@/modules/utils/logging";
@@ -68,6 +69,10 @@ export function useRequestBlockClient() {
     await service.setLanguage(lang);
   };
 
+  const performExport = async (): Promise<ExportedRuleSets> => {
+    return await service.export();
+  };
+
   return {
     loaded,
     enabled,
@@ -77,5 +82,6 @@ export function useRequestBlockClient() {
     updateRuleSets,
     getMatchedRule,
     setLanguage,
+    performExport,
   };
 }

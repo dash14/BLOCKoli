@@ -18,6 +18,7 @@ import { ExportImportDialog } from "@/features/options/components/ruleset/Export
 import { RuleSetsEdit } from "@/features/options/components/ruleset/RuleSetsEdit";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
 import { useTitleFontAdjuster } from "@/hooks/useTitleFontAdjuster";
+import { download } from "@/modules/utils/download";
 import { useI18n } from "../hooks/useI18n";
 
 const Options: React.FC = () => {
@@ -31,12 +32,16 @@ const Options: React.FC = () => {
     updateRuleSets,
     language,
     setLanguage,
+    performExport,
   } = useRequestBlockClient();
 
   const { titleFontAdjuster } = useTitleFontAdjuster(language);
 
-  function onExport() {
-    console.log("export!");
+  async function onExport() {
+    const exported = await performExport();
+    const json = JSON.stringify(exported, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    download(blob, "BLOCKoli.json");
   }
 
   function onImport(file: File) {

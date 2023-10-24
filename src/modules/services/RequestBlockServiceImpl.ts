@@ -1,3 +1,4 @@
+import cloneDeep from "lodash-es/cloneDeep";
 import isEqual from "lodash-es/isEqual";
 import {
   ChromeActionApi,
@@ -6,9 +7,10 @@ import {
   ChromeRuntimeApi,
 } from "@/modules/chrome/api";
 import { Rule as ApiRule } from "@/modules/chrome/api";
-import { RuleActionType } from "@/modules/core/rules";
+import { RuleActionType, RuleCondition } from "@/modules/core/rules";
 import { EventEmitter, ServiceBase } from "@/modules/core/service";
 import { convertToApiRule } from "@/modules/rules/convert";
+import { ExportedRuleSets } from "@/modules/rules/export";
 import { MatchedRule, RulePointer } from "@/modules/rules/matched";
 import { getReservedRules } from "@/modules/rules/reserved";
 import { toRuleList, walkRules } from "@/modules/rules/rulesets";
@@ -222,6 +224,23 @@ export class RequestBlockServiceImpl
     const value = defaultLang === lang ? undefined : lang;
     await this.store.saveLanguage(value);
   }
+
+  public async export(): Promise<ExportedRuleSets> {
+    const stored = await this.getRuleSets();
+    const ruleSets = stored.map((ruleSet) => ({
+      ...ruleSet,
+      rules: ruleSet.rules.map((rule) => ({
+        // remove 'id' field
+        action: rule.action,
+        condition: cleanupCondition(rule.condition),
+      })),
+    }));
+    return {
+      format: "BLOCKoli",
+      version: "1.0",
+      ruleSets,
+    };
+  }
 }
 
 function diffRules(rules: ApiRule[], prevRules: ApiRule[]) {
@@ -278,4 +297,27 @@ function isEqualRule(rule1: ApiRule, rule2: ApiRule) {
     // priority
     rule1.priority === rule2.priority
   );
+}
+
+function cleanupCondition(condition: RuleCondition): RuleCondition {
+  const results: RuleCondition = cloneDeep(condition);
+
+  if (!results.initiatorDomains || results.initiatorDomains.length === 0) {
+    delete results.initiatorDomains;
+  }
+  if (!results.requestDomains || results.requestDomains.length === 0) {
+    delete results.requestDomains;
+  }
+  if (!results.requestMethods || results.requestMethods.length === 0) {
+    delete results.requestMethods;
+  }
+  if (!results.resourceTypes || results.resourceTypes.length === 0) {
+    delete results.resourceTypes;
+  }
+  if (!results.urlFilter) {
+    delete results.urlFilter;
+    delete results.isRegexFilter;
+  }
+
+  return results;
 }
