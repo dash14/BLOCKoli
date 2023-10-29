@@ -239,7 +239,15 @@
   "import_failed": {
     "message": "インポートが失敗しました"
   },
-
+  "json_parse_error": {
+    "message": "JSONパースエラー"
+  },
+  "the_format_is_incorrect_please_read_what_was_exported_by_blockoli": {
+    "message": "書式に誤りがあります、BLOCKoliによってエクスポートされたものをインポートしてください"
+  },
+  "the_file_format_version_is_not_yet_supported": {
+    "message": "ファイルフォーマットに指定されたバージョンはまだサポートされていません"
+  },
 
   "must_not_have_additional_properties": {
     "message": "対応していない追加プロパティが指定されています",

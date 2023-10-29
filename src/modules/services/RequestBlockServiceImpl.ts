@@ -1,4 +1,3 @@
-import cloneDeep from "lodash-es/cloneDeep";
 import isEqual from "lodash-es/isEqual";
 import {
   ChromeActionApi,
@@ -7,7 +6,7 @@ import {
   ChromeRuntimeApi,
 } from "@/modules/chrome/api";
 import { Rule as ApiRule } from "@/modules/chrome/api";
-import { RuleActionType, RuleCondition } from "@/modules/core/rules";
+import { RuleActionType } from "@/modules/core/rules";
 import { EventEmitter, ServiceBase } from "@/modules/core/service";
 import { convertToApiRule } from "@/modules/rules/convert";
 import { ExportedRuleSets } from "@/modules/rules/export";
@@ -26,6 +25,8 @@ import {
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import logging from "@/modules/utils/logging";
+import { performExportCommand } from "./commands/export";
+import { performImportCommand } from "./commands/import";
 
 const log = logging.getLogger("RequestBlock");
 
@@ -238,80 +239,25 @@ export class RequestBlockServiceImpl
 
   public async export(): Promise<ExportedRuleSets> {
     const stored = await this.getRuleSets();
-    const ruleSets = stored.map((ruleSet) => ({
-      ...ruleSet,
-      rules: ruleSet.rules.map((rule) => ({
-        // remove 'id' field
-        action: rule.action,
-        condition: cleanupCondition(rule.condition),
-      })),
-    }));
-    return {
-      format: "BLOCKoli",
-      version: 1,
-      ruleSets,
-    };
+    return performExportCommand(stored);
   }
 
   public async import(
     object: object
   ): Promise<[boolean, RuleSetsValidationError[]]> {
-    // validate meta data in JSON
-    const [valid, errors, data] = validateImportObject(object);
-    if (!valid) {
-      return [false, errors];
+    const storedRuleSets = await this.store.loadRuleSets();
+
+    const [valid, errors, ruleSets] = performImportCommand(
+      object,
+      storedRuleSets
+    );
+
+    if (valid) {
+      await this.updateRuleSets(ruleSets);
     }
 
-    // validate rule sets in JSON
-    const result = validateRuleSets(data.ruleSets);
-    if (!result.valid) {
-      return [false, result.errors];
-    }
-
-    // registration
-    const ruleSets = await this.store.loadRuleSets();
-    const evaluatedRuleSets = result.evaluated;
-    for (const ruleSet of evaluatedRuleSets) {
-      const newRuleSet: StoredRuleSet = {
-        name: ruleSet.name,
-        rules: ruleSet.rules.map((r) => ({ ...r, id: RULE_ID_UNSAVED })),
-      };
-      const existsIndex = ruleSets.findIndex((r) => r.name === ruleSet.name);
-      if (existsIndex >= 0) {
-        ruleSets[existsIndex] = newRuleSet;
-      } else {
-        ruleSets.push(newRuleSet);
-      }
-    }
-    await this.updateRuleSets(ruleSets);
-
-    return [true, []];
+    return [valid, errors];
   }
-}
-
-function validateImportObject(
-  object: object
-): [true, [], ExportedRuleSets] | [false, RuleSetsValidationError[], []] {
-  const errors: RuleSetsValidationError[] = [];
-  // format check
-  const data = object as ExportedRuleSets;
-  if (!data.format || data.format !== "BLOCKoli") {
-    errors.push({
-      message:
-        "The format is incorrect, please read what was exported by BLOCKoli",
-    });
-    return [false, errors, []];
-  }
-
-  if (!data.version || data.version !== 1) {
-    errors.push({
-      message:
-        "The file format version is not yet supported. Extensions may need to be updated",
-    });
-    return [false, errors, []];
-  }
-
-  return [true, [], data];
 }
 
 function diffRules(rules: ApiRule[], prevRules: ApiRule[]) {
@@ -368,27 +314,4 @@ function isEqualRule(rule1: ApiRule, rule2: ApiRule) {
     // priority
     rule1.priority === rule2.priority
   );
-}
-
-function cleanupCondition(condition: RuleCondition): RuleCondition {
-  const results: RuleCondition = cloneDeep(condition);
-
-  if (!results.initiatorDomains || results.initiatorDomains.length === 0) {
-    delete results.initiatorDomains;
-  }
-  if (!results.requestDomains || results.requestDomains.length === 0) {
-    delete results.requestDomains;
-  }
-  if (!results.requestMethods || results.requestMethods.length === 0) {
-    delete results.requestMethods;
-  }
-  if (!results.resourceTypes || results.resourceTypes.length === 0) {
-    delete results.resourceTypes;
-  }
-  if (!results.urlFilter) {
-    delete results.urlFilter;
-    delete results.isRegexFilter;
-  }
-
-  return results;
 }

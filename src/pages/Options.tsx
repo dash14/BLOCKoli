@@ -30,6 +30,8 @@ import { useTitleFontAdjuster } from "@/hooks/useTitleFontAdjuster";
 import { download } from "@/modules/utils/download";
 import { useI18n } from "../hooks/useI18n";
 
+const DOWNLOAD_FILENAME = "BLOCKoli.json";
+
 const Options: React.FC = () => {
   const i18n = useI18n();
 
@@ -54,7 +56,7 @@ const Options: React.FC = () => {
     const exported = await performExport();
     const json = JSON.stringify(exported, null, 2);
     const blob = new Blob([json], { type: "application/json" });
-    download(blob, "BLOCKoli.json");
+    download(blob, DOWNLOAD_FILENAME);
   }
 
   async function onImport(file: File) {
@@ -64,7 +66,7 @@ const Options: React.FC = () => {
       object = JSON.parse(text);
     } catch (e) {
       // parse error
-      console.log(e);
+      await importFailedDialog.current?.open([{ message: "JSON parse error" }]);
     }
 
     if (object) {
