@@ -14,10 +14,18 @@ import { ExportedRuleSets } from "@/modules/rules/export";
 import { MatchedRule, RulePointer } from "@/modules/rules/matched";
 import { getReservedRules } from "@/modules/rules/reserved";
 import { toRuleList, walkRules } from "@/modules/rules/rulesets";
+import {
+  RULE_ID_UNSAVED,
+  StoredRuleSet,
+  StoredRuleSets,
+} from "@/modules/rules/stored";
+import {
+  RuleSetsValidationError,
+  validateRuleSets,
+} from "@/modules/rules/validation/RuleSets";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import logging from "@/modules/utils/logging";
-import { RULE_ID_UNSAVED, StoredRuleSets } from "../rules/stored";
 
 const log = logging.getLogger("RequestBlock");
 
@@ -117,6 +125,9 @@ export class RequestBlockServiceImpl
     // Save to store
     await this.store.saveRuleSets(ruleSets);
 
+    // Emit a event
+    this.emitter.emit("updateRuleSets", ruleSets);
+
     return ruleSets;
   }
 
@@ -191,7 +202,7 @@ export class RequestBlockServiceImpl
     let nextId = await this.store.loadNextRuleId();
     ruleSets.forEach((ruleSet) => {
       ruleSet.rules.forEach((rule) => {
-        if (rule.id === RULE_ID_UNSAVED) {
+        if (!rule.id || rule.id === RULE_ID_UNSAVED) {
           rule.id = nextId++;
         }
       });
@@ -237,10 +248,70 @@ export class RequestBlockServiceImpl
     }));
     return {
       format: "BLOCKoli",
-      version: "1.0",
+      version: 1,
       ruleSets,
     };
   }
+
+  public async import(
+    object: object
+  ): Promise<[boolean, RuleSetsValidationError[]]> {
+    // validate meta data in JSON
+    const [valid, errors, data] = validateImportObject(object);
+    if (!valid) {
+      return [false, errors];
+    }
+
+    // validate rule sets in JSON
+    const result = validateRuleSets(data.ruleSets);
+    if (!result.valid) {
+      return [false, result.errors];
+    }
+
+    // registration
+    const ruleSets = await this.store.loadRuleSets();
+    const evaluatedRuleSets = result.evaluated;
+    for (const ruleSet of evaluatedRuleSets) {
+      const newRuleSet: StoredRuleSet = {
+        name: ruleSet.name,
+        rules: ruleSet.rules.map((r) => ({ ...r, id: RULE_ID_UNSAVED })),
+      };
+      const existsIndex = ruleSets.findIndex((r) => r.name === ruleSet.name);
+      if (existsIndex >= 0) {
+        ruleSets[existsIndex] = newRuleSet;
+      } else {
+        ruleSets.push(newRuleSet);
+      }
+    }
+    await this.updateRuleSets(ruleSets);
+
+    return [true, []];
+  }
+}
+
+function validateImportObject(
+  object: object
+): [true, [], ExportedRuleSets] | [false, RuleSetsValidationError[], []] {
+  const errors: RuleSetsValidationError[] = [];
+  // format check
+  const data = object as ExportedRuleSets;
+  if (!data.format || data.format !== "BLOCKoli") {
+    errors.push({
+      message:
+        "The format is incorrect, please read what was exported by BLOCKoli",
+    });
+    return [false, errors, []];
+  }
+
+  if (!data.version || data.version !== 1) {
+    errors.push({
+      message:
+        "The file format version is not yet supported. Extensions may need to be updated",
+    });
+    return [false, errors, []];
+  }
+
+  return [true, [], data];
 }
 
 function diffRules(rules: ApiRule[], prevRules: ApiRule[]) {

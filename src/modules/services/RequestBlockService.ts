@@ -3,6 +3,7 @@ import { State } from "@/modules/core/state";
 import { ExportedRuleSets } from "@/modules/rules/export";
 import { MatchedRule } from "@/modules/rules/matched";
 import { StoredRuleSets } from "@/modules/rules/stored";
+import { RuleSetsValidationError } from "../rules/validation/RuleSets";
 
 export const ServiceId = "RequestBlock";
 
@@ -21,4 +22,5 @@ export interface Service extends ServiceBase<Events> {
   getLanguage(): Promise<string>;
   setLanguage(lang: string): Promise<void>;
   export(): Promise<ExportedRuleSets>;
+  import(object: object): Promise<[boolean, RuleSetsValidationError[]]>;
 }

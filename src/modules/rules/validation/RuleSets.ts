@@ -5,7 +5,7 @@ import { RuleSetValidationError, validateRuleSet } from "./RuleSet";
 // Types
 // ------------------------------------
 
-interface RuleSetsValidationError extends RuleSetValidationError {
+export interface RuleSetsValidationError extends RuleSetValidationError {
   ruleSetNumber?: number;
 }
 
