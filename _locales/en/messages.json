@@ -58,6 +58,9 @@
   "Save": {
     "message": "Save"
   },
+  "Close": {
+    "message": "Close"
+  },
   "Remove": {
     "message": "Remove"
   },
@@ -200,14 +203,14 @@
     "message": "First, please set up the rules on the page linked below."
   },
 
-  "ExportAndImportRules": {
-    "message": "Export and Import Rules"
-  },
-  "ExportRules": {
-    "message": "Export rules"
+  "ImportAndExportRules": {
+    "message": "Import and Export Rules"
   },
   "ImportRules": {
     "message": "Import rules"
+  },
+  "ExportRules": {
+    "message": "Export rules"
   },
   "export_description": {
     "message": "Export all rules to a file with JSON format."
@@ -229,6 +232,12 @@
   },
   "import_description4": {
     "message": "Are you sure you want to import?"
+  },
+  "import_succeeded": {
+    "message": "Import succeeded"
+  },
+  "import_failed": {
+    "message": "Import failed"
   },
 
   "must_not_have_additional_properties": {

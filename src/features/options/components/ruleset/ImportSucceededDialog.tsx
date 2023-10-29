@@ -1,14 +1,13 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
-import { Button, Icon, useDisclosure } from "@chakra-ui/react";
+import { CheckCircleIcon } from "@chakra-ui/icons";
+import { Button, useDisclosure } from "@chakra-ui/react";
 import {
   AlertDialog,
-  AlertDialogBody,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
 } from "@chakra-ui/react";
-import { FaUpload } from "react-icons/fa";
 import { I18nMessageMap } from "@/hooks/useI18n";
 
 export type ImportSucceededDialogHandle = {
@@ -40,17 +39,20 @@ export const ImportSucceededDialog = forwardRef(({ i18n }: Props, ref) => {
       onClose={onDialogClose}
     >
       <AlertDialogOverlay>
-        <AlertDialogContent maxWidth="30rem">
+        <AlertDialogContent maxWidth="30rem" paddingTop={5}>
           <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            <Icon as={FaUpload} marginRight={2} />
-            {i18n["ImportRules"]}
+            <CheckCircleIcon boxSize={7} marginRight={2} color="green.500" />
+            {i18n["import_succeeded"]}
           </AlertDialogHeader>
 
-          <AlertDialogBody>Import succeeded.</AlertDialogBody>
-
           <AlertDialogFooter>
-            <Button ref={cancelRef} size="sm" onClick={onDialogClose}>
-              Close
+            <Button
+              ref={cancelRef}
+              variant="outline"
+              size="sm"
+              onClick={onDialogClose}
+            >
+              {i18n["Close"]}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

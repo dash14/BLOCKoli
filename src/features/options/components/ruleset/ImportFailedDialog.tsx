@@ -17,8 +17,10 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
 } from "@chakra-ui/react";
-import { FaUpload } from "react-icons/fa";
-import { I18nMessageMap, getLocalizedErrorText } from "@/hooks/useI18n";
+import {
+  I18nMessageMap,
+  getLocalizedValidationErrorText,
+} from "@/hooks/useI18n";
 import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
 
 export type ImportFailedDialogHandle = {
@@ -77,25 +79,21 @@ export const ImportFailedDialog = forwardRef(({ i18n }: Props, ref) => {
       onClose={onDialogClose}
     >
       <AlertDialogOverlay>
-        <AlertDialogContent maxWidth="30rem">
+        <AlertDialogContent maxWidth="30rem" paddingTop={2}>
           <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            <Icon as={FaUpload} marginRight={2} />
-            {i18n["ImportRules"]}
+            <WarningTwoIcon boxSize={7} color="red.500" marginRight={2} />
+            {i18n["import_failed"]}
           </AlertDialogHeader>
 
           <AlertDialogBody>
-            <HStack>
-              <WarningTwoIcon boxSize={5} color="red.500" />
-              <Box marginY={3}>Import has been aborted.</Box>
-            </HStack>
             <UnorderedList marginLeft={6}>
               {errors
                 .filter((error) => error.message)
-                .map((error) => (
-                  <ListItem flexDirection="column" marginY={1}>
+                .map((error, i) => (
+                  <ListItem key={i} flexDirection="column" marginY={1}>
                     <HStack flexWrap="wrap" gap={0}>
                       <Box marginRight={2}>
-                        {getLocalizedErrorText(error.message!, i18n)}
+                        {getLocalizedValidationErrorText(error.message!, i18n)}
                       </Box>
                       <Box>{getAdditionalErrorText(error)}</Box>
                     </HStack>
@@ -105,8 +103,13 @@ export const ImportFailedDialog = forwardRef(({ i18n }: Props, ref) => {
           </AlertDialogBody>
 
           <AlertDialogFooter>
-            <Button ref={cancelRef} size="sm" onClick={onDialogClose}>
-              Close
+            <Button
+              ref={cancelRef}
+              variant="outline"
+              size="sm"
+              onClick={onDialogClose}
+            >
+              {i18n["Close"]}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

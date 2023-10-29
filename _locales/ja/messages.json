@@ -58,6 +58,9 @@
   "Save": {
     "message": "保存する"
   },
+  "Close": {
+    "message": "閉じる"
+  },
   "Remove": {
     "message": "削除する"
   },
@@ -200,14 +203,14 @@
     "message": "まず、以下のページからルールを設定してください。"
   },
 
-  "ExportAndImportRules": {
-    "message": "ルールのエクスポートとインポート"
-  },
-  "ExportRules": {
-    "message": "ルールのエクスポート"
+  "ImportAndExportRules": {
+    "message": "ルールのインポートとエクスポート"
   },
   "ImportRules": {
     "message": "ルールのインポート"
+  },
+  "ExportRules": {
+    "message": "ルールのエクスポート"
   },
   "export_description": {
     "message": "すべてのルールをJSON形式でエクスポートします。"
@@ -230,6 +233,13 @@
   "import_description4": {
     "message": "実行してよろしいですか？"
   },
+  "import_succeeded": {
+    "message": "インポートが成功しました"
+  },
+  "import_failed": {
+    "message": "インポートが失敗しました"
+  },
+
 
   "must_not_have_additional_properties": {
     "message": "対応していない追加プロパティが指定されています",

@@ -57,7 +57,7 @@ export const ExportImportDialog: React.FC<Props> = ({
         size="sm"
         onClick={onOpen}
       >
-        {i18n["ExportAndImportRules"]}
+        {i18n["ImportAndExportRules"]}
       </Button>
 
       <AlertDialog
@@ -71,23 +71,6 @@ export const ExportImportDialog: React.FC<Props> = ({
 
             <AlertDialogBody paddingTop={10} paddingX={10}>
               <Heading as="h2" fontSize={16}>
-                <Icon as={FaDownload} /> {i18n["ExportRules"]}
-              </Heading>
-              <Box margin={2} marginLeft={6}>
-                <Box marginY={4} fontSize={14}>
-                  {i18n["export_description"]}
-                </Box>
-                <Button
-                  leftIcon={<Icon as={FaFileDownload} w={4} h={4} />}
-                  variant="outline"
-                  size="sm"
-                  onClick={onExport}
-                >
-                  {i18n["Export"]}
-                </Button>
-              </Box>
-
-              <Heading as="h2" fontSize={16} marginTop={8}>
                 <Icon as={FaUpload} /> {i18n["ImportRules"]}
               </Heading>
               <Box margin={2} marginLeft={6}>
@@ -103,17 +86,34 @@ export const ExportImportDialog: React.FC<Props> = ({
                   onSelectFile={onSelectImportFile}
                 />
               </Box>
+
+              <Heading as="h2" fontSize={16} marginTop={8}>
+                <Icon as={FaDownload} /> {i18n["ExportRules"]}
+              </Heading>
+              <Box margin={2} marginLeft={6}>
+                <Box marginY={4} fontSize={14}>
+                  {i18n["export_description"]}
+                </Box>
+                <Button
+                  leftIcon={<Icon as={FaFileDownload} w={4} h={4} />}
+                  variant="outline"
+                  size="sm"
+                  onClick={onExport}
+                >
+                  {i18n["Export"]}
+                </Button>
+              </Box>
             </AlertDialogBody>
 
             <AlertDialogFooter>
               <Button
                 ref={cancelRef}
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={onClose}
                 ml={3}
               >
-                Close
+                {i18n["Close"]}
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

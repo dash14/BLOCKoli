@@ -35,8 +35,11 @@ export function updateI18nLanguage(lang: string | null) {
   language = lang;
 }
 
-export function getLocalizedErrorText(text: string, i18n: I18nMessageMap) {
-  const key = text.replace(/[- ]/g, "_").replace(/[^\w]/g, "");
+export function getLocalizedValidationErrorText(
+  text: string,
+  i18n: I18nMessageMap
+) {
+  const key = text.replace(/[- ]/g, "_").replace(/[^\w]/g, "").toLowerCase();
   const translated = i18n[key];
   return translated ? translated : text;
 }
