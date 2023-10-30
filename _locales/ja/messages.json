@@ -4,7 +4,7 @@
     "description": "The description of the extension, displayed in the web store."
   },
   "appDesc": {
-    "message": "ドメイン・URL・リクエストメソッドなどのルールで、Web ネットワークリクエストをブロックまたは許可します。",
+    "message": "ドメイン・URL・リクエストメソッドなどのルールで、Web ネットワークリクエストをブロックします。",
     "description": "The description of the extension, displayed in the web store."
   },
   "Options": {
