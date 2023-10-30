@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import {
   Container,
   Box,
@@ -14,10 +15,22 @@ import { Brand } from "@/components/brand/Brand";
 import { BrandIcon } from "@/components/brand/BrandIcon";
 import { Copyright } from "@/components/brand/Copyright";
 import { ExternalLink } from "@/components/parts/ExternalLink";
+import { ExportImportDialog } from "@/features/options/components/ruleset/ExportImportDialog";
+import {
+  ImportFailedDialog,
+  ImportFailedDialogHandle,
+} from "@/features/options/components/ruleset/ImportFailedDialog";
+import {
+  ImportSucceededDialog,
+  ImportSucceededDialogHandle,
+} from "@/features/options/components/ruleset/ImportSucceededDialog";
 import { RuleSetsEdit } from "@/features/options/components/ruleset/RuleSetsEdit";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
 import { useTitleFontAdjuster } from "@/hooks/useTitleFontAdjuster";
+import { download } from "@/modules/utils/download";
 import { useI18n } from "../hooks/useI18n";
+
+const DOWNLOAD_FILENAME = "BLOCKoli.json";
 
 const Options: React.FC = () => {
   const i18n = useI18n();
@@ -30,9 +43,43 @@ const Options: React.FC = () => {
     updateRuleSets,
     language,
     setLanguage,
+    performExport,
+    performImport,
   } = useRequestBlockClient();
 
   const { titleFontAdjuster } = useTitleFontAdjuster(language);
+
+  const importSuccessDialog = useRef<ImportSucceededDialogHandle>();
+  const importFailedDialog = useRef<ImportFailedDialogHandle>();
+
+  async function onExport() {
+    const exported = await performExport();
+    const json = JSON.stringify(exported, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    download(blob, DOWNLOAD_FILENAME);
+  }
+
+  async function onImport(file: File) {
+    const text = await file.text();
+    let object: object | null = null;
+    try {
+      object = JSON.parse(text);
+    } catch (e) {
+      // parse error
+      await importFailedDialog.current?.open([{ message: "JSON parse error" }]);
+    }
+
+    if (object) {
+      const [success, errors] = await performImport(object);
+      if (success) {
+        // reload, display succeeded dialog
+        await importSuccessDialog.current?.open();
+      } else {
+        // display errors
+        await importFailedDialog.current?.open(errors);
+      }
+    }
+  }
 
   // To prevent flickering when displaying pages,
   // fade and turn off all transitions until loaded.
@@ -105,6 +152,15 @@ const Options: React.FC = () => {
           titleFontAdjuster={titleFontAdjuster}
           onChange={updateRuleSets}
         />
+
+        <Box as="hr" marginY={6} marginX={0} />
+
+        <ExportImportDialog
+          isEnableExport={ruleSets.length > 0}
+          onExport={onExport}
+          onImport={onImport}
+          i18n={i18n}
+        />
       </Container>
 
       <Container
@@ -132,6 +188,10 @@ const Options: React.FC = () => {
           <ListItem>{i18n["notice_2"]}</ListItem>
         </UnorderedList>
       </Container>
+
+      {/* dialog */}
+      <ImportSucceededDialog ref={importSuccessDialog} i18n={i18n} />
+      <ImportFailedDialog ref={importFailedDialog} i18n={i18n} />
 
       <Container as="footer" textAlign="center" marginBottom={4}>
         <Copyright />

@@ -58,6 +58,9 @@
   "Save": {
     "message": "保存する"
   },
+  "Close": {
+    "message": "閉じる"
+  },
   "Remove": {
     "message": "削除する"
   },
@@ -198,6 +201,52 @@
   },
   "initial_setup_message_2": {
     "message": "まず、以下のページからルールを設定してください。"
+  },
+
+  "ImportAndExportRules": {
+    "message": "ルールのインポートとエクスポート"
+  },
+  "ImportRules": {
+    "message": "ルールのインポート"
+  },
+  "ExportRules": {
+    "message": "ルールのエクスポート"
+  },
+  "export_description": {
+    "message": "すべてのルールをJSON形式でエクスポートします。"
+  },
+  "Export": {
+    "message": "エクスポート"
+  },
+  "Import": {
+    "message": "インポート"
+  },
+  "import_description1": {
+    "message": "エクスポートしたファイルを読み込み、ルールとして追加します。"
+  },
+  "import_description2": {
+    "message": "同じ名前で定義されたルールセットが存在する場合、上書きします。"
+  },
+  "import_description3": {
+    "message": "指定されたファイルを読み込み、ルールとして追加します。"
+  },
+  "import_description4": {
+    "message": "実行してよろしいですか？"
+  },
+  "import_succeeded": {
+    "message": "インポートが成功しました"
+  },
+  "import_failed": {
+    "message": "インポートが失敗しました"
+  },
+  "json_parse_error": {
+    "message": "JSONパースエラー"
+  },
+  "the_format_is_incorrect_please_specify_what_was_exported_by_blockoli": {
+    "message": "書式に誤りがあります、BLOCKoliによってエクスポートされたものをインポートしてください"
+  },
+  "the_file_format_version_is_not_supported": {
+    "message": "ファイルフォーマットに指定されたバージョンはサポートされていません"
   },
 
   "must_not_have_additional_properties": {

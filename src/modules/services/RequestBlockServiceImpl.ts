@@ -9,13 +9,24 @@ import { Rule as ApiRule } from "@/modules/chrome/api";
 import { RuleActionType } from "@/modules/core/rules";
 import { EventEmitter, ServiceBase } from "@/modules/core/service";
 import { convertToApiRule } from "@/modules/rules/convert";
+import { ExportedRuleSets } from "@/modules/rules/export";
 import { MatchedRule, RulePointer } from "@/modules/rules/matched";
 import { getReservedRules } from "@/modules/rules/reserved";
 import { toRuleList, walkRules } from "@/modules/rules/rulesets";
+import {
+  RULE_ID_UNSAVED,
+  StoredRuleSet,
+  StoredRuleSets,
+} from "@/modules/rules/stored";
+import {
+  RuleSetsValidationError,
+  validateRuleSets,
+} from "@/modules/rules/validation/RuleSets";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import logging from "@/modules/utils/logging";
-import { RULE_ID_UNSAVED, StoredRuleSets } from "../rules/stored";
+import { performExportCommand } from "./commands/export";
+import { performImportCommand } from "./commands/import";
 
 const log = logging.getLogger("RequestBlock");
 
@@ -115,6 +126,9 @@ export class RequestBlockServiceImpl
     // Save to store
     await this.store.saveRuleSets(ruleSets);
 
+    // Emit a event
+    this.emitter.emit("updateRuleSets", ruleSets);
+
     return ruleSets;
   }
 
@@ -189,7 +203,7 @@ export class RequestBlockServiceImpl
     let nextId = await this.store.loadNextRuleId();
     ruleSets.forEach((ruleSet) => {
       ruleSet.rules.forEach((rule) => {
-        if (rule.id === RULE_ID_UNSAVED) {
+        if (!rule.id || rule.id === RULE_ID_UNSAVED) {
           rule.id = nextId++;
         }
       });
@@ -221,6 +235,28 @@ export class RequestBlockServiceImpl
     // specify undefined, which means to adapt to the environment.
     const value = defaultLang === lang ? undefined : lang;
     await this.store.saveLanguage(value);
+  }
+
+  public async export(): Promise<ExportedRuleSets> {
+    const stored = await this.getRuleSets();
+    return performExportCommand(stored);
+  }
+
+  public async import(
+    object: object
+  ): Promise<[boolean, RuleSetsValidationError[]]> {
+    const storedRuleSets = await this.store.loadRuleSets();
+
+    const [valid, errors, ruleSets] = performImportCommand(
+      object,
+      storedRuleSets
+    );
+
+    if (valid) {
+      await this.updateRuleSets(ruleSets);
+    }
+
+    return [valid, errors];
   }
 }
 
