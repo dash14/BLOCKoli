@@ -54,14 +54,14 @@ function validateImportObject(
   if (!data.format || data.format !== "BLOCKoli") {
     errors.push({
       message:
-        "The format is incorrect, please read what was exported by BLOCKoli",
+        "The format is incorrect, please specify what was exported by BLOCKoli",
     });
     return [false, errors, []];
   }
 
   if (!data.version || data.version !== 1) {
     errors.push({
-      message: "The file format version is not yet supported",
+      message: "The file format version is not supported",
     });
     return [false, errors, []];
   }
