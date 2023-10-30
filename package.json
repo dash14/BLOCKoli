@@ -13,7 +13,7 @@
     "zip": "npm-build-zip --source=dist/",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test": "vitest",
+    "test": "vitest --no-watch",
     "test:watch": "vitest --watch",
     "coverage": "vitest run --coverage"
   },
