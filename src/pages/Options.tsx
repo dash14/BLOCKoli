@@ -156,6 +156,7 @@ const Options: React.FC = () => {
         <Box as="hr" marginY={6} marginX={0} />
 
         <ExportImportDialog
+          isEnableExport={ruleSets.length > 0}
           onExport={onExport}
           onImport={onImport}
           i18n={i18n}

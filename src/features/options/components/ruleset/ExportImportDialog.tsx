@@ -18,12 +18,14 @@ import {
 } from "./ImportConfirmationDialog";
 
 type Props = {
+  isEnableExport: boolean;
   onExport: () => void;
   onImport: (file: File) => void;
   i18n: I18nMessageMap;
 };
 
 export const ExportImportDialog: React.FC<Props> = ({
+  isEnableExport,
   onExport,
   onImport,
   i18n,
@@ -99,6 +101,7 @@ export const ExportImportDialog: React.FC<Props> = ({
                   variant="outline"
                   size="sm"
                   onClick={onExport}
+                  isDisabled={!isEnableExport}
                 >
                   {i18n["Export"]}
                 </Button>
