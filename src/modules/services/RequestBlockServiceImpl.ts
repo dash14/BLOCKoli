@@ -13,15 +13,8 @@ import { ExportedRuleSets } from "@/modules/rules/export";
 import { MatchedRule, RulePointer } from "@/modules/rules/matched";
 import { getReservedRules } from "@/modules/rules/reserved";
 import { toRuleList, walkRules } from "@/modules/rules/rulesets";
-import {
-  RULE_ID_UNSAVED,
-  StoredRuleSet,
-  StoredRuleSets,
-} from "@/modules/rules/stored";
-import {
-  RuleSetsValidationError,
-  validateRuleSets,
-} from "@/modules/rules/validation/RuleSets";
+import { RULE_ID_UNSAVED, StoredRuleSets } from "@/modules/rules/stored";
+import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import logging from "@/modules/utils/logging";

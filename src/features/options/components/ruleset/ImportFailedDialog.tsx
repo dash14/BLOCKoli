@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   HStack,
-  Icon,
   ListItem,
   UnorderedList,
   useDisclosure,
