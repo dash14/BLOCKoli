@@ -13,7 +13,8 @@ easy configuration.
 
 [![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/dash14/BLOCKoli/main?label=Version)](./package.json)
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/fekkdhfmnpifpdgipnkjgfaalcffdeih?label=Chrome%20Web%20Store)](https://chrome.google.com/webstore/detail/blockoli/fekkdhfmnpifpdgipnkjgfaalcffdeih)
-[![GitHub](https://img.shields.io/github/license/dash14/BLOCKoli)](./LICENSE)
+[![License](https://img.shields.io/github/license/dash14/BLOCKoli)](./LICENSE)
+[![MadeWithReactJs.com shield](https://madewithreactjs.com/storage/repo-shields/4660-shield.svg)](https://madewithreactjs.com/p/blockoli/shield-link)
 
 For example, it is useful in the following situations:
 * In user support operations for web services, block modification requests (POST, PATCH, PUT, DELETE) to the target web site to prevent inadvertent modification of user data.

@@ -12,7 +12,8 @@ BLOCKoli は、簡単な設定で Web におけるネットワークリクエス
 
 [![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/dash14/BLOCKoli/main?label=Version)](./package.json)
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/fekkdhfmnpifpdgipnkjgfaalcffdeih?label=Chrome%20Web%20Store)](https://chrome.google.com/webstore/detail/blockoli/fekkdhfmnpifpdgipnkjgfaalcffdeih)
-[![GitHub](https://img.shields.io/github/license/dash14/BLOCKoli)](./LICENSE)
+[![License](https://img.shields.io/github/license/dash14/BLOCKoli)](./LICENSE)
+[![MadeWithReactJs.com shield](https://madewithreactjs.com/storage/repo-shields/4660-shield.svg)](https://madewithreactjs.com/p/blockoli/shield-link)
 
 例えば、以下のような場面で有用です：
 * Webサービスのユーザーサポート業務において、対象ウェブサイトへの変更リクエスト(POST, PATCH, PUT, DELETE)をブロックし、ユーザーデータの不用意な改ざんを防ぐ
