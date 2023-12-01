@@ -10,6 +10,8 @@ import {
 } from "@chakra-ui/react";
 import { Editable, EditableInput, EditablePreview } from "@chakra-ui/react";
 
+const KEYCODE_IME_PROCESS = 229; // Enter key during input with IME
+
 type Props = {
   defaultValue?: string;
   onChange: (text: string) => void;
@@ -100,6 +102,10 @@ export const EditableTitle: React.FC<Props> = ({
           paddingRight={20}
           onClick={(e) => e.stopPropagation()}
           onKeyUp={(e) => e.stopPropagation()}
+          onKeyDown={(e) =>
+            // Ignore Enter key input during conversion in IME
+            e.keyCode === KEYCODE_IME_PROCESS && e.preventDefault()
+          }
         />
         <EditableControls />
       </Flex>
