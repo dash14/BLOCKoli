@@ -24,7 +24,6 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "chakra-react-select": "^4.7.6",
-    "framer-motion": "^10.18.0",
     "loglevel": "^1.8.1",
     "loglevel-plugin-prefix": "^0.8.4",
     "react": "^18.2.0",
