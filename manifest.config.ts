@@ -25,7 +25,7 @@ export default defineManifest({
     default_icon: "images/icon16-gray.png",
   },
   options_page: "options.html",
-  permissions: ["declarativeNetRequest", "activeTab", "storage"],
+  permissions: ["declarativeNetRequest", "activeTab", "storage", "alarms"],
   icons: {
     16: "images/icon16.png",
     48: "images/icon48.png",

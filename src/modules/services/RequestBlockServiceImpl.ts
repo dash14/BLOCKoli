@@ -4,6 +4,9 @@ import {
   ChromeDeclarativeNetRequestApi,
   ChromeI18nApi,
   ChromeRuntimeApi,
+  ChromeStorageApi,
+  ChromeTabsApi,
+  MatchedRuleInfo,
 } from "@/modules/chrome/api";
 import { Rule as ApiRule } from "@/modules/chrome/api";
 import { RuleActionType } from "@/modules/core/rules";
@@ -18,6 +21,8 @@ import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import logging from "@/modules/utils/logging";
+import { MatchedRuleCacheStore } from "./MatchedRuleCacheStore";
+import { RuleMatchObserveAlarm } from "./RuleMatchObserveAlarm";
 import { performExportCommand } from "./commands/export";
 import { performImportCommand } from "./commands/import";
 
@@ -33,25 +38,38 @@ export class RequestBlockServiceImpl
   implements RequestBlock.Service
 {
   private store: ServiceConfigurationStore;
-  private runtime: ChromeRuntimeApi;
   private declarativeNetRequest: ChromeDeclarativeNetRequestApi;
+  private runtime: ChromeRuntimeApi;
+  private tabs: ChromeTabsApi;
   private action: ChromeActionApi;
   private i18n: ChromeI18nApi;
+
+  private ruleMatchObserverAlarm: RuleMatchObserveAlarm;
+  private matchedRuleCaches: MatchedRuleCacheStore;
 
   constructor(
     emitter: EventEmitter<RequestBlock.Events>,
     store: ServiceConfigurationStore,
-    runtime: ChromeRuntimeApi,
     declarativeNetRequest: ChromeDeclarativeNetRequestApi,
+    runtime: ChromeRuntimeApi,
+    tabs: ChromeTabsApi,
     action: ChromeActionApi,
-    i18n: ChromeI18nApi
+    session: ChromeStorageApi,
+    i18n: ChromeI18nApi,
+    ruleMatchObserverAlarm: RuleMatchObserveAlarm
   ) {
     super(emitter);
     this.store = store;
-    this.runtime = runtime;
     this.declarativeNetRequest = declarativeNetRequest;
+    this.runtime = runtime;
+    this.tabs = tabs;
     this.action = action;
     this.i18n = i18n;
+    this.ruleMatchObserverAlarm = ruleMatchObserverAlarm;
+    this.ruleMatchObserverAlarm.setOnAlarmListener(() =>
+      this.onRuleMatchObserverAlarm()
+    );
+    this.matchedRuleCaches = new MatchedRuleCacheStore(session);
   }
 
   public async start(): Promise<void> {
@@ -140,9 +158,22 @@ export class RequestBlockServiceImpl
   }
 
   public async getMatchedRules(): Promise<MatchedRule[]> {
-    let matchedRules =
-      await this.declarativeNetRequest.getMatchedRulesInActiveTab();
+    const tabId = await this.tabs.getActiveTabId();
+    if (!tabId) {
+      return [];
+    }
+
+    let matchedRules: MatchedRuleInfo[];
+    try {
+      matchedRules = await this.declarativeNetRequest.getMatchedRulesInTab(
+        tabId
+      );
+    } catch (e) {
+      // rate limit exceeded. return cache
+      return this.matchedRuleCaches.get(tabId);
+    }
     if (matchedRules.length === 0) {
+      this.matchedRuleCaches.put(tabId, []);
       return [];
     }
 
@@ -169,6 +200,8 @@ export class RequestBlockServiceImpl
       }
     });
     log.debug("Matched rule:", results);
+
+    this.matchedRuleCaches.put(tabId, results);
     return results;
   }
 
@@ -177,6 +210,9 @@ export class RequestBlockServiceImpl
     // Apply rules
     const ruleSets = await this.store.loadRuleSets();
     await this.applyRuleSets(ruleSets);
+
+    // Activate rule match observer
+    await this.ruleMatchObserverAlarm.activate();
 
     // Update icon
     this.action.setIcon({ path: ENABLED_ICON });
@@ -187,6 +223,9 @@ export class RequestBlockServiceImpl
 
     // clear rules
     await this.declarativeNetRequest.removeAllDynamicRules();
+
+    // Deactivate rule match observer
+    await this.ruleMatchObserverAlarm.deactivate();
 
     // Update icon
     this.action.setIcon({ path: DISABLED_ICON });
@@ -250,6 +289,19 @@ export class RequestBlockServiceImpl
     }
 
     return [valid, errors];
+  }
+
+  private async onRuleMatchObserverAlarm() {
+    const rules = await this.getMatchedRules();
+    const blockingCount = rules.reduce((count, rule) => {
+      return rule.rule.isBlocking ? count + 1 : count;
+    }, 0);
+    console.log("blocking count", blockingCount);
+    if (blockingCount > 0) {
+      chrome.action.setBadgeText({ text: "!" });
+    } else {
+      chrome.action.setBadgeText({ text: "" });
+    }
   }
 }
 

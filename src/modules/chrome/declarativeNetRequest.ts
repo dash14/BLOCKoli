@@ -10,8 +10,6 @@ import {
 
 const log = logging.getLogger("net");
 
-let matchedRuleCache: MatchedRuleInfo[] = [];
-
 export class ChromeDeclarativeNetRequestApiImpl
   implements ChromeDeclarativeNetRequestApi
 {
@@ -33,25 +31,16 @@ export class ChromeDeclarativeNetRequestApiImpl
     await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds });
   }
 
-  async getMatchedRulesInActiveTab(): Promise<MatchedRuleInfo[]> {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tabs.length === 0) {
-      return [];
-    }
-    const tab = tabs[0];
-    if (tab.url?.includes("chrome://")) {
-      return [];
-    }
+  async getMatchedRulesInTab(tabId: number): Promise<MatchedRuleInfo[]> {
     try {
       const rules = await chrome.declarativeNetRequest.getMatchedRules({
-        tabId: tab.id,
+        tabId,
       });
-      matchedRuleCache = rules.rulesMatchedInfo;
       return rules.rulesMatchedInfo;
     } catch (e) {
-      // rate limit exceeded. return cached value
+      // rate limit exceeded.
       console.log(e);
-      return matchedRuleCache;
+      throw e;
     }
   }
 
@@ -62,5 +51,13 @@ export class ChromeDeclarativeNetRequestApiImpl
       ...options,
       requireCapturing: false,
     });
+  }
+
+  getGetMatchedRulesQuotaInterval(): number {
+    return chrome.declarativeNetRequest.GETMATCHEDRULES_QUOTA_INTERVAL;
+  }
+
+  getMaxGetMatchedRulesCallsPerInterval(): number {
+    return chrome.declarativeNetRequest.MAX_GETMATCHEDRULES_CALLS_PER_INTERVAL;
   }
 }

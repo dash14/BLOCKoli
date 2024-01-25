@@ -133,6 +133,47 @@ export interface ChromeDeclarativeNetRequestApi {
   updateDynamicRules(options: UpdateRuleOptions): Promise<void>;
   getDynamicRules(): Promise<Rule[]>;
   removeAllDynamicRules(): Promise<void>;
-  getMatchedRulesInActiveTab(): Promise<MatchedRuleInfo[]>;
+  getMatchedRulesInTab(tabId: number): Promise<MatchedRuleInfo[]>;
   isRegexSupported(options: RegexOptions): Promise<IsRegexSupportedResult>;
+  getGetMatchedRulesQuotaInterval(): number;
+  getMaxGetMatchedRulesCallsPerInterval(): number;
+}
+
+export interface TabActiveInfo {
+  /** The ID of the tab that has become active. */
+  tabId: number;
+  /** The ID of the window the active tab changed inside of. */
+  windowId: number;
+}
+
+export interface ChromeTabsApi {
+  getActiveTabId(): Promise<number | undefined>;
+  addActivateListener(listener: (event: TabActiveInfo) => void): void;
+  removeActivateListener(listener: (event: TabActiveInfo) => void): void;
+}
+
+export interface AlarmCreateInfo {
+  /** Optional. Length of time in minutes after which the onAlarm event should fire.  */
+  delayInMinutes?: number | undefined;
+  /** Optional. If set, the onAlarm event should fire every periodInMinutes minutes after the initial event specified by when or delayInMinutes. If not set, the alarm will only fire once.  */
+  periodInMinutes?: number | undefined;
+  /** Optional. Time at which the alarm should fire, in milliseconds past the epoch (e.g. Date.now() + n).  */
+  when?: number | undefined;
+}
+
+export interface Alarm {
+  /** Optional. If not null, the alarm is a repeating alarm and will fire again in periodInMinutes minutes.  */
+  periodInMinutes?: number | undefined;
+  /** Time at which this alarm was scheduled to fire, in milliseconds past the epoch (e.g. Date.now() + n). For performance reasons, the alarm may have been delayed an arbitrary amount beyond this. */
+  scheduledTime: number;
+  /** Name of this alarm. */
+  name: string;
+}
+
+export interface ChromeAlarmsApi {
+  create(name: string, alarmInfo: AlarmCreateInfo): Promise<void>;
+  get(name: string): Promise<Alarm>;
+  clear(name: string): Promise<boolean>;
+  addOnAlarmListener(listener: (alarm: Alarm) => void): void;
+  removeOnAlarmListener(listener: (alarm: Alarm) => void): void;
 }

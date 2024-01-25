@@ -2,6 +2,7 @@ import { ChromeApiFactory } from "@/modules/chrome/factory";
 import { MessageServer } from "@/modules/chrome/message/MessageServer";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { RequestBlockServiceImpl } from "@/modules/services/RequestBlockServiceImpl";
+import { RuleMatchObserveAlarmImpl } from "@/modules/services/RuleMatchObserveAlarmImpl";
 import { ServiceConfigurationStoreImpl } from "@/modules/store/ServiceConfigurationStoreImpl";
 
 export class Main {
@@ -23,13 +24,17 @@ export class Main {
     const store = new ServiceConfigurationStoreImpl(chrome.storage());
 
     // Request Block Service
+    const declarativeNetRequest = chrome.declarativeNetRequest();
     const requestBlockService = new RequestBlockServiceImpl(
       server,
       store,
+      declarativeNetRequest,
       chrome.runtime(),
-      chrome.declarativeNetRequest(),
+      chrome.tabs(),
       chrome.action(),
-      chrome.i18n()
+      chrome.session(),
+      chrome.i18n(),
+      new RuleMatchObserveAlarmImpl(chrome.alarms(), declarativeNetRequest)
     );
 
     // Start
