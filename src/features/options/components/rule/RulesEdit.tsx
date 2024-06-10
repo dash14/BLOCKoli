@@ -1,3 +1,4 @@
+import { createRef } from "react";
 import { AddIcon } from "@chakra-ui/icons";
 import { Button } from "@chakra-ui/react";
 import { css } from "@emotion/react";
@@ -19,6 +20,8 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
   const i18n = useI18n();
   const { isAllowAdd, addRule, updateRule, removeRule, cancelEdit } =
     useRulesEdit(rules, onChange);
+
+  const boxRef = createRef<HTMLDivElement>();
 
   const listTransitionCss = css(`
     display: flex;
@@ -48,20 +51,30 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
   return (
     <>
       <SlideTransitionGroup style={listTransitionCss}>
-        {rules.map((rule, ruleIndex) => (
-          <CSSTransition key={ruleIndex} timeout={250} classNames="slide">
-            <RuleEdit
-              rule={rule ?? newRuleTemplate}
-              isRemoveEnabled={
-                rule.id !== RULE_ID_EDITING &&
-                rules.filter((r) => r.id !== RULE_ID_EDITING).length > 1
-              }
-              onChange={(rule) => updateRule(rule, ruleIndex)}
-              onCancel={() => cancelEdit(ruleIndex)}
-              onRemove={() => removeRule(ruleIndex)}
-            />
-          </CSSTransition>
-        ))}
+        {rules.map((rule, ruleIndex) => {
+          const nodeRef = createRef<HTMLDivElement>();
+          return (
+            <CSSTransition
+              key={ruleIndex}
+              timeout={250}
+              classNames="slide"
+              nodeRef={nodeRef}
+            >
+              <div ref={nodeRef}>
+                <RuleEdit
+                  rule={rule ?? newRuleTemplate}
+                  isRemoveEnabled={
+                    rule.id !== RULE_ID_EDITING &&
+                    rules.filter((r) => r.id !== RULE_ID_EDITING).length > 1
+                  }
+                  onChange={(rule) => updateRule(rule, ruleIndex)}
+                  onCancel={() => cancelEdit(ruleIndex)}
+                  onRemove={() => removeRule(ruleIndex)}
+                />
+              </div>
+            </CSSTransition>
+          );
+        })}
       </SlideTransitionGroup>
       <CSSTransition
         in={isAllowAdd}
@@ -69,17 +82,20 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
         classNames="fade"
         unmountOnExit
         css={addButtonTransition}
+        nodeRef={boxRef}
       >
-        <RuleContainer>
-          <Button
-            leftIcon={<AddIcon />}
-            variant="outline"
-            size="sm"
-            onClick={addRule}
-          >
-            {i18n["AddARule"]}
-          </Button>
-        </RuleContainer>
+        <div ref={boxRef}>
+          <RuleContainer>
+            <Button
+              leftIcon={<AddIcon />}
+              variant="outline"
+              size="sm"
+              onClick={addRule}
+            >
+              {i18n["AddARule"]}
+            </Button>
+          </RuleContainer>
+        </div>
       </CSSTransition>
     </>
   );

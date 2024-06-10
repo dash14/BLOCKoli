@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { createRef, useEffect, useState } from "react";
 import { AddIcon } from "@chakra-ui/icons";
 import {
   Accordion,
@@ -103,40 +103,48 @@ export const RuleSetsEdit: React.FC<Props> = ({
       )}
 
       <SlideTransitionGroup style={listTransitionCss}>
-        {ruleSets.map((ruleSet, ruleSetIndex) => (
-          <CSSTransition
-            key={elementKeys[ruleSetIndex]}
-            timeout={250}
-            classNames="slide"
-          >
-            <Accordion
-              defaultIndex={accordionOpenStates[ruleSetIndex]}
-              allowMultiple
+        {ruleSets.map((ruleSet, ruleSetIndex) => {
+          const nodeRef = createRef<HTMLDivElement>();
+          return (
+            <CSSTransition
+              key={elementKeys[ruleSetIndex]}
+              timeout={250}
+              classNames="slide"
+              nodeRef={nodeRef}
             >
-              <AccordionItem borderWidth="1px">
-                <AccordionButton as="div" cursor="pointer" paddingLeft={2}>
-                  <Box flex="1">
-                    <EditableTitle
-                      defaultValue={ruleSet.name}
-                      cursor="pointer"
-                      onChange={(title) =>
-                        updateRuleSetTitle(title, ruleSetIndex)
-                      }
-                    />
-                  </Box>
-                  <RuleSetMenu onRemove={() => removeRuleSet(ruleSetIndex)} />
-                  <AccordionIcon />
-                </AccordionButton>
-                <AccordionPanel paddingX={6}>
-                  <RulesEdit
-                    rules={ruleSet.rules}
-                    onChange={(rules) => updateRules(rules, ruleSetIndex)}
-                  />
-                </AccordionPanel>
-              </AccordionItem>
-            </Accordion>
-          </CSSTransition>
-        ))}
+              <div ref={nodeRef}>
+                <Accordion
+                  defaultIndex={accordionOpenStates[ruleSetIndex]}
+                  allowMultiple
+                >
+                  <AccordionItem borderWidth="1px">
+                    <AccordionButton as="div" cursor="pointer" paddingLeft={2}>
+                      <Box flex="1">
+                        <EditableTitle
+                          defaultValue={ruleSet.name}
+                          cursor="pointer"
+                          onChange={(title) =>
+                            updateRuleSetTitle(title, ruleSetIndex)
+                          }
+                        />
+                      </Box>
+                      <RuleSetMenu
+                        onRemove={() => removeRuleSet(ruleSetIndex)}
+                      />
+                      <AccordionIcon />
+                    </AccordionButton>
+                    <AccordionPanel paddingX={6}>
+                      <RulesEdit
+                        rules={ruleSet.rules}
+                        onChange={(rules) => updateRules(rules, ruleSetIndex)}
+                      />
+                    </AccordionPanel>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            </CSSTransition>
+          );
+        })}
       </SlideTransitionGroup>
       <Box marginTop={4}>
         <Button
