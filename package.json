@@ -23,7 +23,7 @@
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
-    "chakra-react-select": "^4.7.6",
+    "chakra-react-select": "^4.9.1",
     "loglevel": "^1.9.1",
     "loglevel-plugin-prefix": "^0.8.4",
     "react": "^18.3.1",
