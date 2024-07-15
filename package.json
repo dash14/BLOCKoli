@@ -41,7 +41,7 @@
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
     "@vitejs/plugin-react-swc": "^3.7.0",
-    "ajv": "^8.16.0",
+    "ajv": "^8.17.1",
     "deepmerge": "^4.3.1",
     "eslint": "^8.57.0",
     "eslint-plugin-import": "^2.29.1",
