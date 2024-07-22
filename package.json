@@ -22,7 +22,7 @@
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.11.4",
-    "@emotion/styled": "^11.11.5",
+    "@emotion/styled": "^11.13.0",
     "chakra-react-select": "^4.9.1",
     "loglevel": "^1.9.1",
     "loglevel-plugin-prefix": "^0.8.4",
