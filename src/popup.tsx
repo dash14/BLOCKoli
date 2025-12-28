@@ -3,6 +3,7 @@ import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import Popup from "./pages/Popup.tsx";
 import "./index.scss";
 
+// FIXME: Integrate these styles with options' styles
 const theme = extendTheme({
   styles: {
     global: {

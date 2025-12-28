@@ -20,7 +20,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    "types": ["chrome", "@emotion/react/types/css-prop"],
+    "types": ["chrome", "@emotion/react/types/css-prop", "@vitest/browser/matchers"],
 
     "baseUrl": ".",
     "paths": {
