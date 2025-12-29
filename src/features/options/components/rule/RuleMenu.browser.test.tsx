@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { renderWithChakra } from "@/test/utils/render";
 import { RuleMenu } from "./RuleMenu";
 
@@ -13,6 +13,9 @@ describe("RuleMenu component", () => {
     await expect
       .element(page.getByRole("button", { name: "more" }))
       .toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "RuleMenu-default"
     );
@@ -28,6 +31,9 @@ describe("RuleMenu component", () => {
     await expect
       .element(page.getByRole("menuitem", { name: /remove/i }))
       .toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByRole("menu")).toMatchScreenshot("RuleMenu-open");
   });
 });

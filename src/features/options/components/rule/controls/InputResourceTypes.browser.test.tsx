@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { useI18n } from "@/hooks/useI18n";
 import { ResourceType } from "@/modules/core/rules";
 import { renderWithChakra } from "@/test/utils/render";
@@ -31,6 +31,9 @@ describe("InputResourceTypes component", () => {
   test("renders select in edit mode", async () => {
     await renderWithChakra(<TestWrapper isEditing={true} />);
     await expect.element(page.getByText("ALL")).toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "InputResourceTypes-edit"
     );
@@ -38,9 +41,15 @@ describe("InputResourceTypes component", () => {
 
   test("renders tags in view mode with types", async () => {
     await renderWithChakra(
-      <TestWrapper isEditing={false} types={["script", "image"]} />
+      <TestWrapper
+        isEditing={false}
+        types={[ResourceType.SCRIPT, ResourceType.IMAGE]}
+      />
     );
     await expect.element(page.getByText("script")).toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "InputResourceTypes-view"
     );
@@ -49,6 +58,9 @@ describe("InputResourceTypes component", () => {
   test("renders all in view mode without types", async () => {
     await renderWithChakra(<TestWrapper isEditing={false} />);
     await expect.element(page.getByText("ALL")).toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "InputResourceTypes-empty"
     );

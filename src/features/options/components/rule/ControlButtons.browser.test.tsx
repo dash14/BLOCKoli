@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { renderWithChakra } from "@/test/utils/render";
 import { ControlButtons } from "./ControlButtons";
 
@@ -22,6 +22,9 @@ describe("ControlButtons component", () => {
     await expect
       .element(page.getByRole("button", { name: /cancel/i }))
       .toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.click(document.body);
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "ControlButtons-default"
     );
@@ -42,6 +45,9 @@ describe("ControlButtons component", () => {
     await expect
       .element(page.getByRole("button", { name: /save/i }))
       .toBeDisabled();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "ControlButtons-disabled"
     );
@@ -62,6 +68,9 @@ describe("ControlButtons component", () => {
     await expect
       .element(page.getByRole("button", { name: /remove/i }))
       .toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "ControlButtons-with-remove"
     );

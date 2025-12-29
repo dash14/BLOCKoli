@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { renderWithChakra } from "@/test/utils/render";
 import { RemoveButton } from "./RemoveButton";
 
@@ -14,6 +14,8 @@ describe("RemoveButton component", () => {
     const button = page.getByRole("button", { name: "Remove" });
     await expect.element(button).toBeInTheDocument();
 
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     const container = page.getByTestId("container");
     await expect(container).toMatchScreenshot("RemoveButton-default");
   });

@@ -9,6 +9,23 @@ if (typeof window !== "undefined" && !window.chrome) {
   window.chrome = {};
 }
 
+// VRT安定化: アニメーション・トランジションを強制無効化
+if (typeof document !== "undefined") {
+  const style = document.createElement("style");
+  style.id = "vrt-stability";
+  style.textContent = `
+    *, *::before, *::after {
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
+    }
+  `;
+  if (!document.getElementById("vrt-stability")) {
+    document.head.appendChild(style);
+  }
+}
+
 // FIXME: Integrate these styles with popups' and options' styles
 const theme = extendTheme({
   styles: {

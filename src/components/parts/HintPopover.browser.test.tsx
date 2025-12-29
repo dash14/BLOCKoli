@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { renderWithChakra } from "@/test/utils/render";
 import { HintPopover } from "./HintPopover";
 
@@ -15,6 +15,8 @@ describe("HintPopover component", () => {
     const button = page.getByRole("button", { name: "hint" });
     await expect.element(button).toBeInTheDocument();
 
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     const container = page.getByTestId("container");
     await expect(container).toMatchScreenshot("HintPopover-closed");
   });
@@ -36,6 +38,8 @@ describe("HintPopover component", () => {
       .toBeInTheDocument();
 
     // VRT for open state - capture full page since popover is portaled
-    await expect(page.getByRole("dialog")).toMatchScreenshot("HintPopover-open");
+    await expect(page.getByRole("dialog")).toMatchScreenshot(
+      "HintPopover-open"
+    );
   });
 });

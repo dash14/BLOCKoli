@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { renderWithChakra } from "@/test/utils/render";
 import { MultipleSelect } from "./MultipleSelect";
 
@@ -25,6 +25,8 @@ describe("MultipleSelect component", () => {
       .element(page.getByText("Select options..."))
       .toBeInTheDocument();
 
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     const container = page.getByTestId("container");
     await expect(container).toMatchScreenshot("MultipleSelect-default");
   });
@@ -44,6 +46,8 @@ describe("MultipleSelect component", () => {
     await expect.element(page.getByText("Option A")).toBeInTheDocument();
     await expect.element(page.getByText("Option C")).toBeInTheDocument();
 
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     const container = page.getByTestId("container");
     await expect(container).toMatchScreenshot("MultipleSelect-with-values");
   });

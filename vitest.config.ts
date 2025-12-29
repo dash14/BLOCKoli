@@ -1,5 +1,5 @@
-import { playwright } from "@vitest/browser-playwright";
 import react from "@vitejs/plugin-react-swc";
+import { playwright } from "@vitest/browser-playwright";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
@@ -33,7 +33,11 @@ export default defineConfig({
           include: ["src/**/*.browser.test.{ts,tsx}"],
           browser: {
             enabled: true,
-            provider: playwright(),
+            provider: playwright({
+              contextOptions: {
+                reducedMotion: "reduce",
+              },
+            }),
             instances: [{ browser: "chromium" }],
             headless: true,
           },

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { useI18n } from "@/hooks/useI18n";
 import { renderWithChakra } from "@/test/utils/render";
 import { EditMenu } from "./EditMenu";
@@ -31,6 +31,9 @@ describe("EditMenu component", () => {
       <TestWrapper isEditing={true} isRemoveEnabled={false} />
     );
     await expect.element(page.getByText("Editing")).toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "EditMenu-editing"
     );
@@ -43,6 +46,9 @@ describe("EditMenu component", () => {
     await expect
       .element(page.getByRole("button", { name: /edit/i }))
       .toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "EditMenu-view"
     );
@@ -55,6 +61,9 @@ describe("EditMenu component", () => {
     await expect
       .element(page.getByRole("button", { name: "more" }))
       .toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "EditMenu-with-menu"
     );
