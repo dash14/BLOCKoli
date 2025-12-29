@@ -25,6 +25,9 @@ export default defineConfig({
       // Browser tests (新規 - ブラウザ環境)
       {
         extends: true,
+        optimizeDeps: {
+          include: ["react-icons/hi2"],
+        },
         test: {
           name: "browser",
           include: ["src/**/*.browser.test.{ts,tsx}"],
