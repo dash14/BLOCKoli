@@ -19,7 +19,7 @@ export default defineConfig({
           name: "unit",
           include: ["src/**/*.test.ts"],
           exclude: ["src/**/*.browser.test.{ts,tsx}"],
-          environment: "node",
+          environment: "happy-dom",
         },
       },
       // Browser tests (新規 - ブラウザ環境)
