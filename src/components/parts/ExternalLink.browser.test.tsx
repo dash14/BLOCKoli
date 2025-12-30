@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { renderWithChakra } from "@/test/utils/render";
 import { ExternalLink } from "./ExternalLink";
 
@@ -16,6 +16,8 @@ describe("ExternalLink component", () => {
     await expect.element(link).toHaveAttribute("target", "_blank");
     await expect.element(link).toHaveAttribute("rel", "noopener");
 
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     const container = page.getByTestId("container");
     await expect(container).toMatchScreenshot("ExternalLink-default");
   });

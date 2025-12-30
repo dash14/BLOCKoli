@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { renderWithChakra } from "@/test/utils/render";
 import { EditableTitle } from "./EditableTitle";
 
@@ -16,6 +16,8 @@ describe("EditableTitle component", () => {
       .element(page.getByRole("button", { name: "Edit" }))
       .toBeInTheDocument();
 
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     const container = page.getByTestId("container");
     await expect(container).toMatchScreenshot("EditableTitle-default");
   });
@@ -27,6 +29,8 @@ describe("EditableTitle component", () => {
         <EditableTitle defaultValue="Custom Title" onChange={onChange} />
       </div>
     );
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect.element(page.getByText("Custom Title")).toBeInTheDocument();
   });
 
@@ -86,9 +90,11 @@ describe("EditableTitle component", () => {
     await input.fill("テスト");
 
     // Simulate Enter key during IME composition (keyCode 229)
-    await input.element().dispatchEvent(
-      new KeyboardEvent("keydown", { keyCode: 229, bubbles: true })
-    );
+    await input
+      .element()
+      .dispatchEvent(
+        new KeyboardEvent("keydown", { keyCode: 229, bubbles: true })
+      );
 
     // Should still be in edit mode
     await expect

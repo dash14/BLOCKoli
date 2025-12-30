@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { renderWithChakra } from "@/test/utils/render";
 import { ConfigureRulesLink } from "./ConfigureRulesLink";
 
@@ -13,6 +13,9 @@ describe("ConfigureRulesLink component", () => {
     await expect
       .element(page.getByRole("link", { name: /configure rules/i }))
       .toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "ConfigureRulesLink-default"
     );

@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { renderWithChakra } from "@/test/utils/render";
 import { FileInput } from "./FileInput";
 
@@ -16,6 +16,8 @@ describe("FileInput component", () => {
     await expect.element(input).toHaveAttribute("accept", ".json");
     await expect.element(input).toHaveAttribute("type", "file");
 
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     const container = page.getByTestId("container");
     await expect(container).toMatchScreenshot("FileInput-default");
   });

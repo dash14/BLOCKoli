@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { useI18n } from "@/hooks/useI18n";
 import { renderWithChakra } from "@/test/utils/render";
 import { InputDomains } from "./InputDomains";
@@ -32,6 +32,9 @@ describe("InputDomains component", () => {
       <TestWrapper isEditing={true} domains={["example.com"]} />
     );
     await expect.element(page.getByRole("textbox")).toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "InputDomains-edit"
     );
@@ -42,6 +45,9 @@ describe("InputDomains component", () => {
       <TestWrapper isEditing={false} domains={["example.com", "test.com"]} />
     );
     await expect.element(page.getByText("example.com")).toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "InputDomains-view"
     );
@@ -50,6 +56,9 @@ describe("InputDomains component", () => {
   test("renders not specified in view mode without domains", async () => {
     await renderWithChakra(<TestWrapper isEditing={false} />);
     await expect.element(page.getByText("Not specified")).toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "InputDomains-empty"
     );

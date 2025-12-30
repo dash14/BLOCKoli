@@ -26,11 +26,12 @@ export default defineConfig({
       {
         extends: true,
         optimizeDeps: {
-          include: ["react-icons/hi2"],
+          include: ["react-icons/hi2", "react-transition-group"],
         },
         test: {
           name: "browser",
           include: ["src/**/*.browser.test.{ts,tsx}"],
+          setupFiles: ["src/test/browser.setup.ts"],
           browser: {
             enabled: true,
             provider: playwright({

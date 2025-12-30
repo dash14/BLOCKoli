@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { renderWithChakra } from "@/test/utils/render";
 import { RuleSetMenu } from "./RuleSetMenu";
 
@@ -13,6 +13,9 @@ describe("RuleSetMenu component", () => {
     await expect
       .element(page.getByRole("button", { name: "more" }))
       .toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "RuleSetMenu-default"
     );
@@ -26,6 +29,9 @@ describe("RuleSetMenu component", () => {
     );
     await page.getByRole("button", { name: "more" }).click();
     await expect.element(page.getByRole("menuitem")).toBeInTheDocument();
+
+    // reset hover/focus states before screenshot
+    await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByRole("menu")).toMatchScreenshot("RuleSetMenu-open");
   });
 });
