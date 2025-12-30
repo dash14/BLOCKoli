@@ -17,11 +17,12 @@ export function useRuleSetsEdit(
   const [ruleSets, setRuleSets] = useState<StoredRuleSets>(originalRuleSets);
 
   useEffect(() => {
-    if (ruleSets.length === 0) {
-      setRuleSets(originalRuleSets);
-    } else {
-      // merge editing
-      setRuleSets(mergeEditingRuleSets(originalRuleSets, ruleSets));
+    const newRuleSets =
+      ruleSets.length === 0
+        ? originalRuleSets
+        : mergeEditingRuleSets(originalRuleSets, ruleSets);
+    if (JSON.stringify(newRuleSets) !== JSON.stringify(ruleSets)) {
+      setRuleSets(newRuleSets);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [originalRuleSets]);
