@@ -76,7 +76,7 @@ export const RuleSetsEdit: React.FC<Props> = ({
   } = useRuleSetsEdit(originalRuleSets, onChange, onRemoveRuleSetAt);
 
   useEffect(() => {
-    if (ruleSets.length === 0) {
+    if (accordionOpenStates.length === 0 && originalRuleSets.length > 0) {
       if (originalRuleSets.length === 1) {
         setAccordionOpenStates([[0]]);
       } else {
