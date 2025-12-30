@@ -19,6 +19,8 @@
     "test:unit": "vitest --no-watch --project=unit",
     "test:browser": "vitest --no-watch --project=browser",
     "test:update-snapshots": "vitest --no-watch --project=browser --update",
+    "test:coverage": "vitest --run --coverage",
+    "test:coverage:report": "open \"file://$(pwd)/coverage/index.html\"",
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
@@ -47,6 +49,7 @@
     "@vitejs/plugin-react-swc": "^3.7.0",
     "@vitest/browser": "^4.0.16",
     "@vitest/browser-playwright": "^4.0.16",
+    "@vitest/coverage-v8": "^4.0.16",
     "ajv": "^8.16.0",
     "deepmerge": "^4.3.1",
     "eslint": "^8.57.0",
