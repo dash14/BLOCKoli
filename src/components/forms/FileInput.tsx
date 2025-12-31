@@ -1,32 +1,35 @@
 import React from "react";
-import { ChakraProps, Input, useMultiStyleConfig } from "@chakra-ui/react";
+import { HTMLChakraProps, Input } from "@chakra-ui/react";
 
 type Props = {
   accept: string;
   onSelectFile: (file: File, input: HTMLInputElement) => void;
-} & ChakraProps;
+} & Omit<HTMLChakraProps<"input">, "css" | "onChange">;
 
 export const FileInput: React.FC<Props> = ({
   onSelectFile,
   accept,
   ...props
 }) => {
-  const styles = useMultiStyleConfig("Button", {
-    variant: "outline",
-    size: "sm",
-  });
-
   return (
     <Input
       type="file"
       accept={accept}
       padding={0}
-      sx={{
+      css={{
         "::file-selector-button": {
           border: "none",
           outline: "none",
-          mr: 2,
-          ...styles,
+          marginRight: "0.5rem",
+          padding: "0.25rem 0.75rem",
+          borderRadius: "0.375rem",
+          fontSize: "0.875rem",
+          fontWeight: "500",
+          backgroundColor: "transparent",
+          cursor: "pointer",
+          "&:hover": {
+            backgroundColor: "var(--chakra-colors-gray-100)",
+          },
         },
       }}
       onChange={(e) =>

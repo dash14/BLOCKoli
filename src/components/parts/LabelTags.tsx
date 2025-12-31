@@ -1,4 +1,4 @@
-import { ChakraProps } from "@chakra-ui/react";
+import { HTMLChakraProps } from "@chakra-ui/react";
 import { Tags } from "./Tags";
 
 type Props = {
@@ -6,7 +6,7 @@ type Props = {
   options: { label: string; value: string }[];
   values?: string[];
   maxWidth: number;
-} & ChakraProps;
+} & Omit<HTMLChakraProps<"div">, "css">;
 
 export const LabelTags: React.FC<Props> = ({
   empty,

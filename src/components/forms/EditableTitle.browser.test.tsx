@@ -45,7 +45,7 @@ describe("EditableTitle component", () => {
     await editButton.click();
 
     await expect
-      .element(page.getByRole("button", { name: "Submit" }))
+      .element(page.getByRole("button", { name: "Apply" }))
       .toBeInTheDocument();
     await expect
       .element(page.getByRole("button", { name: "Cancel" }))
@@ -69,7 +69,7 @@ describe("EditableTitle component", () => {
     await input.clear();
     await input.fill("New Title");
 
-    const submitButton = page.getByRole("button", { name: "Submit" });
+    const submitButton = page.getByRole("button", { name: "Apply" });
     await submitButton.click();
 
     await expect.element(page.getByText("New Title")).toBeInTheDocument();
@@ -98,7 +98,7 @@ describe("EditableTitle component", () => {
 
     // Should still be in edit mode
     await expect
-      .element(page.getByRole("button", { name: "Submit" }))
+      .element(page.getByRole("button", { name: "Apply" }))
       .toBeInTheDocument();
     expect(onChange).not.toHaveBeenCalled();
   });
@@ -115,7 +115,7 @@ describe("EditableTitle component", () => {
 
     // Should be in edit mode
     await expect
-      .element(page.getByRole("button", { name: "Submit" }))
+      .element(page.getByRole("button", { name: "Apply" }))
       .toBeInTheDocument();
     await expect
       .element(page.getByRole("button", { name: "Cancel" }))

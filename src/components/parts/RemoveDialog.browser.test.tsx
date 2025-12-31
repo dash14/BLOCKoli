@@ -10,7 +10,7 @@ describe("RemoveDialog component", () => {
     await renderWithChakra(
       <RemoveDialog
         title="Delete Item"
-        isOpen={true}
+        open={true}
         onClose={onClose}
         onPerform={onPerform}
       />
@@ -34,7 +34,7 @@ describe("RemoveDialog component", () => {
     await renderWithChakra(
       <RemoveDialog
         title="Delete Item"
-        isOpen={true}
+        open={true}
         onClose={onClose}
         onPerform={onPerform}
       />
@@ -52,7 +52,7 @@ describe("RemoveDialog component", () => {
     await renderWithChakra(
       <RemoveDialog
         title="Delete Item"
-        isOpen={true}
+        open={true}
         onClose={onClose}
         onPerform={onPerform}
       />
@@ -68,11 +68,17 @@ describe("RemoveDialog component", () => {
     const onClose = vi.fn();
     const onPerform = vi.fn();
     await renderWithChakra(
-      <RemoveDialog isOpen={true} onClose={onClose} onPerform={onPerform} />
+      <RemoveDialog open={true} onClose={onClose} onPerform={onPerform} />
     );
 
     // Check that the header contains the default title "Remove"
-    const header = page.getByRole("banner").getByText("Remove");
-    await expect.element(header).toBeInTheDocument();
+    // In v3, look for the header element specifically by class
+    const dialog = page.getByRole("alertdialog");
+    await expect.element(dialog).toBeInTheDocument();
+    // Verify the dialog title is "Remove" by checking the header div
+    const headerText = await dialog
+      .query()
+      ?.querySelector(".chakra-dialog__header")?.textContent;
+    expect(headerText).toBe("Remove");
   });
 });

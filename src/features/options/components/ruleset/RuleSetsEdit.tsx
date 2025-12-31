@@ -1,17 +1,7 @@
 import { createRef, useEffect, useState } from "react";
-import { AddIcon } from "@chakra-ui/icons";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
-  Box,
-  Button,
-  Text,
-  Heading,
-} from "@chakra-ui/react";
+import { Accordion, Box, Button, Heading, Icon, Text } from "@chakra-ui/react";
 import { css } from "@emotion/react";
+import { LuPlus } from "react-icons/lu";
 import { CSSTransition } from "react-transition-group";
 import { EditableTitle } from "@/components/forms/EditableTitle";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
@@ -113,12 +103,16 @@ export const RuleSetsEdit: React.FC<Props> = ({
               nodeRef={nodeRef}
             >
               <div ref={nodeRef}>
-                <Accordion
-                  defaultIndex={accordionOpenStates[ruleSetIndex]}
-                  allowMultiple
+                <Accordion.Root
+                  defaultValue={accordionOpenStates[ruleSetIndex]?.map(String)}
+                  multiple
                 >
-                  <AccordionItem borderWidth="1px">
-                    <AccordionButton as="div" cursor="pointer" paddingLeft={2}>
+                  <Accordion.Item value="0" borderWidth="1px">
+                    <Accordion.ItemTrigger
+                      as="div"
+                      cursor="pointer"
+                      paddingLeft={2}
+                    >
                       <Box flex="1">
                         <EditableTitle
                           defaultValue={ruleSet.name}
@@ -131,28 +125,24 @@ export const RuleSetsEdit: React.FC<Props> = ({
                       <RuleSetMenu
                         onRemove={() => removeRuleSet(ruleSetIndex)}
                       />
-                      <AccordionIcon />
-                    </AccordionButton>
-                    <AccordionPanel paddingX={6}>
+                      <Accordion.ItemIndicator />
+                    </Accordion.ItemTrigger>
+                    <Accordion.ItemContent paddingX={6}>
                       <RulesEdit
                         rules={ruleSet.rules}
                         onChange={(rules) => updateRules(rules, ruleSetIndex)}
                       />
-                    </AccordionPanel>
-                  </AccordionItem>
-                </Accordion>
+                    </Accordion.ItemContent>
+                  </Accordion.Item>
+                </Accordion.Root>
               </div>
             </CSSTransition>
           );
         })}
       </SlideTransitionGroup>
       <Box marginTop={4}>
-        <Button
-          leftIcon={<AddIcon />}
-          variant="outline"
-          size="sm"
-          onClick={addRuleSet}
-        >
+        <Button variant="outline" size="sm" onClick={addRuleSet}>
+          <Icon as={LuPlus} />
           {i18n["AddARuleSet"]}
         </Button>
       </Box>

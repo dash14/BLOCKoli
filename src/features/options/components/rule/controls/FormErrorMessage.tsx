@@ -1,6 +1,4 @@
-import { FormErrorMessage } from "@chakra-ui/form-control";
-import { VStack } from "@chakra-ui/layout";
-import { ChakraProps } from "@chakra-ui/system";
+import { Field, HTMLChakraProps, VStack } from "@chakra-ui/react";
 import {
   I18nMessageMap,
   getLocalizedValidationErrorText,
@@ -9,7 +7,7 @@ import {
 type Props = {
   messages: string[];
   i18n: I18nMessageMap;
-} & ChakraProps;
+} & Omit<HTMLChakraProps<"div">, "css">;
 
 export const FormErrorMessages: React.FC<Props> = ({
   messages,
@@ -17,10 +15,10 @@ export const FormErrorMessages: React.FC<Props> = ({
   ...props
 }) => {
   return (
-    <FormErrorMessage as={VStack} alignItems="start" gap={0} {...props}>
+    <Field.ErrorText as={VStack} alignItems="start" gap={0} {...props}>
       {messages.map((error) => (
         <div key={error}>{getLocalizedValidationErrorText(error, i18n)}</div>
       ))}
-    </FormErrorMessage>
+    </Field.ErrorText>
   );
 };

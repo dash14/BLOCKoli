@@ -1,8 +1,8 @@
-import { ChakraProps, HStack } from "@chakra-ui/react";
+import { HStack, HTMLChakraProps } from "@chakra-ui/react";
 import { Brand } from "@/components/brand/Brand";
 import { BrandIcon } from "@/components/brand/BrandIcon";
 
-type Props = ChakraProps;
+type Props = Omit<HTMLChakraProps<"header">, "css" | "direction">;
 
 export const Header: React.FC<Props> = (props) => {
   return (

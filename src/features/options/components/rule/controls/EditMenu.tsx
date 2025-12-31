@@ -1,6 +1,5 @@
-import { Button } from "@chakra-ui/button";
-import { EditIcon } from "@chakra-ui/icons";
-import { Tag } from "@chakra-ui/tag";
+import { Button, Icon, Tag } from "@chakra-ui/react";
+import { LuPencil } from "react-icons/lu";
 import { I18nMessageMap } from "@/hooks/useI18n";
 import { RuleMenu } from "../RuleMenu";
 
@@ -20,17 +19,13 @@ export const EditMenu: React.FC<Props> = ({
   i18n,
 }) => {
   return isEditing ? (
-    <Tag size="sm" backgroundColor="blue.500" color="white">
-      {i18n["Editing"]}
-    </Tag>
+    <Tag.Root size="sm" colorPalette="blue">
+      <Tag.Label>{i18n["Editing"]}</Tag.Label>
+    </Tag.Root>
   ) : (
     <>
-      <Button
-        variant="ghost"
-        size="sm"
-        leftIcon={<EditIcon />}
-        onClick={onClickEdit}
-      >
+      <Button variant="ghost" size="sm" onClick={onClickEdit}>
+        <Icon as={LuPencil} />
         {i18n["Edit"]}
       </Button>
       {isRemoveEnabled && <RuleMenu onRemove={onClickRemove} />}

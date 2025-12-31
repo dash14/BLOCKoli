@@ -1,5 +1,5 @@
-import { EditIcon, SmallCloseIcon } from "@chakra-ui/icons";
-import { Button, ButtonGroup, ChakraProps } from "@chakra-ui/react";
+import { Button, Group, HTMLChakraProps, Icon } from "@chakra-ui/react";
+import { LuPencil, LuX } from "react-icons/lu";
 import { RemoveButton } from "@/components/parts/RemoveButton";
 import { useI18n } from "@/hooks/useI18n";
 
@@ -9,7 +9,7 @@ type Props = {
   remove: () => void;
   isValid: boolean;
   isRemoveEnabled: boolean;
-} & ChakraProps;
+} & Omit<HTMLChakraProps<"div">, "css">;
 
 export const ControlButtons: React.FC<Props> = ({
   save,
@@ -21,11 +21,13 @@ export const ControlButtons: React.FC<Props> = ({
 }) => {
   const i18n = useI18n();
   return (
-    <ButtonGroup size="sm" width="100%" {...props}>
-      <Button leftIcon={<EditIcon />} onClick={save} isDisabled={!isValid}>
+    <Group width="100%" {...props}>
+      <Button onClick={save} disabled={!isValid}>
+        <Icon as={LuPencil} />
         {i18n["Save"]}
       </Button>
-      <Button variant="outline" leftIcon={<SmallCloseIcon />} onClick={cancel}>
+      <Button variant="outline" onClick={cancel}>
+        <Icon as={LuX} />
         {i18n["Cancel"]}
       </Button>
       {isRemoveEnabled && (
@@ -35,6 +37,6 @@ export const ControlButtons: React.FC<Props> = ({
           marginLeft="auto"
         />
       )}
-    </ButtonGroup>
+    </Group>
   );
 };

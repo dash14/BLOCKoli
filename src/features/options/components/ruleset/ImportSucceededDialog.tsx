@@ -1,13 +1,6 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
-import { CheckCircleIcon } from "@chakra-ui/icons";
-import { Button, useDisclosure } from "@chakra-ui/react";
-import {
-  AlertDialog,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
-} from "@chakra-ui/react";
+import { Button, Dialog, Icon, useDisclosure } from "@chakra-ui/react";
+import { LuCheckCircle2 } from "react-icons/lu";
 import { I18nMessageMap } from "@/hooks/useI18n";
 
 export type ImportSucceededDialogHandle = {
@@ -19,7 +12,7 @@ type Props = {
 };
 
 export const ImportSucceededDialog = forwardRef(({ i18n }: Props, ref) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   useImperativeHandle(ref, () => ({
@@ -33,19 +26,26 @@ export const ImportSucceededDialog = forwardRef(({ i18n }: Props, ref) => {
   }
 
   return (
-    <AlertDialog
-      isOpen={isOpen}
-      leastDestructiveRef={cancelRef}
-      onClose={onDialogClose}
+    <Dialog.Root
+      open={open}
+      onOpenChange={(e) => !e.open && onDialogClose()}
+      initialFocusEl={() => cancelRef.current}
+      role="alertdialog"
     >
-      <AlertDialogOverlay>
-        <AlertDialogContent maxWidth="30rem" paddingTop={5}>
-          <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            <CheckCircleIcon boxSize={7} marginRight={2} color="green.500" />
+      <Dialog.Backdrop />
+      <Dialog.Positioner>
+        <Dialog.Content maxWidth="30rem" paddingTop={5}>
+          <Dialog.Header fontSize="lg" fontWeight="bold">
+            <Icon
+              as={LuCheckCircle2}
+              boxSize={7}
+              marginRight={2}
+              color="green.500"
+            />
             {i18n["import_succeeded"]}
-          </AlertDialogHeader>
+          </Dialog.Header>
 
-          <AlertDialogFooter>
+          <Dialog.Footer>
             <Button
               ref={cancelRef}
               variant="outline"
@@ -54,9 +54,9 @@ export const ImportSucceededDialog = forwardRef(({ i18n }: Props, ref) => {
             >
               {i18n["Close"]}
             </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialogOverlay>
-    </AlertDialog>
+          </Dialog.Footer>
+        </Dialog.Content>
+      </Dialog.Positioner>
+    </Dialog.Root>
   );
 });

@@ -1,4 +1,9 @@
 import { describe, expect, it } from "vitest";
+import {
+  RequestMethod,
+  ResourceType,
+  RuleActionType,
+} from "@/modules/core/rules";
 import type {
   ChromeActionApi,
   ChromeDeclarativeNetRequestApi,
@@ -8,7 +13,6 @@ import type {
   IsRegexSupportedResult,
   MatchedRule,
   MatchedRuleInfo,
-  Message,
   RegexOptions,
   Rule,
   RuleCondition,
@@ -26,7 +30,9 @@ describe("api types", () => {
       };
 
       expect(api.getId()).toBe("test-id");
-      expect(api.getURL("popup.html")).toBe("chrome-extension://test/popup.html");
+      expect(api.getURL("popup.html")).toBe(
+        "chrome-extension://test/popup.html"
+      );
     });
   });
 
@@ -125,12 +131,15 @@ describe("api types", () => {
         initiatorDomains: ["mysite.com"],
         urlFilter: "*://example.com/*",
         regexFilter: ".*\\.js$",
-        requestMethods: ["get", "post"],
-        resourceTypes: ["script", "stylesheet"],
+        requestMethods: [RequestMethod.GET, RequestMethod.POST],
+        resourceTypes: [ResourceType.SCRIPT, ResourceType.STYLESHEET],
       };
 
       expect(condition.requestDomains).toEqual(["example.com"]);
-      expect(condition.requestMethods).toEqual(["get", "post"]);
+      expect(condition.requestMethods).toEqual([
+        RequestMethod.GET,
+        RequestMethod.POST,
+      ]);
     });
   });
 
@@ -138,19 +147,19 @@ describe("api types", () => {
     it("has required fields", () => {
       const rule: Rule = {
         id: 1,
-        action: { type: "block" },
+        action: { type: RuleActionType.BLOCK },
         condition: {},
       };
 
       expect(rule.id).toBe(1);
-      expect(rule.action).toEqual({ type: "block" });
+      expect(rule.action).toEqual({ type: RuleActionType.BLOCK });
       expect(rule.condition).toEqual({});
     });
 
     it("can have optional priority", () => {
       const rule: Rule = {
         id: 1,
-        action: { type: "block" },
+        action: { type: RuleActionType.BLOCK },
         condition: {},
         priority: 10,
       };
@@ -165,7 +174,7 @@ describe("api types", () => {
         addRules: [
           {
             id: 1,
-            action: { type: "block" },
+            action: { type: RuleActionType.BLOCK },
             condition: {},
           },
         ],
@@ -184,7 +193,9 @@ describe("api types", () => {
 
     it("can have both addRules and removeRuleIds", () => {
       const options: UpdateRuleOptions = {
-        addRules: [{ id: 4, action: { type: "block" }, condition: {} }],
+        addRules: [
+          { id: 4, action: { type: RuleActionType.BLOCK }, condition: {} },
+        ],
         removeRuleIds: [1, 2, 3],
       };
 
@@ -260,7 +271,9 @@ describe("api types", () => {
         getDynamicRules: async () => [],
         removeAllDynamicRules: async () => {},
         getMatchedRulesInActiveTab: async () => [],
-        isRegexSupported: async (_options: RegexOptions) => ({ isSupported: true }),
+        isRegexSupported: async (_options: RegexOptions) => ({
+          isSupported: true,
+        }),
       };
 
       expect(api.updateDynamicRules).toBeDefined();
@@ -268,15 +281,6 @@ describe("api types", () => {
       expect(api.removeAllDynamicRules).toBeDefined();
       expect(api.getMatchedRulesInActiveTab).toBeDefined();
       expect(api.isRegexSupported).toBeDefined();
-    });
-  });
-
-  describe("Message (from message/types)", () => {
-    it("is not exported from api.ts", () => {
-      // Message type is defined in message/types.ts, not in api.ts
-      // This test just verifies the import structure
-      const message: Message = undefined as unknown as Message;
-      expect(message).toBeUndefined();
     });
   });
 });

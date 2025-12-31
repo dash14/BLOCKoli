@@ -1,12 +1,12 @@
-import { DeleteIcon } from "@chakra-ui/icons";
-import { Button, ChakraProps, useDisclosure } from "@chakra-ui/react";
+import { Button, HTMLChakraProps, Icon, useDisclosure } from "@chakra-ui/react";
+import { LuTrash2 } from "react-icons/lu";
 import { useI18n } from "@/hooks/useI18n";
 import { RemoveDialog } from "./RemoveDialog";
 
 type Props = {
   title?: string;
   onPerform: () => void;
-} & ChakraProps;
+} & Omit<HTMLChakraProps<"button">, "css">;
 
 export const RemoveButton: React.FC<Props> = ({
   title,
@@ -14,22 +14,22 @@ export const RemoveButton: React.FC<Props> = ({
   ...props
 }) => {
   const i18n = useI18n();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open, onOpen, onClose } = useDisclosure();
   return (
     <>
       <Button
         variant="outline"
         size="sm"
-        leftIcon={<DeleteIcon />}
         onClick={onOpen}
-        colorScheme="red"
+        colorPalette="red"
         {...props}
       >
+        <Icon as={LuTrash2} />
         {i18n["Remove"]}
       </Button>
       <RemoveDialog
         title={title}
-        isOpen={isOpen}
+        open={open}
         onClose={onClose}
         onPerform={onPerform}
       />

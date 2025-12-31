@@ -1,6 +1,5 @@
-import { CheckCircleIcon, NotAllowedIcon } from "@chakra-ui/icons";
-import { HStack, Stack, Text } from "@chakra-ui/layout";
-import { Radio, RadioGroup } from "@chakra-ui/radio";
+import { HStack, Icon, RadioGroup, Stack, Text } from "@chakra-ui/react";
+import { LuBan, LuCheckCircle2 } from "react-icons/lu";
 import { I18nMessageMap } from "@/hooks/useI18n";
 import { RuleActionType } from "@/modules/core/rules";
 
@@ -18,22 +17,29 @@ export const ActionTypeRadioGroup: React.FC<Props> = ({
   i18n,
 }) => {
   return isEditing ? (
-    <RadioGroup value={actionType} onChange={onChange}>
+    <RadioGroup.Root
+      value={actionType}
+      onValueChange={(e) => onChange(e.value as RuleActionType)}
+    >
       <Stack direction="row">
-        <Radio value="block" colorScheme="red">
-          {i18n["action_block"]}
-        </Radio>
-        <Radio value="allow" colorScheme="green">
-          {i18n["action_allow"]}
-        </Radio>
+        <RadioGroup.Item value="block" colorPalette="red">
+          <RadioGroup.ItemHiddenInput />
+          <RadioGroup.ItemControl />
+          <RadioGroup.ItemText>{i18n["action_block"]}</RadioGroup.ItemText>
+        </RadioGroup.Item>
+        <RadioGroup.Item value="allow" colorPalette="green">
+          <RadioGroup.ItemHiddenInput />
+          <RadioGroup.ItemControl />
+          <RadioGroup.ItemText>{i18n["action_allow"]}</RadioGroup.ItemText>
+        </RadioGroup.Item>
       </Stack>
-    </RadioGroup>
+    </RadioGroup.Root>
   ) : (
     <HStack gap={1}>
       {actionType === RuleActionType.BLOCK ? (
-        <NotAllowedIcon color="red" boxSize={4} />
+        <Icon as={LuBan} color="red" boxSize={4} />
       ) : (
-        <CheckCircleIcon color="green" boxSize={4} />
+        <Icon as={LuCheckCircle2} color="green" boxSize={4} />
       )}
       <Text as="span" fontSize={16}>
         {

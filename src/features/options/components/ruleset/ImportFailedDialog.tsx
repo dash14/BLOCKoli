@@ -1,21 +1,14 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
-import { WarningTwoIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
+  Dialog,
   HStack,
-  ListItem,
-  UnorderedList,
+  Icon,
+  List,
   useDisclosure,
 } from "@chakra-ui/react";
-import {
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
-} from "@chakra-ui/react";
+import { LuAlertTriangle } from "react-icons/lu";
 import {
   I18nMessageMap,
   getLocalizedValidationErrorText,
@@ -31,7 +24,7 @@ type Props = {
 };
 
 export const ImportFailedDialog = forwardRef(({ i18n }: Props, ref) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [errors, setErrors] = useState<RuleSetsValidationError[]>([]);
 
@@ -72,36 +65,43 @@ export const ImportFailedDialog = forwardRef(({ i18n }: Props, ref) => {
   }
 
   return (
-    <AlertDialog
-      isOpen={isOpen}
-      leastDestructiveRef={cancelRef}
-      onClose={onDialogClose}
+    <Dialog.Root
+      open={open}
+      onOpenChange={(e) => !e.open && onDialogClose()}
+      initialFocusEl={() => cancelRef.current}
+      role="alertdialog"
     >
-      <AlertDialogOverlay>
-        <AlertDialogContent maxWidth="30rem" paddingTop={2}>
-          <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            <WarningTwoIcon boxSize={7} color="red.500" marginRight={2} />
+      <Dialog.Backdrop />
+      <Dialog.Positioner>
+        <Dialog.Content maxWidth="30rem" paddingTop={2}>
+          <Dialog.Header fontSize="lg" fontWeight="bold">
+            <Icon
+              as={LuAlertTriangle}
+              boxSize={7}
+              color="red.500"
+              marginRight={2}
+            />
             {i18n["import_failed"]}
-          </AlertDialogHeader>
+          </Dialog.Header>
 
-          <AlertDialogBody>
-            <UnorderedList marginLeft={6}>
+          <Dialog.Body>
+            <List.Root marginLeft={6}>
               {errors
                 .filter((error) => error.message)
                 .map((error, i) => (
-                  <ListItem key={i} flexDirection="column" marginY={1}>
+                  <List.Item key={i} flexDirection="column" marginY={1}>
                     <HStack flexWrap="wrap" gap={0}>
                       <Box marginRight={2}>
                         {getLocalizedValidationErrorText(error.message!, i18n)}
                       </Box>
                       <Box>{getAdditionalErrorText(error)}</Box>
                     </HStack>
-                  </ListItem>
+                  </List.Item>
                 ))}
-            </UnorderedList>
-          </AlertDialogBody>
+            </List.Root>
+          </Dialog.Body>
 
-          <AlertDialogFooter>
+          <Dialog.Footer>
             <Button
               ref={cancelRef}
               variant="outline"
@@ -110,9 +110,9 @@ export const ImportFailedDialog = forwardRef(({ i18n }: Props, ref) => {
             >
               {i18n["Close"]}
             </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialogOverlay>
-    </AlertDialog>
+          </Dialog.Footer>
+        </Dialog.Content>
+      </Dialog.Positioner>
+    </Dialog.Root>
   );
 });

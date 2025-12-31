@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { RuleActionType, RuleSets } from "@/modules/core/rules";
 import { MatchedRule } from "@/modules/rules/matched";
@@ -154,8 +154,8 @@ describe("Main component", () => {
         />
       );
 
-      // Click on the Chakra Switch label element (class="chakra-switch")
-      const switchElement = document.querySelector("label.chakra-switch");
+      // Click on the Chakra Switch v3 element (data-scope="switch")
+      const switchElement = document.querySelector('[data-scope="switch"]');
       expect(switchElement).not.toBeNull();
       await userEvent.click(switchElement!);
 

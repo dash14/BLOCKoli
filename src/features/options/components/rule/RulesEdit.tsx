@@ -1,7 +1,7 @@
 import { createRef } from "react";
-import { AddIcon } from "@chakra-ui/icons";
-import { Button } from "@chakra-ui/react";
+import { Button, Icon } from "@chakra-ui/react";
 import { css } from "@emotion/react";
+import { LuPlus } from "react-icons/lu";
 import { CSSTransition } from "react-transition-group";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
 import { useRulesEdit } from "@/features/options/hooks/useRulesEdit";
@@ -86,12 +86,8 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
       >
         <div ref={boxRef}>
           <RuleContainer>
-            <Button
-              leftIcon={<AddIcon />}
-              variant="outline"
-              size="sm"
-              onClick={addRule}
-            >
+            <Button variant="outline" size="sm" onClick={addRule}>
+              <Icon as={LuPlus} />
               {i18n["AddARule"]}
             </Button>
           </RuleContainer>

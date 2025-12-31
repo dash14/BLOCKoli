@@ -1,10 +1,10 @@
-import { ExternalLinkIcon, SettingsIcon } from "@chakra-ui/icons";
-import { ChakraProps, Link, Text } from "@chakra-ui/react";
+import { HTMLChakraProps, Icon, Link, Text } from "@chakra-ui/react";
+import { LuExternalLink, LuSettings } from "react-icons/lu";
 import { useI18n } from "@/hooks/useI18n";
 
 type Props = {
   optionsUrl: string;
-} & ChakraProps;
+} & Omit<HTMLChakraProps<"p">, "css">;
 
 export const ConfigureRulesLink: React.FC<Props> = ({
   optionsUrl,
@@ -22,9 +22,9 @@ export const ConfigureRulesLink: React.FC<Props> = ({
         alignItems="center"
         gap="3px"
       >
-        <SettingsIcon />
+        <Icon as={LuSettings} />
         {i18n["ConfigureRules"]}
-        <ExternalLinkIcon />
+        <Icon as={LuExternalLink} />
       </Link>
     </Text>
   );

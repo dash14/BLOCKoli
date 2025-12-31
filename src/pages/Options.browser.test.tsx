@@ -43,7 +43,9 @@ const sampleRuleSets: StoredRuleSets = [
 ];
 
 // Default mock return value factory
-function createMockReturnValue(overrides: Partial<ReturnType<typeof mockUseRequestBlockClient>> = {}) {
+function createMockReturnValue(
+  overrides: Partial<ReturnType<typeof mockUseRequestBlockClient>> = {}
+) {
   return {
     loaded: true,
     enabled: true,
@@ -191,11 +193,12 @@ describe("Options page", () => {
       </div>
     );
 
-    // Get the checkbox element and simulate click (which triggers change)
-    const switchCheckbox = page.getByRole("checkbox");
-    const inputElement = (await switchCheckbox.element()) as HTMLInputElement;
-    // Native click triggers the change event properly for checkboxes
-    inputElement.click();
+    // In Chakra v3, click on the Switch control element
+    const switchControl = document.querySelector(
+      '[data-scope="switch"][data-part="control"]'
+    );
+    expect(switchControl).not.toBeNull();
+    await userEvent.click(switchControl!);
 
     expect(changeState).toHaveBeenCalledWith(true);
   });
@@ -267,7 +270,9 @@ describe("Options page", () => {
       version: 1,
       ruleSets: [{ name: "Imported", rules: [] }],
     });
-    const file = new File([validJson], "test.json", { type: "application/json" });
+    const file = new File([validJson], "test.json", {
+      type: "application/json",
+    });
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
     fileInput.files = dataTransfer.files;
@@ -279,7 +284,10 @@ describe("Options page", () => {
       .toBeInTheDocument();
 
     // Click Import to confirm
-    await page.getByRole("button", { name: "Import", exact: true }).nth(0).click();
+    await page
+      .getByRole("button", { name: "Import", exact: true })
+      .nth(0)
+      .click();
 
     // Wait for import to complete
     await vi.waitFor(() => {
@@ -287,14 +295,18 @@ describe("Options page", () => {
     });
 
     // Success dialog should appear
-    await expect.element(page.getByText(/import succeeded/i)).toBeInTheDocument();
+    await expect
+      .element(page.getByText(/import succeeded/i))
+      .toBeInTheDocument();
   });
 
   test("shows error dialog on import validation failure", async () => {
-    const performImport = vi.fn().mockResolvedValue([
-      false,
-      [{ message: "invalid_format", ruleSetNumber: 0 }],
-    ]);
+    const performImport = vi
+      .fn()
+      .mockResolvedValue([
+        false,
+        [{ message: "invalid_format", ruleSetNumber: 0 }],
+      ]);
     mockUseRequestBlockClient.mockReturnValue(
       createMockReturnValue({ ruleSets: sampleRuleSets, performImport })
     );
@@ -317,7 +329,9 @@ describe("Options page", () => {
       version: 1,
       ruleSets: [{ name: "Invalid", rules: [] }],
     });
-    const file = new File([validJson], "test.json", { type: "application/json" });
+    const file = new File([validJson], "test.json", {
+      type: "application/json",
+    });
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
     fileInput.files = dataTransfer.files;
@@ -329,7 +343,10 @@ describe("Options page", () => {
       .toBeInTheDocument();
 
     // Click Import to confirm
-    await page.getByRole("button", { name: "Import", exact: true }).nth(0).click();
+    await page
+      .getByRole("button", { name: "Import", exact: true })
+      .nth(0)
+      .click();
 
     // Wait for import to complete
     await vi.waitFor(() => {
@@ -360,7 +377,9 @@ describe("Options page", () => {
     const fileInputElement = page.getByRole("textbox");
     const fileInput = (await fileInputElement.element()) as HTMLInputElement;
     const invalidJson = "{ invalid json }";
-    const file = new File([invalidJson], "invalid.json", { type: "application/json" });
+    const file = new File([invalidJson], "invalid.json", {
+      type: "application/json",
+    });
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
     fileInput.files = dataTransfer.files;
@@ -372,7 +391,10 @@ describe("Options page", () => {
       .toBeInTheDocument();
 
     // Click Import to confirm
-    await page.getByRole("button", { name: "Import", exact: true }).nth(0).click();
+    await page
+      .getByRole("button", { name: "Import", exact: true })
+      .nth(0)
+      .click();
 
     // Error dialog should appear (JSON parse error)
     await expect.element(page.getByText(/import failed/i)).toBeInTheDocument();

@@ -1,13 +1,6 @@
 import { MouseEvent } from "react";
-import { DeleteIcon, HamburgerIcon } from "@chakra-ui/icons";
-import {
-  IconButton,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  useDisclosure,
-} from "@chakra-ui/react";
+import { Icon, IconButton, Menu, useDisclosure } from "@chakra-ui/react";
+import { LuMenu, LuTrash2 } from "react-icons/lu";
 import { RemoveDialog } from "@/components/parts/RemoveDialog";
 import { useI18n } from "@/hooks/useI18n";
 
@@ -17,7 +10,7 @@ type Props = {
 
 export const RuleSetMenu: React.FC<Props> = ({ onRemove }) => {
   const i18n = useI18n();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open, onOpen, onClose } = useDisclosure();
 
   function onClickDeleteMenu(event: MouseEvent) {
     event.stopPropagation();
@@ -31,29 +24,34 @@ export const RuleSetMenu: React.FC<Props> = ({ onRemove }) => {
 
   return (
     <>
-      <Menu>
-        <MenuButton
-          as={IconButton}
-          icon={<HamburgerIcon />}
-          aria-label="more"
-          variant="ghost"
-          colorScheme="gray"
-          onClick={(e) => e.stopPropagation()}
-        />
-        <MenuList>
-          <MenuItem
-            icon={<DeleteIcon />}
-            color="red"
-            onClick={(e) => onClickDeleteMenu(e)}
+      <Menu.Root>
+        <Menu.Trigger asChild>
+          <IconButton
+            aria-label="more"
+            variant="ghost"
+            colorPalette="gray"
+            onClick={(e) => e.stopPropagation()}
           >
-            {i18n["RemoveTheRuleSet"]}
-          </MenuItem>
-        </MenuList>
-      </Menu>
+            <LuMenu />
+          </IconButton>
+        </Menu.Trigger>
+        <Menu.Positioner>
+          <Menu.Content>
+            <Menu.Item
+              value="remove"
+              color="red"
+              onClick={(e) => onClickDeleteMenu(e)}
+            >
+              <Icon as={LuTrash2} />
+              {i18n["RemoveTheRuleSet"]}
+            </Menu.Item>
+          </Menu.Content>
+        </Menu.Positioner>
+      </Menu.Root>
 
       <RemoveDialog
         title={i18n["remove_rule_set_confirmation_title"]}
-        isOpen={isOpen}
+        open={open}
         onClose={onClose}
         onPerform={onClickRemoveInDialog}
       />

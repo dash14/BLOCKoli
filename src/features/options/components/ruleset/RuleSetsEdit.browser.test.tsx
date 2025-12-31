@@ -286,8 +286,8 @@ describe("RuleSetsEdit component", () => {
       await titleInput.clear();
       await titleInput.fill("Updated Title");
 
-      // Click Submit button to confirm
-      await page.getByRole("button", { name: "Submit" }).click();
+      // Click Apply button to confirm
+      await page.getByRole("button", { name: "Apply" }).click();
 
       // onChange is called with updated title
       expect(onChange).toHaveBeenCalled();
@@ -335,7 +335,9 @@ describe("RuleSetsEdit component", () => {
 
       // Single rule set accordion opens by default
       // Click "Add a Rule" button within the rule set to trigger updateRules (line 139)
-      await page.getByRole("button", { name: "Add a Rule", exact: true }).click();
+      await page
+        .getByRole("button", { name: "Add a Rule", exact: true })
+        .click();
 
       // Verify onChange was called (updateRules callback on line 139)
       // Note: filterAvailableRuleSets filters out RULE_ID_EDITING rules,

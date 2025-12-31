@@ -1,6 +1,4 @@
-import { Input } from "@chakra-ui/input";
-import { Box } from "@chakra-ui/layout";
-import { Tag } from "@chakra-ui/tag";
+import { Box, Input, Tag } from "@chakra-ui/react";
 import { DisableTag } from "@/components/parts/DisableTag";
 import { I18nMessageMap } from "@/hooks/useI18n";
 
@@ -38,7 +36,9 @@ export const InputUrlFilter: React.FC<Props> = ({
   ) : (
     <Box marginTop="2px">
       {urlFilter ? (
-        <Tag maxWidth={maxWidth}>{urlFilter}</Tag>
+        <Tag.Root maxWidth={maxWidth}>
+          <Tag.Label>{urlFilter}</Tag.Label>
+        </Tag.Root>
       ) : (
         <DisableTag>{i18n["NotSpecified"]}</DisableTag>
       )}

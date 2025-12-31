@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { RuleActionType } from "@/modules/core/rules";
 import { ChromeDeclarativeNetRequestApiImpl } from "./declarativeNetRequest";
 import type { Rule } from "./api";
 
@@ -23,7 +24,9 @@ describe("ChromeDeclarativeNetRequestApiImpl", () => {
     mockGetDynamicRules = vi.fn().mockResolvedValue([]);
     mockGetMatchedRules = vi.fn().mockResolvedValue({ rulesMatchedInfo: [] });
     mockIsRegexSupported = vi.fn().mockResolvedValue({ isSupported: true });
-    mockTabsQuery = vi.fn().mockResolvedValue([{ id: 1, url: "https://example.com" }]);
+    mockTabsQuery = vi
+      .fn()
+      .mockResolvedValue([{ id: 1, url: "https://example.com" }]);
 
     vi.stubGlobal("chrome", {
       declarativeNetRequest: {
@@ -46,7 +49,9 @@ describe("ChromeDeclarativeNetRequestApiImpl", () => {
     it("calls chrome.declarativeNetRequest.updateDynamicRules with options", async () => {
       const api = new ChromeDeclarativeNetRequestApiImpl();
       const options = {
-        addRules: [{ id: 1, action: { type: "block" as const }, condition: {} }],
+        addRules: [
+          { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
+        ],
       };
 
       await api.updateDynamicRules(options);
@@ -69,8 +74,12 @@ describe("ChromeDeclarativeNetRequestApiImpl", () => {
   describe("getDynamicRules", () => {
     it("returns rules from chrome.declarativeNetRequest.getDynamicRules", async () => {
       const rules: Rule[] = [
-        { id: 1, action: { type: "block" }, condition: {} },
-        { id: 2, action: { type: "allow" }, condition: { urlFilter: "*" } },
+        { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
+        {
+          id: 2,
+          action: { type: RuleActionType.ALLOW },
+          condition: { urlFilter: "*" },
+        },
       ];
       mockGetDynamicRules.mockResolvedValue(rules);
 
@@ -93,9 +102,9 @@ describe("ChromeDeclarativeNetRequestApiImpl", () => {
   describe("removeAllDynamicRules", () => {
     it("removes all existing rules", async () => {
       const existingRules = [
-        { id: 1, action: { type: "block" }, condition: {} },
-        { id: 2, action: { type: "allow" }, condition: {} },
-        { id: 3, action: { type: "block" }, condition: {} },
+        { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
+        { id: 2, action: { type: RuleActionType.ALLOW }, condition: {} },
+        { id: 3, action: { type: RuleActionType.BLOCK }, condition: {} },
       ];
       mockGetDynamicRules.mockResolvedValue(existingRules);
 
@@ -158,7 +167,9 @@ describe("ChromeDeclarativeNetRequestApiImpl", () => {
       const matchedRules = [
         { rule: { ruleId: 1 }, tabId: 1, timeStamp: 1234567890 },
       ];
-      mockGetMatchedRules.mockResolvedValueOnce({ rulesMatchedInfo: matchedRules });
+      mockGetMatchedRules.mockResolvedValueOnce({
+        rulesMatchedInfo: matchedRules,
+      });
 
       const api = new ChromeDeclarativeNetRequestApiImpl();
 
@@ -167,7 +178,9 @@ describe("ChromeDeclarativeNetRequestApiImpl", () => {
       expect(result1).toEqual(matchedRules);
 
       // Second call - rate limit exceeded, returns cached value
-      mockGetMatchedRules.mockRejectedValueOnce(new Error("Rate limit exceeded"));
+      mockGetMatchedRules.mockRejectedValueOnce(
+        new Error("Rate limit exceeded")
+      );
       const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
       const result2 = await api.getMatchedRulesInActiveTab();

@@ -6,9 +6,8 @@ import {
   Heading,
   HStack,
   Text,
-  UnorderedList,
-  ListItem,
-  Select,
+  List,
+  NativeSelect,
 } from "@chakra-ui/react";
 import { css, Global } from "@emotion/react";
 import { Brand } from "@/components/brand/Brand";
@@ -111,17 +110,16 @@ const Options: React.FC = () => {
           <BrandIcon marginRight="4px" />
           <Brand as="h1" fontSize={36} />
         </HStack>
-        <Select
-          size="xs"
-          variant="outline"
-          borderColor="#C4D3AB"
-          width={110}
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-        >
-          <option value="en">English</option>
-          <option value="ja">日本語 (ja)</option>
-        </Select>
+        <NativeSelect.Root size="xs" variant="outline" width={110}>
+          <NativeSelect.Field
+            borderColor="#C4D3AB"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+          >
+            <option value="en">English</option>
+            <option value="ja">日本語 (ja)</option>
+          </NativeSelect.Field>
+        </NativeSelect.Root>
       </HStack>
       <Container
         width="930px"
@@ -141,10 +139,15 @@ const Options: React.FC = () => {
           <Text fontSize={18 + titleFontAdjuster} marginRight={10}>
             {i18n["EnableRules"]}
           </Text>
-          <Switch
-            isChecked={enabled}
-            onChange={(e) => changeState(e.target.checked)}
-          />
+          <Switch.Root
+            checked={enabled}
+            onCheckedChange={(e) => changeState(e.checked)}
+          >
+            <Switch.HiddenInput />
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Root>
         </HStack>
 
         <RuleSetsEdit
@@ -177,16 +180,16 @@ const Options: React.FC = () => {
         borderRadius="lg"
       >
         <Text as="div">{i18n["Notice"]}:</Text>
-        <UnorderedList>
-          <ListItem>
+        <List.Root>
+          <List.Item>
             {i18n["notice1_1"]}{" "}
             <ExternalLink href="https://developer.chrome.com/docs/extensions/reference/declarativeNetRequest/#limits">
               Rules limits
             </ExternalLink>{" "}
             {i18n["notice1_2"]}
-          </ListItem>
-          <ListItem>{i18n["notice_2"]}</ListItem>
-        </UnorderedList>
+          </List.Item>
+          <List.Item>{i18n["notice_2"]}</List.Item>
+        </List.Root>
       </Container>
 
       {/* dialog */}

@@ -1,4 +1,4 @@
-import { Box } from "@chakra-ui/layout";
+import { Box } from "@chakra-ui/react";
 import { MultipleSelect } from "@/components/forms/MultipleSelect";
 import { LabelTags } from "@/components/parts/LabelTags";
 import { I18nMessageMap } from "@/hooks/useI18n";

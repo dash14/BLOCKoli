@@ -1,22 +1,12 @@
 import { ReactNode } from "react";
-import { QuestionIcon } from "@chakra-ui/icons";
-import {
-  ChakraProps,
-  IconButton,
-  Popover,
-  PopoverArrow,
-  PopoverBody,
-  PopoverCloseButton,
-  PopoverContent,
-  PopoverHeader,
-  PopoverTrigger,
-} from "@chakra-ui/react";
+import { HTMLChakraProps, IconButton, Popover } from "@chakra-ui/react";
+import { LuHelpCircle } from "react-icons/lu";
 
 type Props = {
   title: string;
   children: ReactNode;
   contentWidth: number;
-} & ChakraProps;
+} & Omit<HTMLChakraProps<"button">, "css">;
 
 export const HintPopover: React.FC<Props> = ({
   contentWidth,
@@ -25,24 +15,24 @@ export const HintPopover: React.FC<Props> = ({
   ...props
 }) => {
   return (
-    <Popover>
-      <PopoverTrigger>
-        <IconButton
-          icon={<QuestionIcon />}
-          aria-label="hint"
-          size="sm"
-          variant="ghost"
-          {...props}
-        />
-      </PopoverTrigger>
-      <PopoverContent width={contentWidth}>
-        <PopoverArrow />
-        <PopoverCloseButton />
-        <PopoverHeader fontSize={14}>{title}</PopoverHeader>
-        <PopoverBody fontSize={14} paddingX={4} paddingY={3}>
-          {children}
-        </PopoverBody>
-      </PopoverContent>
-    </Popover>
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <IconButton aria-label="hint" size="sm" variant="ghost" {...props}>
+          <LuHelpCircle />
+        </IconButton>
+      </Popover.Trigger>
+      <Popover.Positioner>
+        <Popover.Content width={contentWidth}>
+          <Popover.Arrow>
+            <Popover.ArrowTip />
+          </Popover.Arrow>
+          <Popover.CloseTrigger />
+          <Popover.Header fontSize={14}>{title}</Popover.Header>
+          <Popover.Body fontSize={14} paddingX={4} paddingY={3}>
+            {children}
+          </Popover.Body>
+        </Popover.Content>
+      </Popover.Positioner>
+    </Popover.Root>
   );
 };
