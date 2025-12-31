@@ -24,11 +24,9 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@chakra-ui/icons": "^2.1.1",
-    "@chakra-ui/react": "^2.8.2",
+    "@chakra-ui/react": "^3.30.0",
     "@emotion/react": "^11.11.4",
-    "@emotion/styled": "^11.11.5",
-    "chakra-react-select": "^4.9.1",
+    "chakra-react-select": "^6.1.0",
     "loglevel": "^1.9.1",
     "loglevel-plugin-prefix": "^0.8.4",
     "react": "^18.3.1",
