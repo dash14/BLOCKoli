@@ -11,6 +11,11 @@ vi.mock("@/hooks/useRequestBlockClient", () => ({
   useRequestBlockClient: mockUseRequestBlockClient,
 }));
 
+// Mock download function
+vi.mock("@/modules/utils/download", () => ({
+  download: vi.fn(),
+}));
+
 import Options from "./Options";
 
 // Test data
@@ -172,5 +177,207 @@ describe("Options page", () => {
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "Options-accordion-open"
     );
+  });
+
+  test("toggles enable state when switch is clicked", async () => {
+    const changeState = vi.fn();
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ changeState, enabled: false })
+    );
+
+    await renderWithChakra(
+      <div data-testid="container" style={{ width: 1024, height: 900 }}>
+        <Options />
+      </div>
+    );
+
+    // Get the checkbox element and simulate click (which triggers change)
+    const switchCheckbox = page.getByRole("checkbox");
+    const inputElement = (await switchCheckbox.element()) as HTMLInputElement;
+    // Native click triggers the change event properly for checkboxes
+    inputElement.click();
+
+    expect(changeState).toHaveBeenCalledWith(true);
+  });
+
+  test("changes language when select is changed", async () => {
+    const setLanguage = vi.fn();
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ setLanguage })
+    );
+
+    await renderWithChakra(
+      <div data-testid="container" style={{ width: 1024, height: 900 }}>
+        <Options />
+      </div>
+    );
+
+    // Change language to Japanese
+    await page.getByRole("combobox").selectOptions("ja");
+
+    expect(setLanguage).toHaveBeenCalledWith("ja");
+  });
+
+  test("exports rule sets when export button is clicked", async () => {
+    const performExport = vi.fn().mockResolvedValue({
+      format: "BLOCKoli",
+      version: 1,
+      ruleSets: [{ name: "Test", rules: [] }],
+    });
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ ruleSets: sampleRuleSets, performExport })
+    );
+
+    await renderWithChakra(
+      <div data-testid="container" style={{ width: 1024, height: 900 }}>
+        <Options />
+      </div>
+    );
+
+    // Open export/import dialog
+    await page.getByRole("button", { name: /import and export/i }).click();
+
+    // Click export button
+    await page.getByRole("button", { name: /^export$/i }).click();
+
+    expect(performExport).toHaveBeenCalled();
+  });
+
+  test("imports rule sets successfully", async () => {
+    const performImport = vi.fn().mockResolvedValue([true, []]);
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ ruleSets: sampleRuleSets, performImport })
+    );
+
+    await renderWithChakra(
+      <div data-testid="container" style={{ width: 1024, height: 900 }}>
+        <Options />
+      </div>
+    );
+
+    // Open export/import dialog
+    await page.getByRole("button", { name: /import and export/i }).click();
+    await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
+
+    // Select file for import using file input
+    const fileInputElement = page.getByRole("textbox");
+    const fileInput = (await fileInputElement.element()) as HTMLInputElement;
+    const validJson = JSON.stringify({
+      format: "BLOCKoli",
+      version: 1,
+      ruleSets: [{ name: "Imported", rules: [] }],
+    });
+    const file = new File([validJson], "test.json", { type: "application/json" });
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+
+    // Wait for confirmation dialog to appear
+    await expect
+      .element(page.getByRole("button", { name: "Import", exact: true }).nth(0))
+      .toBeInTheDocument();
+
+    // Click Import to confirm
+    await page.getByRole("button", { name: "Import", exact: true }).nth(0).click();
+
+    // Wait for import to complete
+    await vi.waitFor(() => {
+      expect(performImport).toHaveBeenCalled();
+    });
+
+    // Success dialog should appear
+    await expect.element(page.getByText(/import succeeded/i)).toBeInTheDocument();
+  });
+
+  test("shows error dialog on import validation failure", async () => {
+    const performImport = vi.fn().mockResolvedValue([
+      false,
+      [{ message: "invalid_format", ruleSetNumber: 0 }],
+    ]);
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ ruleSets: sampleRuleSets, performImport })
+    );
+
+    await renderWithChakra(
+      <div data-testid="container" style={{ width: 1024, height: 900 }}>
+        <Options />
+      </div>
+    );
+
+    // Open export/import dialog
+    await page.getByRole("button", { name: /import and export/i }).click();
+    await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
+
+    // Select file for import using file input
+    const fileInputElement = page.getByRole("textbox");
+    const fileInput = (await fileInputElement.element()) as HTMLInputElement;
+    const validJson = JSON.stringify({
+      format: "BLOCKoli",
+      version: 1,
+      ruleSets: [{ name: "Invalid", rules: [] }],
+    });
+    const file = new File([validJson], "test.json", { type: "application/json" });
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+
+    // Wait for confirmation dialog to appear
+    await expect
+      .element(page.getByRole("button", { name: "Import", exact: true }).nth(0))
+      .toBeInTheDocument();
+
+    // Click Import to confirm
+    await page.getByRole("button", { name: "Import", exact: true }).nth(0).click();
+
+    // Wait for import to complete
+    await vi.waitFor(() => {
+      expect(performImport).toHaveBeenCalled();
+    });
+
+    // Error dialog should appear
+    await expect.element(page.getByText(/import failed/i)).toBeInTheDocument();
+  });
+
+  test("shows error dialog on JSON parse error", async () => {
+    const performImport = vi.fn();
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ ruleSets: sampleRuleSets, performImport })
+    );
+
+    await renderWithChakra(
+      <div data-testid="container" style={{ width: 1024, height: 900 }}>
+        <Options />
+      </div>
+    );
+
+    // Open export/import dialog
+    await page.getByRole("button", { name: /import and export/i }).click();
+    await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
+
+    // Select file with invalid JSON using file input
+    const fileInputElement = page.getByRole("textbox");
+    const fileInput = (await fileInputElement.element()) as HTMLInputElement;
+    const invalidJson = "{ invalid json }";
+    const file = new File([invalidJson], "invalid.json", { type: "application/json" });
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+
+    // Wait for confirmation dialog to appear
+    await expect
+      .element(page.getByRole("button", { name: "Import", exact: true }).nth(0))
+      .toBeInTheDocument();
+
+    // Click Import to confirm
+    await page.getByRole("button", { name: "Import", exact: true }).nth(0).click();
+
+    // Error dialog should appear (JSON parse error)
+    await expect.element(page.getByText(/import failed/i)).toBeInTheDocument();
+
+    // performImport should NOT have been called (parse error before import)
+    expect(performImport).not.toHaveBeenCalled();
   });
 });

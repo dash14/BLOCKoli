@@ -102,4 +102,68 @@ describe("EditableTitle component", () => {
       .toBeInTheDocument();
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  test("enters edit mode on double click", async () => {
+    const onChange = vi.fn();
+    await renderWithChakra(
+      <EditableTitle defaultValue="Test Title" onChange={onChange} />
+    );
+
+    // Double click on preview text to enter edit mode
+    const preview = page.getByText("Test Title");
+    await userEvent.dblClick(preview.element());
+
+    // Should be in edit mode
+    await expect
+      .element(page.getByRole("button", { name: "Submit" }))
+      .toBeInTheDocument();
+    await expect
+      .element(page.getByRole("button", { name: "Cancel" }))
+      .toBeInTheDocument();
+  });
+
+  test("calls preventDefault for IME Enter key (keyCode 229)", async () => {
+    const onChange = vi.fn();
+    await renderWithChakra(<EditableTitle onChange={onChange} />);
+
+    // Enter edit mode
+    await page.getByRole("button", { name: "Edit" }).click();
+
+    const input = page.getByRole("textbox");
+    const inputElement = await input.element();
+
+    // Create keydown event with keyCode 229 (IME) and spy on preventDefault
+    const event = new KeyboardEvent("keydown", {
+      keyCode: 229,
+      bubbles: true,
+      cancelable: true,
+    });
+    const preventDefaultSpy = vi.spyOn(event, "preventDefault");
+
+    inputElement.dispatchEvent(event);
+
+    expect(preventDefaultSpy).toHaveBeenCalled();
+  });
+
+  test("stops propagation when clicking input", async () => {
+    const onChange = vi.fn();
+    await renderWithChakra(<EditableTitle onChange={onChange} />);
+
+    // Enter edit mode
+    await page.getByRole("button", { name: "Edit" }).click();
+
+    const input = page.getByRole("textbox");
+    const inputElement = await input.element();
+
+    // Create click event and spy on stopPropagation
+    const event = new MouseEvent("click", {
+      bubbles: true,
+      cancelable: true,
+    });
+    const stopPropagationSpy = vi.spyOn(event, "stopPropagation");
+
+    inputElement.dispatchEvent(event);
+
+    expect(stopPropagationSpy).toHaveBeenCalled();
+  });
 });

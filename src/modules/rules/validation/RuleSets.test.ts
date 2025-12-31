@@ -41,6 +41,26 @@ describe("validateRuleSets: RuleSets", () => {
       });
     });
 
+    it("[invalid] mixed valid and invalid rulesets", () => {
+      const ruleSets = [
+        // Valid ruleset (triggers line 39: if (result.valid) return;)
+        { name: "valid set", rules: [validRule] },
+        // Invalid ruleset
+        { name: "invalid set", rules: [] },
+      ];
+      const result = validateRuleSets(ruleSets);
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [
+          {
+            ruleSetNumber: 1,
+            ruleSetField: "rules",
+            message: "must NOT have fewer than 1 items",
+          },
+        ],
+      });
+    });
+
     it("[invalid] A ruleSetNumber is specified in the RuleSet error", () => {
       const ruleSets = [
         {

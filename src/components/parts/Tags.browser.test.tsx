@@ -29,4 +29,25 @@ describe("Tags component", () => {
     const container = page.getByTestId("container");
     await expect(container).toMatchScreenshot("Tags-empty");
   });
+
+  test("truncates width when tags exceed maxWidth", async () => {
+    // Use very small maxWidth to trigger the break condition
+    await renderWithChakra(
+      <div data-testid="container">
+        <Tags
+          empty="No tags"
+          values={["LongTagName1", "LongTagName2", "LongTagName3"]}
+          maxWidth={50}
+        />
+      </div>
+    );
+
+    // All tags should still be rendered (just container width is truncated)
+    await expect.element(page.getByText("LongTagName1")).toBeInTheDocument();
+    await expect.element(page.getByText("LongTagName2")).toBeInTheDocument();
+    await expect.element(page.getByText("LongTagName3")).toBeInTheDocument();
+
+    const container = page.getByTestId("container");
+    await expect(container).toMatchScreenshot("Tags-truncated");
+  });
 });

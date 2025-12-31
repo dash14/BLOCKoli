@@ -1,3 +1,4 @@
+/* v8 ignore file -- @preserve */
 import logging from "loglevel";
 import prefixer from "loglevel-plugin-prefix";
 

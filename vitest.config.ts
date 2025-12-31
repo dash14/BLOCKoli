@@ -37,6 +37,7 @@ export default defineConfig({
             provider: playwright({
               contextOptions: {
                 reducedMotion: "reduce",
+                deviceScaleFactor: 1,
               },
             }),
             instances: [{ browser: "chromium" }],

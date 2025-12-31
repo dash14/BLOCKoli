@@ -168,6 +168,8 @@ describe("RuleSetsEdit component", () => {
 
   describe("Adding rule set", () => {
     test("adds new rule set with edit form when clicking Add button", async () => {
+      await page.viewport(800, 1500);
+
       await renderWithChakra(
         <StatefulRuleSetsEdit
           initialRuleSets={singleRuleSet}
@@ -321,7 +323,24 @@ describe("RuleSetsEdit component", () => {
     });
   });
 
-  // Note: Rule operations are covered in RulesEdit.browser.test.tsx.
-  // This test file focuses on RuleSetsEdit-specific features:
-  // add/remove rule sets, title editing, and accordion behavior.
+  describe("Rule operations within rule set", () => {
+    test("calls onChange when rules are updated within a rule set", async () => {
+      const onChangeCapture = vi.fn();
+      await renderWithChakra(
+        <StatefulRuleSetsEdit
+          initialRuleSets={singleRuleSet}
+          onChangeCapture={onChangeCapture}
+        />
+      );
+
+      // Single rule set accordion opens by default
+      // Click "Add a Rule" button within the rule set to trigger updateRules (line 139)
+      await page.getByRole("button", { name: "Add a Rule", exact: true }).click();
+
+      // Verify onChange was called (updateRules callback on line 139)
+      // Note: filterAvailableRuleSets filters out RULE_ID_EDITING rules,
+      // so we just verify the callback was triggered
+      expect(onChangeCapture).toHaveBeenCalled();
+    });
+  });
 });

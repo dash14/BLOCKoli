@@ -356,5 +356,60 @@ describe("MessageProxyFactory", () => {
 
       expect(handler).toHaveBeenCalledWith({ id: 1, name: "test" });
     });
+
+    it("removeEventListener removes specific handler", () => {
+      const factory = new MessageProxyFactory();
+      const proxy = factory.create<TestService>("testService");
+
+      const handler1 = vi.fn();
+      const handler2 = vi.fn();
+      proxy.addEventListener("onUpdate", handler1);
+      proxy.addEventListener("onUpdate", handler2);
+
+      // Remove handler1
+      proxy.removeEventListener("onUpdate", handler1);
+
+      // Simulate receiving a broadcast message
+      const sendResponse = vi.fn();
+      messageListeners[0](
+        {
+          type: "broadcast",
+          service: "testService",
+          event: "onUpdate",
+          message: { id: 1, name: "test" },
+        },
+        {},
+        sendResponse
+      );
+
+      expect(handler1).not.toHaveBeenCalled();
+      expect(handler2).toHaveBeenCalledWith({ id: 1, name: "test" });
+    });
+
+    it("removeEventListener does nothing when event has no handlers", () => {
+      const factory = new MessageProxyFactory();
+      const proxy = factory.create<TestService>("testService");
+
+      const handler = vi.fn();
+      proxy.addEventListener("onUpdate", handler);
+
+      // Remove from event that has no handlers (covers EventListeners.remove branch)
+      proxy.removeEventListener("onDelete", vi.fn());
+
+      // Original handler still works
+      const sendResponse = vi.fn();
+      messageListeners[0](
+        {
+          type: "broadcast",
+          service: "testService",
+          event: "onUpdate",
+          message: { id: 1, name: "test" },
+        },
+        {},
+        sendResponse
+      );
+
+      expect(handler).toHaveBeenCalled();
+    });
   });
 });

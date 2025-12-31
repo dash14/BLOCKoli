@@ -28,4 +28,18 @@ describe("ImportSucceededDialog component", () => {
       "ImportSucceededDialog-open"
     );
   });
+
+  test("closes dialog when close button is clicked", async () => {
+    await renderWithChakra(<TestWrapper />);
+    await page.getByRole("button", { name: "Open" }).click();
+    await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
+
+    // Click Close button to trigger onDialogClose (line 32)
+    await page.getByRole("button", { name: "Close" }).click();
+
+    // Dialog should be closed
+    await expect
+      .element(page.getByRole("alertdialog"))
+      .not.toBeInTheDocument();
+  });
 });

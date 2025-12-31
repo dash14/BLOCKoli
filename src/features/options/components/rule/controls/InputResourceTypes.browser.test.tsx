@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { useI18n } from "@/hooks/useI18n";
 import { ResourceType } from "@/modules/core/rules";
@@ -64,5 +64,30 @@ describe("InputResourceTypes component", () => {
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "InputResourceTypes-empty"
     );
+  });
+
+  test("calls onChange when selection changes", async () => {
+    const onChange = vi.fn();
+    const i18n = { ALL: "ALL" };
+
+    await renderWithChakra(
+      <InputResourceTypes
+        isEditing={true}
+        resourceTypes={[]}
+        onChange={onChange}
+        width={300}
+        maxWidth={300}
+        i18n={i18n}
+      />
+    );
+
+    // Click on the select to open dropdown
+    const selectInput = page.getByRole("combobox");
+    await selectInput.click();
+
+    // Click on script option
+    await page.getByRole("option", { name: "script" }).click();
+
+    expect(onChange).toHaveBeenCalled();
   });
 });

@@ -34,6 +34,25 @@ function TestWrapper() {
   );
 }
 
+function TestWrapperWithNoRuleSetNumber() {
+  const i18n = useI18n();
+  const ref = useRef<ImportFailedDialogHandle>(null);
+  return (
+    <>
+      <button
+        onClick={() =>
+          ref.current?.open([
+            { message: "invalid_format" }, // No ruleSetNumber - tests line 70
+          ])
+        }
+      >
+        Open
+      </button>
+      <ImportFailedDialog ref={ref} i18n={i18n} />
+    </>
+  );
+}
+
 describe("ImportFailedDialog component", () => {
   test("renders dialog with errors", async () => {
     await renderWithChakra(<TestWrapper />);
@@ -42,5 +61,30 @@ describe("ImportFailedDialog component", () => {
     await expect(page.getByRole("alertdialog")).toMatchScreenshot(
       "ImportFailedDialog-open"
     );
+  });
+
+  test("closes dialog when close button is clicked", async () => {
+    await renderWithChakra(<TestWrapper />);
+    await page.getByRole("button", { name: "Open" }).click();
+    await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
+
+    // Click Close button to trigger onDialogClose (line 46)
+    await page.getByRole("button", { name: "Close" }).click();
+
+    // Dialog should be closed
+    await expect
+      .element(page.getByRole("alertdialog"))
+      .not.toBeInTheDocument();
+  });
+
+  test("renders error without ruleSetNumber (covers empty return path)", async () => {
+    await renderWithChakra(<TestWrapperWithNoRuleSetNumber />);
+    await page.getByRole("button", { name: "Open" }).click();
+    await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
+
+    // The dialog renders with error that has no ruleSetNumber
+    // This triggers getAdditionalErrorText to return "" (line 70)
+    // Verify dialog header is present
+    await expect.element(page.getByText("Import failed")).toBeInTheDocument();
   });
 });

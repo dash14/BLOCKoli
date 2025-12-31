@@ -105,6 +105,58 @@ describe("validateRuleSet: RuleSet", () => {
     });
   });
 
+  describe("validateAdditional errors", () => {
+    it("[invalid] rule with empty condition triggers validateAdditional", () => {
+      const ruleSet = {
+        name: "rule set",
+        rules: [
+          {
+            action: { type: "block" },
+            condition: {},
+          },
+        ],
+      };
+      const result = validateRuleSet(ruleSet);
+      expect(result).toStrictEqual({
+        valid: false,
+        errors: [
+          {
+            ruleSetField: "rules",
+            ruleNumber: 0,
+            ruleField: "condition",
+            message: "must contain at least one rule",
+          },
+        ],
+      });
+    });
+  });
+
+  describe("Error sorting", () => {
+    it("sorts errors by ruleNumber, keeping same ruleNumber errors together", () => {
+      const ruleSet = {
+        name: "rule set",
+        rules: [
+          // Rule 0: multiple errors (same ruleNumber)
+          {
+            action: { type: "block" },
+            condition: {
+              resourceTypes: "invalid", // schema error
+              urlFilter: "test[", // regex error
+              isRegexFilter: true,
+            },
+          },
+        ],
+      };
+      const result = validateRuleSet(ruleSet);
+      expect(result.valid).toBe(false);
+      if (!result.valid) {
+        // All errors should have ruleNumber 0
+        expect(result.errors.every((e) => e.ruleNumber === 0)).toBe(true);
+        expect(result.errors.length).toBeGreaterThanOrEqual(2);
+      }
+    });
+  });
+
   describe("A ruleNumber is specified in the Rule error", () => {
     it("[invalid] not array", () => {
       const ruleSet = {

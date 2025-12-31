@@ -1,3 +1,4 @@
+/* v8 ignore file -- @preserve */
 import { ReactElement } from "react";
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import { render } from "vitest-browser-react";

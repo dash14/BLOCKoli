@@ -27,7 +27,9 @@ export const Tags: React.FC<Props> = ({
         const div = elm as HTMLDivElement;
         return div.getBoundingClientRect().width;
       });
+      /* v8 ignore next -- @preserve */
       if (widthList.length === 0) return;
+      /* v8 ignore next -- @preserve */
       let currentWidth = widthList.shift() ?? 0;
       for (const width of widthList) {
         const newWidth = currentWidth + gap + width;

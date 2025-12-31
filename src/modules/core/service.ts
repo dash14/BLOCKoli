@@ -7,6 +7,10 @@ export interface EventDispatchable<T> {
     type: K,
     handler: (value: T[K]) => void
   ): void;
+  removeEventListener<K extends keyof T>(
+    type: K,
+    handler: (value: T[K]) => void
+  ): void;
   removeAllEventListeners(): void;
 }
 

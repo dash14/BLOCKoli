@@ -271,6 +271,119 @@ describe("RequestBlockServiceImpl", () => {
       expect(mockDeclarativeNetRequest.updateDynamicRules).toHaveBeenCalled();
     });
 
+    it("replaces rules when rule is modified", async () => {
+      const prevRuleSets: StoredRuleSets = [
+        {
+          name: "Test Set",
+          rules: [
+            {
+              id: 50,
+              action: { type: RuleActionType.BLOCK },
+              condition: { requestDomains: ["old.com"] },
+            },
+          ],
+        },
+      ];
+      vi.mocked(mockStore.loadRuleSets).mockResolvedValue(prevRuleSets);
+      vi.mocked(mockStore.loadState).mockResolvedValue("enable");
+      // Return existing API rules
+      vi.mocked(mockDeclarativeNetRequest.getDynamicRules).mockResolvedValue([
+        {
+          id: 50,
+          action: { type: RuleActionType.BLOCK },
+          condition: { requestDomains: ["old.com"] },
+          priority: 1,
+        },
+      ]);
+
+      const newRuleSets: StoredRuleSets = [
+        {
+          name: "Test Set",
+          rules: [
+            {
+              id: 50,
+              action: { type: RuleActionType.BLOCK },
+              condition: { requestDomains: ["new.com"] }, // Changed
+            },
+          ],
+        },
+      ];
+
+      const service = createService();
+      await service.updateRuleSets(newRuleSets);
+
+      // Should remove old rule and add new rule (replace)
+      expect(mockDeclarativeNetRequest.updateDynamicRules).toHaveBeenCalledWith(
+        expect.objectContaining({
+          removeRuleIds: expect.arrayContaining([50]),
+          addRules: expect.arrayContaining([
+            expect.objectContaining({ id: 50 }),
+          ]),
+        })
+      );
+    });
+
+    it("removes rules when rule is deleted", async () => {
+      const prevRuleSets: StoredRuleSets = [
+        {
+          name: "Test Set",
+          rules: [
+            {
+              id: 50,
+              action: { type: RuleActionType.BLOCK },
+              condition: { requestDomains: ["example.com"] },
+            },
+            {
+              id: 51,
+              action: { type: RuleActionType.BLOCK },
+              condition: { requestDomains: ["delete-me.com"] },
+            },
+          ],
+        },
+      ];
+      vi.mocked(mockStore.loadRuleSets).mockResolvedValue(prevRuleSets);
+      vi.mocked(mockStore.loadState).mockResolvedValue("enable");
+      // Return existing API rules including rule 51 that will be deleted
+      vi.mocked(mockDeclarativeNetRequest.getDynamicRules).mockResolvedValue([
+        {
+          id: 50,
+          action: { type: RuleActionType.BLOCK },
+          condition: { requestDomains: ["example.com"] },
+          priority: 1,
+        },
+        {
+          id: 51,
+          action: { type: RuleActionType.BLOCK },
+          condition: { requestDomains: ["delete-me.com"] },
+          priority: 1,
+        },
+      ]);
+
+      // Remove rule 51
+      const newRuleSets: StoredRuleSets = [
+        {
+          name: "Test Set",
+          rules: [
+            {
+              id: 50,
+              action: { type: RuleActionType.BLOCK },
+              condition: { requestDomains: ["example.com"] },
+            },
+          ],
+        },
+      ];
+
+      const service = createService();
+      await service.updateRuleSets(newRuleSets);
+
+      // Should remove rule 51
+      expect(mockDeclarativeNetRequest.updateDynamicRules).toHaveBeenCalledWith(
+        expect.objectContaining({
+          removeRuleIds: expect.arrayContaining([51]),
+        })
+      );
+    });
+
     it("does not apply rules when disabled", async () => {
       vi.mocked(mockStore.loadRuleSets).mockResolvedValue([]);
       vi.mocked(mockStore.loadState).mockResolvedValue("disable");

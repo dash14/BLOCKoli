@@ -307,4 +307,37 @@ describe("useRequestBlockClient", () => {
 
     expect(mockRemoveListener).toHaveBeenCalled();
   });
+
+  it("updates enabled state when changeState event is received", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let capturedListener: any;
+    mockAddListener.mockImplementation((listener) => {
+      capturedListener = listener;
+    });
+
+    const { result } = renderHook(() => useRequestBlockClient());
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true);
+    });
+
+    // Initially disabled
+    expect(result.current.enabled).toBe(false);
+
+    // Simulate receiving "changeState" event with "enable"
+    act(() => {
+      capturedListener(
+        {
+          type: "broadcast",
+          service: "RequestBlock",
+          event: "changeState",
+          message: "enable",
+        },
+        {},
+        vi.fn()
+      );
+    });
+
+    expect(result.current.enabled).toBe(true);
+  });
 });

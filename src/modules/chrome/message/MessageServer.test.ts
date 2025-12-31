@@ -309,30 +309,37 @@ describe("MessageServer", () => {
   });
 
   describe("message handling when server not started", () => {
-    it("returns error when server is not started", () => {
+    it("returns error when isStarted becomes false after start", () => {
       const server = new MessageServer<TestService>("testService");
       const mockEmitter: EventEmitter<TestEvents> = {
         emit: vi.fn(),
       };
       const service = new TestService(mockEmitter);
 
-      // Get the message listener without starting the server properly
-      // We need to manually call buildMessageListener
-      // Since buildMessageListener is private, we'll test this differently
+      server.start(service);
 
-      // Actually, this case is tricky because the listener is only registered when start() is called
-      // However, there's a check for isStarted in the listener itself
-      // Let's test by starting the server, then somehow resetting isStarted (which we can't do directly)
+      // Force isStarted to false to test defensive code
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (server as any).isStarted = false;
 
-      // Actually looking at the code, this case can happen if:
-      // 1. start() is called with a service
-      // 2. The listener receives a message
-      // But isStarted is set to true before adding the listener, so this test case
-      // would require modifying the server state which isn't possible from outside
+      const sendResponse = vi.fn();
+      const result = messageListeners[0](
+        {
+          type: "request",
+          service: "testService",
+          method: "getData",
+          args: [],
+        },
+        {} as chrome.runtime.MessageSender,
+        sendResponse
+      );
 
-      // Instead, let's just verify the server can be created without issues
-      expect(server).toBeDefined();
-      expect(service).toBeDefined();
+      expect(result).toBe(false);
+      expect(sendResponse).toHaveBeenCalledWith({
+        type: "response",
+        success: false,
+        error: "Message server is not started.",
+      });
     });
   });
 
