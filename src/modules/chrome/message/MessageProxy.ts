@@ -73,6 +73,13 @@ class BroadcastListeners<T extends Events> implements EventDispatchable<T> {
     }
   }
 
+  removeEventListener<K extends keyof T>(
+    type: K,
+    handler: (value: T[K]) => void
+  ): void {
+    this.listeners.remove(type, handler as (value: T[keyof T]) => void);
+  }
+
   removeAllEventListeners(): void {
     this.listeners.removeAll();
     if (this.messageListener) {

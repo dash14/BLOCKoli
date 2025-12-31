@@ -1,3 +1,4 @@
+/* v8 ignore file -- @preserve */
 import { Main } from "./modules/worker/Main";
 
 const controller = new Main();

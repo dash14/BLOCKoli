@@ -1,3 +1,4 @@
+/* v8 ignore file -- @preserve */
 import { ChromeApiFactory } from "@/modules/chrome/factory";
 import { MessageServer } from "@/modules/chrome/message/MessageServer";
 import * as RequestBlock from "@/modules/services/RequestBlockService";

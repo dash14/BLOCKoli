@@ -1,19 +1,23 @@
 // A hook for defining keys for an Array whose elements have no id
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { push, removeAt } from "@/modules/core/array";
 
-export function useArrayKey(initialLength: number) {
-  const [elementKeys, setElementKeys] = useState<number[]>([]);
-  const nextIdRef = useRef(1);
+function generateKeys(
+  length: number,
+  nextIdRef: React.MutableRefObject<number>
+): number[] {
+  return [...Array(length)].map(() => nextIdRef.current++);
+}
 
-  useEffect(() => {
-    resetElementLength(initialLength);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+export function useArrayKey(initialLength: number) {
+  const nextIdRef = useRef(1);
+  const [elementKeys, setElementKeys] = useState<number[]>(() =>
+    generateKeys(initialLength, nextIdRef)
+  );
 
   function resetElementLength(length: number) {
-    setElementKeys([...Array(length)].map(() => nextIdRef.current++));
+    setElementKeys(generateKeys(length, nextIdRef));
   }
 
   function pushElementKey() {
