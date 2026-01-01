@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { describe, expect, test } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { useI18n } from "@/hooks/useI18n";
 import { renderWithChakra } from "@/test/utils/render";
 import {
@@ -16,7 +16,11 @@ function TestWrapper() {
       <button
         onClick={() =>
           ref.current?.open([
-            { message: "invalid_format", ruleSetNumber: 0, ruleSetField: "rules" },
+            {
+              message: "invalid_format",
+              ruleSetNumber: 0,
+              ruleSetField: "rules",
+            },
             {
               message: "required",
               ruleSetNumber: 1,
@@ -72,9 +76,7 @@ describe("ImportFailedDialog component", () => {
     await page.getByRole("button", { name: "Close" }).click();
 
     // Dialog should be closed
-    await expect
-      .element(page.getByRole("alertdialog"))
-      .not.toBeInTheDocument();
+    await expect.element(page.getByRole("alertdialog")).not.toBeInTheDocument();
   });
 
   test("renders error without ruleSetNumber (covers empty return path)", async () => {
@@ -86,5 +88,17 @@ describe("ImportFailedDialog component", () => {
     // This triggers getAdditionalErrorText to return "" (line 70)
     // Verify dialog header is present
     await expect.element(page.getByText("Import failed")).toBeInTheDocument();
+  });
+
+  test("closes dialog when Escape key is pressed", async () => {
+    await renderWithChakra(<TestWrapper />);
+    await page.getByRole("button", { name: "Open" }).click();
+    await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
+
+    // Press Escape key to close the dialog
+    await userEvent.keyboard("{Escape}");
+
+    // Dialog should be closed
+    await expect.element(page.getByRole("alertdialog")).not.toBeInTheDocument();
   });
 });

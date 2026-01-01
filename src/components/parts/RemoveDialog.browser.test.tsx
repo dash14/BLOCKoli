@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { renderWithChakra } from "@/test/utils/render";
 import { RemoveDialog } from "./RemoveDialog";
 
@@ -80,5 +80,25 @@ describe("RemoveDialog component", () => {
       .query()
       ?.querySelector(".chakra-dialog__header")?.textContent;
     expect(headerText).toBe("Remove");
+  });
+
+  test("calls onClose when Escape key is pressed", async () => {
+    const onClose = vi.fn();
+    const onPerform = vi.fn();
+    await renderWithChakra(
+      <RemoveDialog
+        title="Delete Item"
+        open={true}
+        onClose={onClose}
+        onPerform={onPerform}
+      />
+    );
+
+    await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
+
+    // Press Escape key to close the dialog
+    await userEvent.keyboard("{Escape}");
+
+    expect(onClose).toHaveBeenCalled();
   });
 });

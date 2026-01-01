@@ -168,7 +168,7 @@ describe("RuleSetsEdit component", () => {
 
   describe("Adding rule set", () => {
     test("adds new rule set with edit form when clicking Add button", async () => {
-      await page.viewport(800, 1500);
+      await page.viewport(800, 1250);
 
       await renderWithChakra(
         <StatefulRuleSetsEdit

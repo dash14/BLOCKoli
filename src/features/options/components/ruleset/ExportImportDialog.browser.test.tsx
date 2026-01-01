@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { useI18n } from "@/hooks/useI18n";
 import { renderWithChakra } from "@/test/utils/render";
 import { ExportImportDialog } from "./ExportImportDialog";
@@ -94,9 +94,7 @@ describe("ExportImportDialog component", () => {
 
     // Wait for confirmation dialog to appear (second dialog with Import button)
     await expect
-      .element(
-        page.getByRole("button", { name: "Import", exact: true }).nth(0)
-      )
+      .element(page.getByRole("button", { name: "Import", exact: true }).nth(0))
       .toBeInTheDocument();
 
     // Click Import to confirm (in the confirmation dialog)
@@ -162,5 +160,19 @@ describe("ExportImportDialog component", () => {
 
     // Verify onImport was NOT called
     expect(onImport).not.toHaveBeenCalled();
+  });
+
+  test("closes dialog when Escape key is pressed", async () => {
+    await renderWithChakra(<TestWrapper />);
+
+    // Open the dialog
+    await page.getByRole("button", { name: /import/i }).click();
+    await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
+
+    // Press Escape key to close the dialog
+    await userEvent.keyboard("{Escape}");
+
+    // Dialog should be closed
+    await expect.element(page.getByRole("alertdialog")).not.toBeInTheDocument();
   });
 });

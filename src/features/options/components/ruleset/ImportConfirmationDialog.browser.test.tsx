@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { describe, expect, test } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { useI18n } from "@/hooks/useI18n";
 import { renderWithChakra } from "@/test/utils/render";
 import {
@@ -27,5 +27,17 @@ describe("ImportConfirmationDialog component", () => {
     await expect(page.getByRole("alertdialog")).toMatchScreenshot(
       "ImportConfirmationDialog-open"
     );
+  });
+
+  test("closes dialog when Escape key is pressed", async () => {
+    await renderWithChakra(<TestWrapper />);
+    await page.getByRole("button", { name: "Open" }).click();
+    await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
+
+    // Press Escape key to close the dialog
+    await userEvent.keyboard("{Escape}");
+
+    // Dialog should be closed
+    await expect.element(page.getByRole("alertdialog")).not.toBeInTheDocument();
   });
 });
