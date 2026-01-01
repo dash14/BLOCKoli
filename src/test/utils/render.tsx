@@ -16,6 +16,11 @@ if (typeof document !== "undefined") {
   const style = document.createElement("style");
   style.id = "vrt-stability";
   style.textContent = `
+    * {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: geometricPrecision;
+    }
     *, *::before, *::after {
       animation-duration: 0s !important;
       animation-delay: 0s !important;

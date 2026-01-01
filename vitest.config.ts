@@ -42,6 +42,15 @@ export default defineConfig({
             }),
             instances: [{ browser: "chromium" }],
             headless: true,
+            expect: {
+              toMatchScreenshot: {
+                comparatorName: "pixelmatch",
+                comparatorOptions: {
+                  threshold: 0.2,
+                  includeAA: false,
+                },
+              },
+            },
           },
         },
       },
