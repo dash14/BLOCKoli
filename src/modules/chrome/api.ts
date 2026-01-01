@@ -126,7 +126,7 @@ export enum UnsupportedRegexReason {
 
 export interface IsRegexSupportedResult {
   isSupported: boolean;
-  reason?: UnsupportedRegexReason | undefined;
+  reason?: `${UnsupportedRegexReason}`;
 }
 
 export interface ChromeDeclarativeNetRequestApi {

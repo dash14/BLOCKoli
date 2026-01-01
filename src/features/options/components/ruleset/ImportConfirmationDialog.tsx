@@ -8,7 +8,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { FaUpload } from "react-icons/fa";
-import { LuAlertTriangle } from "react-icons/lu";
+import { LuTriangleAlert } from "react-icons/lu";
 import { useDefer } from "@/hooks/useDefer";
 import { I18nMessageMap } from "@/hooks/useI18n";
 
@@ -62,7 +62,7 @@ export const ImportConfirmationDialog: React.FC<Props> = ({ i18n, ref }) => {
           <Dialog.Body>
             {i18n["import_description3"]}
             <HStack marginY={3} alignItems="start">
-              <Icon as={LuAlertTriangle} boxSize={5} color="orange.300" />
+              <Icon as={LuTriangleAlert} boxSize={5} color="orange.300" />
               <Box>{i18n["import_description2"]}</Box>
             </HStack>
             {i18n["import_description4"]}

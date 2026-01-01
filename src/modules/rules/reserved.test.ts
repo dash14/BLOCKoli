@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { RESERVED_RULE_ID_MAX, getReservedRules } from "./reserved";
 import { RuleActionType } from "@/modules/core/rules";
+import { RESERVED_RULE_ID_MAX, getReservedRules } from "./reserved";
 
 describe("reserved", () => {
   describe("RESERVED_RULE_ID_MAX", () => {

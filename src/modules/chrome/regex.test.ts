@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { createRegexValidator } from "./regex";
 import { UnsupportedRegexReason } from "./api";
+import { createRegexValidator } from "./regex";
 
 // Mock logging for declarativeNetRequest
 vi.mock("@/modules/utils/logging", () => ({

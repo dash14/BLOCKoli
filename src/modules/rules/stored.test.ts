@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { RuleActionType } from "@/modules/core/rules";
 import { RULE_ID_EDITING, RULE_ID_UNSAVED } from "./stored";
 import type { StoredRule, StoredRules, StoredRuleSet, StoredRuleSets } from "./stored";
-import { RuleActionType } from "@/modules/core/rules";
 
 describe("stored", () => {
   describe("RULE_ID_EDITING", () => {

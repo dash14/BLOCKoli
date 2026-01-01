@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { HTMLChakraProps, IconButton, Popover } from "@chakra-ui/react";
-import { LuHelpCircle } from "react-icons/lu";
+import { LuCircleHelp } from "react-icons/lu";
 
 type Props = {
   title: string;
@@ -18,7 +18,7 @@ export const HintPopover: React.FC<Props> = ({
     <Popover.Root positioning={{ strategy: "fixed", hideWhenDetached: true }}>
       <Popover.Trigger asChild>
         <IconButton aria-label="hint" size="sm" variant="ghost" {...props}>
-          <LuHelpCircle />
+          <LuCircleHelp />
         </IconButton>
       </Popover.Trigger>
       <Popover.Positioner>

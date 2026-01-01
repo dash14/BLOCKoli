@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { newRuleTemplate, newRuleSetTemplate } from "./template";
 import { RuleActionType } from "@/modules/core/rules";
 import { RULE_ID_EDITING } from "./stored";
+import { newRuleTemplate, newRuleSetTemplate } from "./template";
 
 describe("template", () => {
   describe("newRuleTemplate", () => {

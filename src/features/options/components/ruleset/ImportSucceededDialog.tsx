@@ -1,6 +1,6 @@
 import { useImperativeHandle, useRef } from "react";
 import { Button, Dialog, Icon, useDisclosure } from "@chakra-ui/react";
-import { LuCheckCircle } from "react-icons/lu";
+import { LuCircleCheckBig } from "react-icons/lu";
 import { I18nMessageMap } from "@/hooks/useI18n";
 
 export type ImportSucceededDialogHandle = {
@@ -39,7 +39,7 @@ export const ImportSucceededDialog: React.FC<Props> = ({ i18n, ref }) => {
         <Dialog.Content maxWidth="30rem" paddingTop={5}>
           <Dialog.Header fontSize="lg" fontWeight="bold">
             <Icon
-              as={LuCheckCircle}
+              as={LuCircleCheckBig}
               boxSize={7}
               marginRight={2}
               color="green.500"

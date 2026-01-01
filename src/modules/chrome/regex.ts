@@ -15,7 +15,7 @@ export function createRegexValidator(): RegexValidator {
       try {
         new RegExp(regex, isCaseSensitive ? "" : "i");
         return { isSupported: true };
-      } catch (e) {
+      } catch {
         return {
           isSupported: false,
           reason: UnsupportedRegexReason.SYNTAX_ERROR,

@@ -1,10 +1,10 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { ChromeApiFactory } from "./factory";
-import { ChromeStorageApiImpl } from "./storage";
-import { ChromeDeclarativeNetRequestApiImpl } from "./declarativeNetRequest";
 import { ChromeActionApiImpl } from "./action";
-import { ChromeRuntimeApiImpl } from "./runtime";
+import { ChromeDeclarativeNetRequestApiImpl } from "./declarativeNetRequest";
+import { ChromeApiFactory } from "./factory";
 import { ChromeI18nApiImpl } from "./i18n";
+import { ChromeRuntimeApiImpl } from "./runtime";
+import { ChromeStorageApiImpl } from "./storage";
 
 // Mock logging for declarativeNetRequest
 vi.mock("@/modules/utils/logging", () => ({

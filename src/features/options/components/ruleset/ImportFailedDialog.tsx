@@ -8,7 +8,7 @@ import {
   List,
   useDisclosure,
 } from "@chakra-ui/react";
-import { LuAlertTriangle } from "react-icons/lu";
+import { LuTriangleAlert } from "react-icons/lu";
 import {
   I18nMessageMap,
   getLocalizedValidationErrorText,
@@ -78,7 +78,7 @@ export const ImportFailedDialog: React.FC<Props> = ({ i18n, ref }) => {
         <Dialog.Content maxWidth="30rem" paddingTop={2}>
           <Dialog.Header fontSize="lg" fontWeight="bold">
             <Icon
-              as={LuAlertTriangle}
+              as={LuTriangleAlert}
               boxSize={7}
               color="red.500"
               marginRight={2}

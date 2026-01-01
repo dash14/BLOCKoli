@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { convertToApiRule } from "./convert";
 import { RuleActionType, RequestMethod, ResourceType, RESOURCE_TYPES } from "@/modules/core/rules";
+import { convertToApiRule } from "./convert";
 import type { StoredRule } from "./stored";
 
 describe("convert", () => {

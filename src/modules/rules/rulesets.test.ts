@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { toRuleList, walkRules } from "./rulesets";
 import { RuleActionType } from "@/modules/core/rules";
+import { toRuleList, walkRules } from "./rulesets";
 import { RULE_ID_EDITING, RULE_ID_UNSAVED } from "./stored";
 import type { StoredRuleSets, StoredRule } from "./stored";
 

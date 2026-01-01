@@ -203,7 +203,7 @@ function validateRegexpFilter(json: object): ValidationResult {
   if (rule?.condition?.urlFilter && rule?.condition?.isRegexFilter) {
     try {
       new RegExp(rule.condition.urlFilter);
-    } catch (e) {
+    } catch {
       return [
         false,
         [

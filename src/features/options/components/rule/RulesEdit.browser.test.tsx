@@ -177,7 +177,8 @@ describe("RulesEdit component", () => {
 
       // onChangeCaptureが呼ばれる（最後の呼び出しが保存後）
       expect(onChangeCapture).toHaveBeenCalled();
-      const lastCall = onChangeCapture.mock.calls.at(-1);
+      const lastCall =
+        onChangeCapture.mock.calls[onChangeCapture.mock.calls.length - 1];
       const newRules = lastCall?.[0] as StoredRule[];
       expect(newRules).toHaveLength(2);
       // 新規ルールのIDはRULE_ID_UNSAVED (0)
@@ -273,7 +274,8 @@ describe("RulesEdit component", () => {
         .toBeInTheDocument();
 
       // 最後のonChangeCapture呼び出しでルールが1件に戻っている
-      const lastCall = onChangeCapture.mock.calls.at(-1);
+      const lastCall =
+        onChangeCapture.mock.calls[onChangeCapture.mock.calls.length - 1];
       const rules = lastCall?.[0] as StoredRule[];
       expect(rules).toHaveLength(1);
     });

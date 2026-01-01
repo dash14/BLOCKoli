@@ -8,7 +8,8 @@ export class ChromeStorageApiImpl implements ChromeStorageApi {
   }
 
   async get<T>(key: string): Promise<T | undefined> {
-    return (await this.area.get(key))[key];
+    const result = await this.area.get(key);
+    return result[key] as T | undefined;
   }
 
   async set<T>(key: string, value: T): Promise<void> {

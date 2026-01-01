@@ -1,5 +1,5 @@
 import { Box, HTMLChakraProps, Icon, Table } from "@chakra-ui/react";
-import { LuBan, LuCheckCircle, LuHelpCircle } from "react-icons/lu";
+import { LuBan, LuCircleCheckBig, LuCircleHelp } from "react-icons/lu";
 import { useI18n } from "@/hooks/useI18n";
 import { MatchedRule } from "@/modules/rules/matched";
 
@@ -47,7 +47,7 @@ export const MatchedRulesTable: React.FC<Props> = ({
                 paddingLeft="6px"
                 paddingRight="10px"
               >
-                <Icon as={LuHelpCircle} />
+                <Icon as={LuCircleHelp} />
               </Table.ColumnHeader>
             </Table.Row>
           </Table.Header>
@@ -76,10 +76,10 @@ export const MatchedRulesTable: React.FC<Props> = ({
                     rule.rule.isBlocking ? (
                       <Icon as={LuBan} color="red" />
                     ) : (
-                      <Icon as={LuCheckCircle} color="green" />
+                      <Icon as={LuCircleCheckBig} color="green" />
                     )
                   ) : (
-                    <Icon as={LuHelpCircle} color="blue.500" />
+                    <Icon as={LuCircleHelp} color="blue.500" />
                   )}
                 </Table.Cell>
               </Table.Row>

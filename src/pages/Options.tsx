@@ -63,7 +63,7 @@ const Options: React.FC = () => {
     let object: object | null = null;
     try {
       object = JSON.parse(text);
-    } catch (e) {
+    } catch {
       // parse error
       await importFailedDialog.current?.open([{ message: "JSON parse error" }]);
     }
