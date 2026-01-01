@@ -12,12 +12,13 @@ export const URLFilterHint: React.FC<Props> = (props) => {
       {i18n["hint_URLFilter_1"]}
       <br />
       {i18n["hint_URLFilter_2"]}
+      &nbsp;
       <ExternalLink href="https://developer.chrome.com/docs/extensions/reference/declarativeNetRequest/#filter-matching-charactgers">
         API reference (urlFilter)
       </ExternalLink>
       {i18n["hint_URLFilter_3"]}
       <Box marginTop={1}>{i18n["hint_Note"]}:</Box>
-      <List.Root marginLeft={5}>
+      <List.Root>
         <List.Item>
           {i18n["hint_URLFilter_note_1_1"]}
           {i18n["hint_URLFilter_note_1_2"]}

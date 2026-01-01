@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { Button, Dialog } from "@chakra-ui/react";
+import { Button, Dialog, Portal } from "@chakra-ui/react";
 import { useI18n } from "@/hooks/useI18n";
 
 type Props = {
@@ -20,26 +20,31 @@ export const RemoveDialog: React.FC<Props> = ({
   return (
     <Dialog.Root
       open={open}
+      placement="center"
       onOpenChange={(e) => !e.open && onClose()}
       initialFocusEl={() => cancelRef.current}
       role="alertdialog"
     >
-      <Dialog.Backdrop />
-      <Dialog.Positioner>
-        <Dialog.Content>
-          <Dialog.Header>{title ?? "Remove"}</Dialog.Header>
-          <Dialog.CloseTrigger />
-          <Dialog.Body fontSize={14}>{i18n["remove_confirmation"]}</Dialog.Body>
-          <Dialog.Footer>
-            <Button ref={cancelRef} variant="outline" onClick={onClose}>
-              {i18n["Cancel"]}
-            </Button>
-            <Button colorPalette="red" ml={3} onClick={onPerform}>
-              {i18n["Remove"]}
-            </Button>
-          </Dialog.Footer>
-        </Dialog.Content>
-      </Dialog.Positioner>
+      <Portal>
+        <Dialog.Backdrop pointerEvents="auto" />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>{title ?? "Remove"}</Dialog.Header>
+            <Dialog.CloseTrigger />
+            <Dialog.Body fontSize={14}>
+              {i18n["remove_confirmation"]}
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Button ref={cancelRef} variant="outline" onClick={onClose}>
+                {i18n["Cancel"]}
+              </Button>
+              <Button colorPalette="red" onClick={onPerform}>
+                {i18n["Remove"]}
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
     </Dialog.Root>
   );
 };

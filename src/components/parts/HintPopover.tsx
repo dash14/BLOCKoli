@@ -15,7 +15,7 @@ export const HintPopover: React.FC<Props> = ({
   ...props
 }) => {
   return (
-    <Popover.Root>
+    <Popover.Root positioning={{ strategy: "fixed", hideWhenDetached: true }}>
       <Popover.Trigger asChild>
         <IconButton aria-label="hint" size="sm" variant="ghost" {...props}>
           <LuHelpCircle />
@@ -26,7 +26,6 @@ export const HintPopover: React.FC<Props> = ({
           <Popover.Arrow>
             <Popover.ArrowTip />
           </Popover.Arrow>
-          <Popover.CloseTrigger />
           <Popover.Header fontSize={14}>{title}</Popover.Header>
           <Popover.Body fontSize={14} paddingX={4} paddingY={3}>
             {children}

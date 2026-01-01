@@ -9,7 +9,13 @@ type Props = {
 
 export const ExternalLink: React.FC<Props> = ({ href, children }) => {
   return (
-    <Link href={href} target="_blank" rel="noopener" color="blue.500">
+    <Link
+      href={href}
+      target="_blank"
+      rel="noopener"
+      color="blue.500"
+      outlineWidth="0"
+    >
       {children}
       <Icon as={LuExternalLink} mx="2px" />
     </Link>

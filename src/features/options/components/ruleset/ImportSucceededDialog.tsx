@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import { Button, Dialog, Icon, useDisclosure } from "@chakra-ui/react";
-import { LuCheckCircle2 } from "react-icons/lu";
+import { LuCheckCircle } from "react-icons/lu";
 import { I18nMessageMap } from "@/hooks/useI18n";
 
 export type ImportSucceededDialogHandle = {
@@ -28,6 +28,7 @@ export const ImportSucceededDialog = forwardRef(({ i18n }: Props, ref) => {
   return (
     <Dialog.Root
       open={open}
+      placement="center"
       onOpenChange={(e) => !e.open && onDialogClose()}
       initialFocusEl={() => cancelRef.current}
       role="alertdialog"
@@ -37,7 +38,7 @@ export const ImportSucceededDialog = forwardRef(({ i18n }: Props, ref) => {
         <Dialog.Content maxWidth="30rem" paddingTop={5}>
           <Dialog.Header fontSize="lg" fontWeight="bold">
             <Icon
-              as={LuCheckCircle2}
+              as={LuCheckCircle}
               boxSize={7}
               marginRight={2}
               color="green.500"

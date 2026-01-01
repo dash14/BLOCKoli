@@ -24,7 +24,7 @@ export const RemoveButton: React.FC<Props> = ({
         colorPalette="red"
         {...props}
       >
-        <Icon as={LuTrash2} />
+        <Icon as={LuTrash2} size="xs" />
         {i18n["Remove"]}
       </Button>
       <RemoveDialog

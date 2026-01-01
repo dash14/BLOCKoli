@@ -19,13 +19,13 @@ export const EditMenu: React.FC<Props> = ({
   i18n,
 }) => {
   return isEditing ? (
-    <Tag.Root size="sm" colorPalette="blue">
+    <Tag.Root variant="solid" size="sm" colorPalette="blue">
       <Tag.Label>{i18n["Editing"]}</Tag.Label>
     </Tag.Root>
   ) : (
     <>
       <Button variant="ghost" size="sm" onClick={onClickEdit}>
-        <Icon as={LuPencil} />
+        <Icon as={LuPencil} size="xs" />
         {i18n["Edit"]}
       </Button>
       {isRemoveEnabled && <RuleMenu onRemove={onClickRemove} />}

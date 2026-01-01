@@ -1,9 +1,18 @@
 import { createRef, useEffect, useState } from "react";
-import { Accordion, Box, Button, Heading, Icon, Text } from "@chakra-ui/react";
+import {
+  Accordion,
+  Box,
+  Button,
+  Heading,
+  HStack,
+  Icon,
+  Text,
+} from "@chakra-ui/react";
 import { css } from "@emotion/react";
 import { LuPlus } from "react-icons/lu";
 import { CSSTransition } from "react-transition-group";
 import { EditableTitle } from "@/components/forms/EditableTitle";
+import { AccordionCustomTrigger } from "@/components/parts/AccordionCustomTrigger";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
 import { RulesEdit } from "@/features/options/components/rule/RulesEdit";
 import { useRuleSetsEdit } from "@/features/options/hooks/useRuleSetsEdit";
@@ -108,25 +117,20 @@ export const RuleSetsEdit: React.FC<Props> = ({
                   multiple
                 >
                   <Accordion.Item value="0" borderWidth="1px">
-                    <Accordion.ItemTrigger
-                      as="div"
-                      cursor="pointer"
-                      paddingLeft={2}
-                    >
-                      <Box flex="1">
-                        <EditableTitle
-                          defaultValue={ruleSet.name}
-                          cursor="pointer"
-                          onChange={(title) =>
-                            updateRuleSetTitle(title, ruleSetIndex)
-                          }
-                        />
-                      </Box>
+                    <AccordionCustomTrigger>
+                      <EditableTitle
+                        defaultValue={ruleSet.name}
+                        cursor="pointer"
+                        flex="1"
+                        onChange={(title) =>
+                          updateRuleSetTitle(title, ruleSetIndex)
+                        }
+                      />
                       <RuleSetMenu
                         onRemove={() => removeRuleSet(ruleSetIndex)}
                       />
                       <Accordion.ItemIndicator />
-                    </Accordion.ItemTrigger>
+                    </AccordionCustomTrigger>
                     <Accordion.ItemContent paddingX={6}>
                       <RulesEdit
                         rules={ruleSet.rules}

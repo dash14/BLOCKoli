@@ -12,7 +12,7 @@ export const RequestDomainsHint: React.FC<Props> = (props) => {
       <br />
       {i18n["hint_RequestDomains_2"]}
       <Box marginTop={1}>{i18n["hint_Note"]}:</Box>
-      <List.Root marginLeft={5}>
+      <List.Root>
         <List.Item>{i18n["hint_Domains_note_1"]}</List.Item>
         <List.Item>{i18n["hint_Domains_note_2"]}</List.Item>
         <List.Item>{i18n["hint_Domains_note_3"]}</List.Item>

@@ -90,7 +90,7 @@ export const RuleEdit: React.FC<Props> = ({
         />
       </Box>
       <Box>
-        <Heading as="h4" size="sm" marginBottom={2}>
+        <Heading as="h4" size="md" marginBottom={2}>
           {i18n["Action"]}
         </Heading>
         <Box marginLeft="20px">
@@ -105,7 +105,7 @@ export const RuleEdit: React.FC<Props> = ({
 
       <Box marginTop={4}>
         <HStack alignItems="baseline">
-          <Heading as="h4" size="sm" marginBottom={2}>
+          <Heading as="h4" size="md" marginBottom={2}>
             {i18n["Condition"]}
           </Heading>
           <Text as="div" fontSize={13} color="#666">

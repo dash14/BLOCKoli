@@ -19,7 +19,7 @@ export const URLFilterWithRegexHint: React.FC<Props> = (props) => {
       </ExternalLink>
       {i18n["hint_URLFilterWithRegex_2"]}
       <Box marginTop={1}>{i18n["hint_Note"]}:</Box>
-      <List.Root marginLeft={5}>
+      <List.Root>
         <List.Item>
           {i18n["hint_URLFilterWithRegex_note_1_1"]}
           {i18n["hint_URLFilterWithRegex_note_1_2"]}

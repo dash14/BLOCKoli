@@ -1,5 +1,5 @@
 import { HStack, Icon, RadioGroup, Stack, Text } from "@chakra-ui/react";
-import { LuBan, LuCheckCircle2 } from "react-icons/lu";
+import { LuBan, LuCheckCircle } from "react-icons/lu";
 import { I18nMessageMap } from "@/hooks/useI18n";
 import { RuleActionType } from "@/modules/core/rules";
 
@@ -24,12 +24,12 @@ export const ActionTypeRadioGroup: React.FC<Props> = ({
       <Stack direction="row">
         <RadioGroup.Item value="block" colorPalette="red">
           <RadioGroup.ItemHiddenInput />
-          <RadioGroup.ItemControl />
+          <RadioGroup.ItemIndicator />
           <RadioGroup.ItemText>{i18n["action_block"]}</RadioGroup.ItemText>
         </RadioGroup.Item>
         <RadioGroup.Item value="allow" colorPalette="green">
           <RadioGroup.ItemHiddenInput />
-          <RadioGroup.ItemControl />
+          <RadioGroup.ItemIndicator />
           <RadioGroup.ItemText>{i18n["action_allow"]}</RadioGroup.ItemText>
         </RadioGroup.Item>
       </Stack>
@@ -39,7 +39,7 @@ export const ActionTypeRadioGroup: React.FC<Props> = ({
       {actionType === RuleActionType.BLOCK ? (
         <Icon as={LuBan} color="red" boxSize={4} />
       ) : (
-        <Icon as={LuCheckCircle2} color="green" boxSize={4} />
+        <Icon as={LuCheckCircle} color="green" boxSize={4} />
       )}
       <Text as="span" fontSize={16}>
         {

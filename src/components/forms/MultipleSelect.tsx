@@ -1,5 +1,6 @@
 import { ComponentProps } from "react";
-import { MultiValue, Select } from "chakra-react-select";
+import { SystemStyleObject } from "@chakra-ui/react";
+import { ChakraStylesConfig, MultiValue, Select } from "chakra-react-select";
 
 type Option = { label: string; value: string };
 type SelectComponentProps = ComponentProps<typeof Select<Option, true>>;
@@ -9,6 +10,20 @@ type Props = {
   options: { label: string; value: string }[];
   value?: string[];
   onChange?: (values: string[]) => void;
+};
+
+const customStyles = {
+  control: (provided: SystemStyleObject) => ({
+    ...provided,
+    height: "fit-content",
+    minHeight: "2rem",
+  }),
+  valueContainer: (provided: SystemStyleObject) => ({
+    ...provided,
+  }),
+  indicatorsContainer: (provided: SystemStyleObject) => ({
+    ...provided,
+  }),
 };
 
 export const MultipleSelect: React.FC<Props> = ({
@@ -33,7 +48,6 @@ export const MultipleSelect: React.FC<Props> = ({
   };
 
   const props: SelectComponentProps = {
-    // @ts-ignore
     selectedOptionStyle: "check",
     placeholder,
     options,
@@ -46,5 +60,5 @@ export const MultipleSelect: React.FC<Props> = ({
     onChange: onChangeValue,
   };
 
-  return <Select {...props} />;
+  return <Select chakraStyles={customStyles} {...props} />;
 };

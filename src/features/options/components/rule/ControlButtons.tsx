@@ -23,11 +23,11 @@ export const ControlButtons: React.FC<Props> = ({
   return (
     <Group width="100%" {...props}>
       <Button onClick={save} disabled={!isValid}>
-        <Icon as={LuPencil} />
+        <Icon as={LuPencil} size="xs" />
         {i18n["Save"]}
       </Button>
       <Button variant="outline" onClick={cancel}>
-        <Icon as={LuX} />
+        <Icon as={LuX} size="xs" />
         {i18n["Cancel"]}
       </Button>
       {isRemoveEnabled && (

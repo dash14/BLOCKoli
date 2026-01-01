@@ -119,6 +119,7 @@ const Options: React.FC = () => {
             <option value="en">English</option>
             <option value="ja">日本語 (ja)</option>
           </NativeSelect.Field>
+          <NativeSelect.Indicator />
         </NativeSelect.Root>
       </HStack>
       <Container

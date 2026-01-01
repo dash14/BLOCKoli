@@ -67,6 +67,7 @@ export const ImportFailedDialog = forwardRef(({ i18n }: Props, ref) => {
   return (
     <Dialog.Root
       open={open}
+      placement="center"
       onOpenChange={(e) => !e.open && onDialogClose()}
       initialFocusEl={() => cancelRef.current}
       role="alertdialog"

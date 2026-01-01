@@ -17,19 +17,26 @@ export const FileInput: React.FC<Props> = ({
       accept={accept}
       padding={0}
       css={{
-        "::file-selector-button": {
-          border: "none",
+        appearance: "none",
+        "&::file-selector-button": {
+          borderWidth: "1px",
+          borderStyle: "solid",
+          borderColor: "var(--chakra-colors-blue-500)",
+          borderRadius: "var(--chakra-radii-l2)",
+          color: "var(--chakra-colors-blue-600)",
           outline: "none",
           marginRight: "0.5rem",
           padding: "0.25rem 0.75rem",
-          borderRadius: "0.375rem",
-          fontSize: "0.875rem",
-          fontWeight: "500",
+          fontSize: "var(--chakra-font-sizes-sm)",
+          fontWeight: "var(--chakra-font-weights-semibold)",
           backgroundColor: "transparent",
           cursor: "pointer",
-          "&:hover": {
-            backgroundColor: "var(--chakra-colors-gray-100)",
-          },
+        },
+        "&::file-selector-button:hover": {
+          backgroundColor: "var(--chakra-colors-blue-50)",
+        },
+        "&::file-selector-button:active": {
+          backgroundColor: "var(--chakra-colors-blue-100)",
         },
       }}
       onChange={(e) =>

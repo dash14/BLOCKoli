@@ -24,6 +24,7 @@ export const EditableTitle: React.FC<Props> = ({
   return (
     <Editable.Root
       defaultValue={defaultValue}
+      activationMode="dblclick"
       fontSize={fontSize}
       onValueCommit={(e) => onChange(e.value)}
       {...props}
@@ -34,7 +35,8 @@ export const EditableTitle: React.FC<Props> = ({
           as={Input}
           zIndex={1}
           fontSize={fontSize}
-          paddingRight={20}
+          marginX={4}
+          marginY={1}
           onClick={(e) => e.stopPropagation()}
           onKeyUp={(e) => e.stopPropagation()}
           onKeyDown={(e) =>
@@ -50,7 +52,7 @@ export const EditableTitle: React.FC<Props> = ({
                   justifyContent="center"
                   gap="0"
                   position="absolute"
-                  right={2}
+                  right={4}
                   onClick={(e) => e.stopPropagation()}
                   css={{ zIndex: 2 }}
                 >

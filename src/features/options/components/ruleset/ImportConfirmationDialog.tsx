@@ -45,6 +45,7 @@ export const ImportConfirmationDialog = forwardRef(({ i18n }: Props, ref) => {
   return (
     <Dialog.Root
       open={open}
+      placement="center"
       onOpenChange={(e) => !e.open && onDialogCancel()}
       initialFocusEl={() => cancelRef.current}
       role="alertdialog"
@@ -59,7 +60,7 @@ export const ImportConfirmationDialog = forwardRef(({ i18n }: Props, ref) => {
 
           <Dialog.Body>
             {i18n["import_description3"]}
-            <HStack marginY={3}>
+            <HStack marginY={3} alignItems="start">
               <Icon as={LuAlertTriangle} boxSize={5} color="orange.300" />
               <Box>{i18n["import_description2"]}</Box>
             </HStack>
@@ -75,7 +76,7 @@ export const ImportConfirmationDialog = forwardRef(({ i18n }: Props, ref) => {
             >
               {i18n["Cancel"]}
             </Button>
-            <Button size="sm" onClick={onImport} ml={3}>
+            <Button size="sm" onClick={onImport}>
               {i18n["Import"]}
             </Button>
           </Dialog.Footer>

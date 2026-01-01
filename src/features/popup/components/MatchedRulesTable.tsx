@@ -1,5 +1,5 @@
 import { Box, HTMLChakraProps, Icon, Table } from "@chakra-ui/react";
-import { LuBan, LuCheckCircle2, LuHelpCircle } from "react-icons/lu";
+import { LuBan, LuCheckCircle, LuHelpCircle } from "react-icons/lu";
 import { useI18n } from "@/hooks/useI18n";
 import { MatchedRule } from "@/modules/rules/matched";
 
@@ -15,7 +15,7 @@ export const MatchedRulesTable: React.FC<Props> = ({
   return (
     <Box overflowY="auto" border="1px solid #ccc" borderRadius="6px" {...props}>
       <Table.ScrollArea overflowX="unset" overflowY="unset">
-        <Table.Root variant="outline" size="sm">
+        <Table.Root variant="outline" size="sm" fontSize="12px">
           <Table.Header
             position="sticky"
             top="0"
@@ -26,16 +26,24 @@ export const MatchedRulesTable: React.FC<Props> = ({
               <Table.ColumnHeader
                 width="90px"
                 textTransform="none"
+                paddingTop="2px"
+                paddingBottom="2px"
                 paddingLeft="10px"
                 paddingRight="6px"
               >
                 {i18n["table_MatchedRules_column_timestamp"]}
               </Table.ColumnHeader>
-              <Table.ColumnHeader textTransform="none">
+              <Table.ColumnHeader
+                textTransform="none"
+                paddingTop="0"
+                paddingBottom="2px"
+              >
                 {i18n["table_MatchedRules_column_rule"]}
               </Table.ColumnHeader>
               <Table.ColumnHeader
                 width="20px"
+                paddingTop="0"
+                paddingBottom="2px"
                 paddingLeft="6px"
                 paddingRight="10px"
               >
@@ -68,7 +76,7 @@ export const MatchedRulesTable: React.FC<Props> = ({
                     rule.rule.isBlocking ? (
                       <Icon as={LuBan} color="red" />
                     ) : (
-                      <Icon as={LuCheckCircle2} color="green" />
+                      <Icon as={LuCheckCircle} color="green" />
                     )
                   ) : (
                     <Icon as={LuHelpCircle} color="blue.500" />

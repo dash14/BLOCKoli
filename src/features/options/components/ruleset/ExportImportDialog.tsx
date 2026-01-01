@@ -60,6 +60,7 @@ export const ExportImportDialog: React.FC<Props> = ({
 
       <Dialog.Root
         open={open}
+        placement="center"
         onOpenChange={(e) => !e.open && onClose()}
         initialFocusEl={() => cancelRef.current}
         role="alertdialog"
@@ -112,7 +113,6 @@ export const ExportImportDialog: React.FC<Props> = ({
                 variant="outline"
                 size="sm"
                 onClick={onClose}
-                ml={3}
               >
                 {i18n["Close"]}
               </Button>
