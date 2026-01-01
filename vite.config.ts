@@ -20,6 +20,13 @@ export default defineConfig({
       port: 5173,
     },
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: "modern-compiler",
+      },
+    },
+  },
   optimizeDeps: {
     include: ["@chakra-ui/react", "loglevel", "loglevel-plugin-prefix"],
   },
