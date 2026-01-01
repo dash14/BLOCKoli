@@ -1,21 +1,19 @@
-import { MouseEventHandler } from "react";
-import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
 import {
-  ButtonGroup,
-  ChakraProps,
+  Editable,
   Flex,
+  Group,
+  HTMLChakraProps,
   IconButton,
   Input,
-  useEditableControls,
 } from "@chakra-ui/react";
-import { Editable, EditableInput, EditablePreview } from "@chakra-ui/react";
+import { LuCheck, LuPencil, LuX } from "react-icons/lu";
 
 const KEYCODE_IME_PROCESS = 229; // Enter key during input with IME
 
 type Props = {
   defaultValue?: string;
   onChange: (text: string) => void;
-} & ChakraProps;
+} & Omit<HTMLChakraProps<"div">, "css" | "onChange">;
 
 export const EditableTitle: React.FC<Props> = ({
   defaultValue = "RuleSet",
@@ -23,83 +21,22 @@ export const EditableTitle: React.FC<Props> = ({
   onChange,
   ...props
 }) => {
-  function Preview() {
-    const { getEditButtonProps } = useEditableControls();
-
-    const onDoubleClick: MouseEventHandler<HTMLDivElement> = (e) => {
-      getEditButtonProps().onClick?.(e);
-      e.stopPropagation();
-    };
-
-    return (
-      <EditablePreview
-        marginX={4}
-        marginY={1}
-        cursor={props.cursor}
-        onDoubleClick={onDoubleClick}
-      />
-    );
-  }
-
-  const EditableControls: React.FC = () => {
-    const {
-      isEditing,
-      getSubmitButtonProps,
-      getCancelButtonProps,
-      getEditButtonProps,
-    } = useEditableControls();
-
-    return isEditing ? (
-      <ButtonGroup
-        variant="ghost"
-        size="xs"
-        justifyContent="center"
-        gap="0"
-        position="absolute"
-        right={2}
-        onClick={(e) => e.stopPropagation()}
-        css={{ zIndex: 2 }}
-      >
-        <IconButton
-          icon={<CheckIcon />}
-          aria-label="Apply"
-          {...getSubmitButtonProps()}
-        />
-        <IconButton
-          icon={<CloseIcon />}
-          aria-label="Cancel"
-          marginLeft={0}
-          {...getCancelButtonProps()}
-        />
-      </ButtonGroup>
-    ) : (
-      <Flex justifyContent="center" onClick={(e) => e.stopPropagation()}>
-        <IconButton
-          icon={<EditIcon color="gray.500" />}
-          aria-label="Edit"
-          variant="ghost"
-          size="sm"
-          {...getEditButtonProps()}
-        />
-      </Flex>
-    );
-  };
-
   return (
-    <Editable
+    <Editable.Root
       defaultValue={defaultValue}
-      isPreviewFocusable={false}
+      activationMode="dblclick"
       fontSize={fontSize}
-      onSubmit={(e) => onChange(e)}
+      onValueCommit={(e) => onChange(e.value)}
       {...props}
     >
       <Flex direction="row" alignItems="center" position="relative" flex={1}>
-        <Preview />
-        <Input
-          as={EditableInput}
+        <Editable.Preview marginX={4} marginY={1} cursor={props.cursor} />
+        <Editable.Input
+          as={Input}
           zIndex={1}
           fontSize={fontSize}
-          paddingRight={20}
+          marginX={4}
+          marginY={1}
           onClick={(e) => e.stopPropagation()}
           onKeyUp={(e) => e.stopPropagation()}
           onKeyDown={(e) =>
@@ -107,8 +44,50 @@ export const EditableTitle: React.FC<Props> = ({
             e.keyCode === KEYCODE_IME_PROCESS && e.preventDefault()
           }
         />
-        <EditableControls />
+        <Editable.Control>
+          <Editable.Context>
+            {(editable) =>
+              editable.editing ? (
+                <Group
+                  justifyContent="center"
+                  gap="0"
+                  position="absolute"
+                  right={4}
+                  onClick={(e) => e.stopPropagation()}
+                  css={{ zIndex: 2 }}
+                >
+                  <Editable.SubmitTrigger asChild>
+                    <IconButton aria-label="Apply" variant="ghost" size="xs">
+                      <LuCheck />
+                    </IconButton>
+                  </Editable.SubmitTrigger>
+                  <Editable.CancelTrigger asChild>
+                    <IconButton
+                      aria-label="Cancel"
+                      variant="ghost"
+                      size="xs"
+                      marginLeft={0}
+                    >
+                      <LuX />
+                    </IconButton>
+                  </Editable.CancelTrigger>
+                </Group>
+              ) : (
+                <Flex
+                  justifyContent="center"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Editable.EditTrigger asChild>
+                    <IconButton aria-label="Edit" variant="ghost" size="sm">
+                      <LuPencil color="gray" />
+                    </IconButton>
+                  </Editable.EditTrigger>
+                </Flex>
+              )
+            }
+          </Editable.Context>
+        </Editable.Control>
       </Flex>
-    </Editable>
+    </Editable.Root>
   );
 };

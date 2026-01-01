@@ -1,12 +1,11 @@
 import React, { useRef } from "react";
-import { Box, Button, Heading, Icon, useDisclosure } from "@chakra-ui/react";
 import {
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogContent,
-  AlertDialogOverlay,
-  AlertDialogCloseButton,
+  Box,
+  Button,
+  Dialog,
+  Heading,
+  Icon,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { FaDownload, FaFileDownload, FaUpload } from "react-icons/fa";
 import { HiMiniArrowsUpDown } from "react-icons/hi2";
@@ -30,7 +29,7 @@ export const ExportImportDialog: React.FC<Props> = ({
   onImport,
   i18n,
 }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   const openConfirmationDialogRef = useRef<ImportConfirmationDialogHandle>();
@@ -54,25 +53,24 @@ export const ExportImportDialog: React.FC<Props> = ({
 
   return (
     <>
-      <Button
-        leftIcon={<Icon as={HiMiniArrowsUpDown} w={5} h={5} />}
-        variant="outline"
-        size="sm"
-        onClick={onOpen}
-      >
+      <Button variant="outline" size="sm" onClick={onOpen}>
+        <Icon as={HiMiniArrowsUpDown} w={5} h={5} />
         {i18n["ImportAndExportRules"]}
       </Button>
 
-      <AlertDialog
-        isOpen={isOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onClose}
+      <Dialog.Root
+        open={open}
+        placement="center"
+        onOpenChange={(e) => !e.open && onClose()}
+        initialFocusEl={() => cancelRef.current}
+        role="alertdialog"
       >
-        <AlertDialogOverlay>
-          <AlertDialogContent maxWidth="36rem">
-            <AlertDialogCloseButton />
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content maxWidth="36rem">
+            <Dialog.CloseTrigger />
 
-            <AlertDialogBody paddingTop={10} paddingX={10}>
+            <Dialog.Body paddingTop={10} paddingX={10}>
               <Heading as="h2" fontSize={16}>
                 <Icon as={FaUpload} /> {i18n["ImportRules"]}
               </Heading>
@@ -98,31 +96,30 @@ export const ExportImportDialog: React.FC<Props> = ({
                   {i18n["export_description"]}
                 </Box>
                 <Button
-                  leftIcon={<Icon as={FaFileDownload} w={4} h={4} />}
                   variant="outline"
                   size="sm"
                   onClick={onExport}
-                  isDisabled={!isEnableExport}
+                  disabled={!isEnableExport}
                 >
+                  <Icon as={FaFileDownload} w={4} h={4} />
                   {i18n["Export"]}
                 </Button>
               </Box>
-            </AlertDialogBody>
+            </Dialog.Body>
 
-            <AlertDialogFooter>
+            <Dialog.Footer>
               <Button
                 ref={cancelRef}
                 variant="outline"
                 size="sm"
                 onClick={onClose}
-                ml={3}
               >
                 {i18n["Close"]}
               </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
 
       <ImportConfirmationDialog ref={openConfirmationDialogRef} i18n={i18n} />
     </>

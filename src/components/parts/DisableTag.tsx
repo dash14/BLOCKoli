@@ -1,12 +1,17 @@
 import { ReactNode } from "react";
-import { ChakraProps, Tag } from "@chakra-ui/react";
+import { HTMLChakraProps, Tag } from "@chakra-ui/react";
 
-type Props = { children: ReactNode } & ChakraProps;
+type Props = { children: ReactNode } & Omit<HTMLChakraProps<"span">, "css">;
 
 export const DisableTag: React.FC<Props> = ({ children, ...props }) => {
   return (
-    <Tag fontWeight="normal" color="#777" justifyContent="center" {...props}>
-      {children}
-    </Tag>
+    <Tag.Root
+      fontWeight="normal"
+      color="#777"
+      justifyContent="center"
+      {...props}
+    >
+      <Tag.Label>{children}</Tag.Label>
+    </Tag.Root>
   );
 };

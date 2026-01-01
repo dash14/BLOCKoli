@@ -1,12 +1,4 @@
-import {
-  Box,
-  FormControl,
-  FormLabel,
-  HStack,
-  Heading,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
+import { Box, Field, HStack, Heading, Text, VStack } from "@chakra-ui/react";
 import { css } from "@emotion/react";
 import { useRuleEdit } from "@/features/options/hooks/useRuleEdit";
 import { useI18n } from "@/hooks/useI18n";
@@ -98,7 +90,7 @@ export const RuleEdit: React.FC<Props> = ({
         />
       </Box>
       <Box>
-        <Heading as="h4" size="sm" marginBottom={2}>
+        <Heading as="h4" size="md" marginBottom={2}>
           {i18n["Action"]}
         </Heading>
         <Box marginLeft="20px">
@@ -113,7 +105,7 @@ export const RuleEdit: React.FC<Props> = ({
 
       <Box marginTop={4}>
         <HStack alignItems="baseline">
-          <Heading as="h4" size="sm" marginBottom={2}>
+          <Heading as="h4" size="md" marginBottom={2}>
             {i18n["Condition"]}
           </Heading>
           <Text as="div" fontSize={13} color="#666">
@@ -127,11 +119,13 @@ export const RuleEdit: React.FC<Props> = ({
           gap={isEditing ? 5 : 2}
         >
           {/* Request Domains */}
-          <FormControl
+          <Field.Root
             css={styles.formControl}
-            isInvalid={validationErrors.requestDomains.length > 0}
+            invalid={validationErrors.requestDomains.length > 0}
           >
-            <FormLabel css={styles.label}>{i18n["RequestDomains"]}</FormLabel>
+            <Field.Label css={styles.label}>
+              {i18n["RequestDomains"]}
+            </Field.Label>
             <InputDomains
               isEditing={isEditing}
               domains={rule.condition.requestDomains}
@@ -147,14 +141,16 @@ export const RuleEdit: React.FC<Props> = ({
               width={controlWidth}
               i18n={i18n}
             />
-          </FormControl>
+          </Field.Root>
 
           {/* Initiator Domains */}
-          <FormControl
+          <Field.Root
             css={styles.formControl}
-            isInvalid={validationErrors.initiatorDomains.length > 0}
+            invalid={validationErrors.initiatorDomains.length > 0}
           >
-            <FormLabel css={styles.label}>{i18n["InitiatorDomains"]}</FormLabel>
+            <Field.Label css={styles.label}>
+              {i18n["InitiatorDomains"]}
+            </Field.Label>
             <InputDomains
               isEditing={isEditing}
               domains={rule.condition.initiatorDomains}
@@ -170,14 +166,16 @@ export const RuleEdit: React.FC<Props> = ({
               width={controlWidth}
               i18n={i18n}
             />
-          </FormControl>
+          </Field.Root>
 
           {/* Request Methods */}
-          <FormControl
+          <Field.Root
             css={styles.formControl}
-            isInvalid={validationErrors.requestMethods.length > 0}
+            invalid={validationErrors.requestMethods.length > 0}
           >
-            <FormLabel css={styles.label}>{i18n["RequestMethods"]}</FormLabel>
+            <Field.Label css={styles.label}>
+              {i18n["RequestMethods"]}
+            </Field.Label>
             <InputRequestMethods
               isEditing={isEditing}
               requestMethods={rule.condition.requestMethods}
@@ -187,15 +185,15 @@ export const RuleEdit: React.FC<Props> = ({
               i18n={i18n}
             />
             <RequestMethodsHint marginLeft={2} />
-          </FormControl>
+          </Field.Root>
 
           {/* URL Filter */}
           <Box>
-            <FormControl
+            <Field.Root
               css={styles.formControl}
-              isInvalid={validationErrors.urlFilter.length > 0}
+              invalid={validationErrors.urlFilter.length > 0}
             >
-              <FormLabel css={styles.label}>{i18n["URLFilter"]}</FormLabel>
+              <Field.Label css={styles.label}>{i18n["URLFilter"]}</Field.Label>
               <InputUrlFilter
                 isEditing={isEditing}
                 urlFilter={rule.condition.urlFilter}
@@ -216,7 +214,7 @@ export const RuleEdit: React.FC<Props> = ({
                 marginTop={1}
                 i18n={i18n}
               />
-            </FormControl>
+            </Field.Root>
 
             <Box css={styles.note}>
               <IsRegexFilter
@@ -230,11 +228,13 @@ export const RuleEdit: React.FC<Props> = ({
           </Box>
 
           {/* Resource Types */}
-          <FormControl
+          <Field.Root
             css={styles.formControl}
-            isInvalid={validationErrors.resourceTypes.length > 0}
+            invalid={validationErrors.resourceTypes.length > 0}
           >
-            <FormLabel css={styles.label}>{i18n["ResourceTypes"]}</FormLabel>
+            <Field.Label css={styles.label}>
+              {i18n["ResourceTypes"]}
+            </Field.Label>
             <InputResourceTypes
               isEditing={isEditing}
               resourceTypes={rule.condition.resourceTypes}
@@ -244,7 +244,7 @@ export const RuleEdit: React.FC<Props> = ({
               i18n={i18n}
             />
             <ResourceTypesHint marginLeft={2} />
-          </FormControl>
+          </Field.Root>
         </VStack>
       </Box>
       {isEditing && (

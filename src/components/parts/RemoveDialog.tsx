@@ -1,56 +1,50 @@
 import { useRef } from "react";
-import {
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogCloseButton,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogOverlay,
-  Button,
-} from "@chakra-ui/react";
+import { Button, Dialog, Portal } from "@chakra-ui/react";
 import { useI18n } from "@/hooks/useI18n";
 
 type Props = {
   title?: string;
-  isOpen: boolean;
+  open: boolean;
   onClose: () => void;
   onPerform: () => void;
 };
 
 export const RemoveDialog: React.FC<Props> = ({
   title,
-  isOpen,
+  open,
   onClose,
   onPerform,
 }) => {
   const i18n = useI18n();
   const cancelRef = useRef<HTMLButtonElement>(null);
   return (
-    <AlertDialog
-      motionPreset="slideInBottom"
-      leastDestructiveRef={cancelRef}
-      onClose={onClose}
-      isOpen={isOpen}
-      isCentered
+    <Dialog.Root
+      open={open}
+      placement="center"
+      onOpenChange={(e) => !e.open && onClose()}
+      initialFocusEl={() => cancelRef.current}
+      role="alertdialog"
     >
-      <AlertDialogOverlay />
-
-      <AlertDialogContent>
-        <AlertDialogHeader>{title ?? "Remove"}</AlertDialogHeader>
-        <AlertDialogCloseButton />
-        <AlertDialogBody fontSize={14}>
-          {i18n["remove_confirmation"]}
-        </AlertDialogBody>
-        <AlertDialogFooter>
-          <Button ref={cancelRef} variant="outline" onClick={onClose}>
-            {i18n["Cancel"]}
-          </Button>
-          <Button colorScheme="red" ml={3} onClick={onPerform}>
-            {i18n["Remove"]}
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      <Portal>
+        <Dialog.Backdrop pointerEvents="auto" />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>{title ?? "Remove"}</Dialog.Header>
+            <Dialog.CloseTrigger />
+            <Dialog.Body fontSize={14}>
+              {i18n["remove_confirmation"]}
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Button ref={cancelRef} variant="outline" onClick={onClose}>
+                {i18n["Cancel"]}
+              </Button>
+              <Button colorPalette="red" onClick={onPerform}>
+                {i18n["Remove"]}
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
   );
 };

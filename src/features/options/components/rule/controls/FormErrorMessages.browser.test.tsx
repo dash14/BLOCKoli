@@ -1,4 +1,4 @@
-import { FormControl } from "@chakra-ui/form-control";
+import { Field } from "@chakra-ui/react";
 import { describe, expect, test } from "vitest";
 import { page } from "vitest/browser";
 import { useI18n } from "@/hooks/useI18n";
@@ -8,9 +8,9 @@ import { FormErrorMessages } from "./FormErrorMessage";
 function TestWrapper({ messages }: { messages: string[] }) {
   const i18n = useI18n();
   return (
-    <FormControl isInvalid data-testid="container">
+    <Field.Root invalid data-testid="container">
       <FormErrorMessages messages={messages} i18n={i18n} />
-    </FormControl>
+    </Field.Root>
   );
 }
 

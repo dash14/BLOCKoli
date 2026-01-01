@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Input } from "@chakra-ui/input";
+import { Input } from "@chakra-ui/react";
 import { Tags } from "@/components/parts/Tags";
 import { I18nMessageMap } from "@/hooks/useI18n";
 import { unique } from "@/modules/utils/unique";

@@ -1,6 +1,4 @@
-import { Checkbox } from "@chakra-ui/checkbox";
-import { FormControl } from "@chakra-ui/form-control";
-import { HStack, Text } from "@chakra-ui/layout";
+import { Checkbox, Field, HStack, Text } from "@chakra-ui/react";
 import { I18nMessageMap } from "@/hooks/useI18n";
 
 type Props = {
@@ -20,17 +18,19 @@ export const IsRegexFilter: React.FC<Props> = ({
 }) => {
   return isEditing ? (
     <HStack alignItems="start">
-      <FormControl paddingTop="2px" width="auto">
-        <Checkbox
+      <Field.Root paddingTop="2px" width="auto">
+        <Checkbox.Root
           defaultChecked={isRegexFilter}
           checked={isRegexFilter}
-          onChange={(e) => onChange(e.target.checked)}
+          onCheckedChange={(e) => onChange(!!e.checked)}
           size="sm"
           marginTop="3px"
         >
-          {i18n["UseRegex"]}
-        </Checkbox>
-      </FormControl>
+          <Checkbox.HiddenInput />
+          <Checkbox.Control />
+          <Checkbox.Label>{i18n["UseRegex"]}</Checkbox.Label>
+        </Checkbox.Root>
+      </Field.Root>
     </HStack>
   ) : (
     isRegexFilter && urlFilter && (

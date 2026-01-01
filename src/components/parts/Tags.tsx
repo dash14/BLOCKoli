@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { ChakraProps, HStack, Tag } from "@chakra-ui/react";
+import { HStack, HTMLChakraProps, Tag } from "@chakra-ui/react";
 import { DisableTag } from "./DisableTag";
 
 type Props = {
   empty: string;
   values: string[];
   maxWidth: number;
-} & ChakraProps;
+} & Omit<HTMLChakraProps<"div">, "css" | "direction">;
 
 export const Tags: React.FC<Props> = ({
   empty,
@@ -61,7 +61,11 @@ export const Tags: React.FC<Props> = ({
       {values.length === 0 ? (
         <DisableTag justifyContent="center">{empty}</DisableTag>
       ) : (
-        values.map((label) => <Tag key={label}>{label}</Tag>)
+        values.map((label) => (
+          <Tag.Root key={label}>
+            <Tag.Label>{label}</Tag.Label>
+          </Tag.Root>
+        ))
       )}
     </HStack>
   );

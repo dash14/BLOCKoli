@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 import standaloneCode from "ajv/dist/standalone/index.js";
 import merge from "deepmerge";
-import additional from "./additional.json" assert { type: "json" };
-import draft from "./draft.json" assert { type: "json" };
+import additional from "./additional.json" with { type: "json" };
+import draft from "./draft.json" with { type: "json" };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

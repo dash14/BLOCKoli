@@ -41,7 +41,6 @@ const regexRule: Rule = {
 };
 
 describe("RuleEdit component", () => {
-  // RuleEditコンポーネント用にビューポートを設定
   beforeAll(async () => {
     await page.viewport(800, 900);
   });

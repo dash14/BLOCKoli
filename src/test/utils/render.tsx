@@ -1,7 +1,8 @@
 /* v8 ignore file -- @preserve */
 import { ReactElement } from "react";
-import { ChakraProvider, extendTheme } from "@chakra-ui/react";
+import { ChakraProvider } from "@chakra-ui/react";
 import { render } from "vitest-browser-react";
+import { baseSystem } from "@/theme";
 import "@/index.scss";
 
 // Mock chrome API for browser tests
@@ -10,7 +11,7 @@ if (typeof window !== "undefined" && !window.chrome) {
   window.chrome = {};
 }
 
-// VRT安定化: アニメーション・トランジションを強制無効化
+// VRT stabilization: Force disable animations and transitions
 if (typeof document !== "undefined") {
   const style = document.createElement("style");
   style.id = "vrt-stability";
@@ -27,19 +28,6 @@ if (typeof document !== "undefined") {
   }
 }
 
-// FIXME: Integrate these styles with popups' and options' styles
-const theme = extendTheme({
-  styles: {
-    global: {
-      html: { fontSize: "16px" },
-    },
-  },
-  components: {
-    Button: { defaultProps: { colorScheme: "blue" } },
-    Switch: { defaultProps: { colorScheme: "blue", size: "lg" } },
-  },
-});
-
 export function renderWithChakra(ui: ReactElement) {
-  return render(<ChakraProvider theme={theme}>{ui}</ChakraProvider>);
+  return render(<ChakraProvider value={baseSystem}>{ui}</ChakraProvider>);
 }

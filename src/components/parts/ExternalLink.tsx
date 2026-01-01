@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
-import { ExternalLinkIcon } from "@chakra-ui/icons";
-import { Link } from "@chakra-ui/react";
+import { Icon, Link } from "@chakra-ui/react";
+import { LuExternalLink } from "react-icons/lu";
 
 type Props = {
   href: string;
@@ -9,9 +9,15 @@ type Props = {
 
 export const ExternalLink: React.FC<Props> = ({ href, children }) => {
   return (
-    <Link href={href} target="_blank" rel="noopener" color="blue.500">
+    <Link
+      href={href}
+      target="_blank"
+      rel="noopener"
+      color="blue.500"
+      outlineWidth="0"
+    >
       {children}
-      <ExternalLinkIcon mx="2px" />
+      <Icon as={LuExternalLink} mx="2px" />
     </Link>
   );
 };

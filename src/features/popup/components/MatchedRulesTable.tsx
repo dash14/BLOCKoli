@@ -1,25 +1,11 @@
-import {
-  CheckCircleIcon,
-  NotAllowedIcon,
-  QuestionOutlineIcon,
-} from "@chakra-ui/icons";
-import {
-  Box,
-  ChakraProps,
-  Table,
-  TableContainer,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-} from "@chakra-ui/react";
+import { Box, HTMLChakraProps, Icon, Table } from "@chakra-ui/react";
+import { LuBan, LuCheckCircle, LuHelpCircle } from "react-icons/lu";
 import { useI18n } from "@/hooks/useI18n";
 import { MatchedRule } from "@/modules/rules/matched";
 
 type Props = {
   matchedRules: MatchedRule[];
-} & ChakraProps;
+} & Omit<HTMLChakraProps<"div">, "css">;
 
 export const MatchedRulesTable: React.FC<Props> = ({
   matchedRules,
@@ -28,43 +14,55 @@ export const MatchedRulesTable: React.FC<Props> = ({
   const i18n = useI18n();
   return (
     <Box overflowY="auto" border="1px solid #ccc" borderRadius="6px" {...props}>
-      <TableContainer overflowX="unset" overflowY="unset">
-        <Table variant="simple" size="sm">
-          <Thead
+      <Table.ScrollArea overflowX="unset" overflowY="unset">
+        <Table.Root variant="outline" size="sm" fontSize="12px">
+          <Table.Header
             position="sticky"
             top="0"
             zIndex="docked"
             backgroundColor="#eee"
           >
-            <Tr>
-              <Th
+            <Table.Row>
+              <Table.ColumnHeader
                 width="90px"
                 textTransform="none"
+                paddingTop="2px"
+                paddingBottom="2px"
                 paddingLeft="10px"
                 paddingRight="6px"
               >
                 {i18n["table_MatchedRules_column_timestamp"]}
-              </Th>
-              <Th textTransform="none">
+              </Table.ColumnHeader>
+              <Table.ColumnHeader
+                textTransform="none"
+                paddingTop="0"
+                paddingBottom="2px"
+              >
                 {i18n["table_MatchedRules_column_rule"]}
-              </Th>
-              <Th width="20px" paddingLeft="6px" paddingRight="10px">
-                <QuestionOutlineIcon />
-              </Th>
-            </Tr>
-          </Thead>
-          <Tbody>
+              </Table.ColumnHeader>
+              <Table.ColumnHeader
+                width="20px"
+                paddingTop="0"
+                paddingBottom="2px"
+                paddingLeft="6px"
+                paddingRight="10px"
+              >
+                <Icon as={LuHelpCircle} />
+              </Table.ColumnHeader>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
             {matchedRules.map((rule, i) => (
-              <Tr key={i}>
-                <Td
+              <Table.Row key={i}>
+                <Table.Cell
                   width="90px"
                   fontSize="12px"
                   paddingY="4px"
                   paddingRight="6px"
                 >
                   {new Date(rule.timeStamp).toLocaleTimeString()}
-                </Td>
-                <Td
+                </Table.Cell>
+                <Table.Cell
                   fontSize="12px"
                   paddingY="4px"
                   overflowX="hidden"
@@ -72,23 +70,23 @@ export const MatchedRulesTable: React.FC<Props> = ({
                   title={`${rule.rule.ruleSetName} #${rule.rule.number}`}
                 >
                   {`${rule.rule.ruleSetName} #${rule.rule.number}`}
-                </Td>
-                <Td width="20px" paddingLeft="6px" paddingRight="10px">
+                </Table.Cell>
+                <Table.Cell width="20px" paddingLeft="6px" paddingRight="10px">
                   {rule.rule ? (
                     rule.rule.isBlocking ? (
-                      <NotAllowedIcon color="red" />
+                      <Icon as={LuBan} color="red" />
                     ) : (
-                      <CheckCircleIcon color="green" />
+                      <Icon as={LuCheckCircle} color="green" />
                     )
                   ) : (
-                    <QuestionOutlineIcon color="blue.500" />
+                    <Icon as={LuHelpCircle} color="blue.500" />
                   )}
-                </Td>
-              </Tr>
+                </Table.Cell>
+              </Table.Row>
             ))}
-          </Tbody>
-        </Table>
-      </TableContainer>
+          </Table.Body>
+        </Table.Root>
+      </Table.ScrollArea>
     </Box>
   );
 };

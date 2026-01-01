@@ -1,9 +1,9 @@
-import { Box, ChakraProps, ListItem, UnorderedList } from "@chakra-ui/react";
+import { Box, HTMLChakraProps, List } from "@chakra-ui/react";
 import { ExternalLink } from "@/components/parts/ExternalLink";
 import { HintPopover } from "@/components/parts/HintPopover";
 import { useI18n } from "@/hooks/useI18n";
 
-type Props = ChakraProps;
+type Props = Omit<HTMLChakraProps<"button">, "css">;
 
 export const URLFilterWithRegexHint: React.FC<Props> = (props) => {
   const i18n = useI18n();
@@ -19,13 +19,13 @@ export const URLFilterWithRegexHint: React.FC<Props> = (props) => {
       </ExternalLink>
       {i18n["hint_URLFilterWithRegex_2"]}
       <Box marginTop={1}>{i18n["hint_Note"]}:</Box>
-      <UnorderedList marginLeft={5}>
-        <ListItem>
+      <List.Root>
+        <List.Item>
           {i18n["hint_URLFilterWithRegex_note_1_1"]}
           {i18n["hint_URLFilterWithRegex_note_1_2"]}
-        </ListItem>
-        <ListItem>{i18n["hint_URLFilterWithRegex_note_2"]}</ListItem>
-        <ListItem>
+        </List.Item>
+        <List.Item>{i18n["hint_URLFilterWithRegex_note_2"]}</List.Item>
+        <List.Item>
           {i18n["hint_URLFilterWithRegex_note_3"]}
           <Box
             backgroundColor="#f3f3f3"
@@ -36,8 +36,8 @@ export const URLFilterWithRegexHint: React.FC<Props> = (props) => {
             rules_1.json: Rule with id 1 specified a more complext regex than
             allowed as part of the "regexFilter" key.
           </Box>
-        </ListItem>
-      </UnorderedList>
+        </List.Item>
+      </List.Root>
     </HintPopover>
   );
 };
