@@ -23,13 +23,6 @@ export default defineConfig({
       origin: [/chrome-extension:\/\//],
     },
   },
-  css: {
-    preprocessorOptions: {
-      scss: {
-        api: "modern-compiler",
-      },
-    },
-  },
   optimizeDeps: {
     include: ["@chakra-ui/react", "loglevel", "loglevel-plugin-prefix"],
   },
