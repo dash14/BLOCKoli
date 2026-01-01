@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { useImperativeHandle, useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -21,9 +21,10 @@ export type ImportFailedDialogHandle = {
 
 type Props = {
   i18n: I18nMessageMap;
+  ref?: React.Ref<ImportFailedDialogHandle>;
 };
 
-export const ImportFailedDialog = forwardRef(({ i18n }: Props, ref) => {
+export const ImportFailedDialog: React.FC<Props> = ({ i18n, ref }) => {
   const { open, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [errors, setErrors] = useState<RuleSetsValidationError[]>([]);
@@ -116,4 +117,4 @@ export const ImportFailedDialog = forwardRef(({ i18n }: Props, ref) => {
       </Dialog.Positioner>
     </Dialog.Root>
   );
-});
+};

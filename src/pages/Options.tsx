@@ -48,8 +48,8 @@ const Options: React.FC = () => {
 
   const { titleFontAdjuster } = useTitleFontAdjuster(language);
 
-  const importSuccessDialog = useRef<ImportSucceededDialogHandle>();
-  const importFailedDialog = useRef<ImportFailedDialogHandle>();
+  const importSuccessDialog = useRef<ImportSucceededDialogHandle>(null);
+  const importFailedDialog = useRef<ImportFailedDialogHandle>(null);
 
   async function onExport() {
     const exported = await performExport();

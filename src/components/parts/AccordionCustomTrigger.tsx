@@ -8,8 +8,8 @@ export const AccordionCustomTrigger: React.FC<Props> = ({ children }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const accordion = useAccordionContext();
   const item = useAccordionItemContext();
-  const handleClick = (e) => {
-    if (!containerRef.current?.contains(e.target)) {
+  const handleClick = (e: React.MouseEvent) => {
+    if (!containerRef.current?.contains(e.target as Node)) {
       return;
     }
     if (item.expanded) {

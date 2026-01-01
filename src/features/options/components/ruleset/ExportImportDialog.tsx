@@ -32,7 +32,8 @@ export const ExportImportDialog: React.FC<Props> = ({
   const { open, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
-  const openConfirmationDialogRef = useRef<ImportConfirmationDialogHandle>();
+  const openConfirmationDialogRef =
+    useRef<ImportConfirmationDialogHandle>(null);
 
   async function onSelectImportFile(file: File, input: HTMLInputElement) {
     const dialogRef = openConfirmationDialogRef.current;
