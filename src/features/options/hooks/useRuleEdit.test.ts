@@ -410,11 +410,10 @@ describe("useRuleEdit", () => {
 
       await waitFor(() => {
         expect(result.current.isValid).toBe(false);
+        // isValid is false for empty conditions
+        // Note: validation error is stored in "condition" field, not individual fields
+        expect(result.current.isEditing).toBe(true);
       });
-
-      // isValid is false for empty conditions
-      // Note: validation error is stored in "condition" field, not individual fields
-      expect(result.current.isEditing).toBe(true);
     });
 
     test("shows error for invalid regex syntax", async () => {
@@ -437,10 +436,9 @@ describe("useRuleEdit", () => {
 
       await waitFor(() => {
         expect(result.current.isValid).toBe(false);
+        // Invalid regex triggers edit mode
+        expect(result.current.isEditing).toBe(true);
       });
-
-      // Invalid regex triggers edit mode
-      expect(result.current.isEditing).toBe(true);
     });
 
     test("valid rule with urlFilter passes validation", async () => {

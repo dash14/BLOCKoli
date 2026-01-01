@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { useImperativeHandle, useRef } from "react";
 import {
   Box,
   Button,
@@ -18,9 +18,10 @@ export type ImportConfirmationDialogHandle = {
 
 type Props = {
   i18n: I18nMessageMap;
+  ref?: React.Ref<ImportConfirmationDialogHandle>;
 };
 
-export const ImportConfirmationDialog = forwardRef(({ i18n }: Props, ref) => {
+export const ImportConfirmationDialog: React.FC<Props> = ({ i18n, ref }) => {
   const { open, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const defer = useDefer<boolean>();
@@ -84,4 +85,4 @@ export const ImportConfirmationDialog = forwardRef(({ i18n }: Props, ref) => {
       </Dialog.Positioner>
     </Dialog.Root>
   );
-});
+};

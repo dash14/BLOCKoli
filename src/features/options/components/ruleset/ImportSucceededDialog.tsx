@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { useImperativeHandle, useRef } from "react";
 import { Button, Dialog, Icon, useDisclosure } from "@chakra-ui/react";
 import { LuCheckCircle } from "react-icons/lu";
 import { I18nMessageMap } from "@/hooks/useI18n";
@@ -9,9 +9,10 @@ export type ImportSucceededDialogHandle = {
 
 type Props = {
   i18n: I18nMessageMap;
+  ref?: React.Ref<ImportSucceededDialogHandle>;
 };
 
-export const ImportSucceededDialog = forwardRef(({ i18n }: Props, ref) => {
+export const ImportSucceededDialog: React.FC<Props> = ({ i18n, ref }) => {
   const { open, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
@@ -60,4 +61,4 @@ export const ImportSucceededDialog = forwardRef(({ i18n }: Props, ref) => {
       </Dialog.Positioner>
     </Dialog.Root>
   );
-});
+};

@@ -1,6 +1,6 @@
 import { ComponentProps } from "react";
 import { SystemStyleObject } from "@chakra-ui/react";
-import { ChakraStylesConfig, MultiValue, Select } from "chakra-react-select";
+import { MultiValue, Select } from "chakra-react-select";
 
 type Option = { label: string; value: string };
 type SelectComponentProps = ComponentProps<typeof Select<Option, true>>;
