@@ -19,6 +19,9 @@ export default defineConfig({
     hmr: {
       port: 5173,
     },
+    cors: {
+      origin: [/chrome-extension:\/\//],
+    },
   },
   css: {
     preprocessorOptions: {
