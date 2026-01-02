@@ -86,6 +86,40 @@ describe("useRuleEdit", () => {
 
       expect(result.current.isValid).toBe(false);
     });
+
+    test("updates rule when initialRule prop changes", async () => {
+      const onChange = vi.fn();
+      const onCancel = vi.fn();
+      const onRemove = vi.fn();
+
+      const { result, rerender } = renderHook(
+        ({ rule }) => useRuleEdit(rule, onChange, onCancel, onRemove),
+        { initialProps: { rule: validRule } }
+      );
+
+      await waitFor(() => {
+        expect(result.current.isValid).toBe(true);
+      });
+
+      expect(result.current.rule).toEqual(validRule);
+
+      // Change initialRule prop (simulates import scenario)
+      const newRule: Rule = {
+        action: { type: RuleActionType.ALLOW },
+        condition: { requestDomains: ["newdomain.com"] },
+      };
+
+      rerender({ rule: newRule });
+
+      await waitFor(() => {
+        expect(result.current.rule).toEqual(newRule);
+      });
+
+      expect(result.current.rule.action.type).toBe(RuleActionType.ALLOW);
+      expect(result.current.rule.condition.requestDomains).toEqual([
+        "newdomain.com",
+      ]);
+    });
   });
 
   describe("enterEditMode", () => {

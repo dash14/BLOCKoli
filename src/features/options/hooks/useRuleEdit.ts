@@ -35,6 +35,7 @@ export function useRuleEdit(
   });
 
   useEffect(() => {
+    setRuleObject(initialRule);
     // For incomplete data, enter edit mode.
     ruleValidator.validate(rule).then(({ valid }) => {
       if (!valid) {
@@ -43,7 +44,7 @@ export function useRuleEdit(
       setIsValid(valid);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initialRule]);
 
   function save() {
     setIsEditing(false);
