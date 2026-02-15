@@ -1,0 +1,47 @@
+name: Create Draft Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      # Check if tag for current version already exists
+      - name: Check for existing tag
+        run: |
+          git fetch --tags
+          VERSION=$(node -p "require('./package.json').version")
+          if git tag -l "v${VERSION}" | grep -q .; then
+            echo "::error::Tag v${VERSION} already exists"
+            exit 1
+          fi
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+      - run: corepack enable
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: 'package.json'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm lint
+      - run: pnpm build
+      - run: pnpm test
+
+      - name: Create draft release
+        run: |
+          gh release create "v${VERSION}" \
+            --draft \
+            --title "v${VERSION}" \
+            --generate-notes \
+            block-oli_*.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
