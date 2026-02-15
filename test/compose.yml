@@ -1,0 +1,13 @@
+services:
+  test:
+    build:
+      context: ..
+      dockerfile: test/Dockerfile
+    volumes:
+      - ..:/app
+      - node_modules:/app/node_modules
+    entrypoint: ["sh", "-c", "pnpm install --frozen-lockfile && exec \"$@\"", "--"]
+    command: ["pnpm", "test:browser"]
+
+volumes:
+  node_modules:

@@ -26,6 +26,8 @@
     "test:update-snapshots": "vitest --no-watch --project=browser --update",
     "test:coverage": "vitest --run --coverage",
     "test:coverage:report": "open \"file://$(pwd)/coverage/index.html\"",
+    "docker:test:browser": "docker compose -f test/compose.yml run --rm test pnpm test:browser",
+    "docker:test:update-snapshots": "docker compose -f test/compose.yml run --rm test pnpm test:update-snapshots",
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
