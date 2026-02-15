@@ -31,10 +31,21 @@ jobs:
           node-version-file: 'package.json'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm lint
       - run: pnpm build
-      - run: pnpm test
+      - name: Run unit tests
+        run: pnpm test:unit
+      - name: Run browser tests
+        id: browser-tests
+        run: pnpm docker:test:browser
+
+      - name: Upload VRT diff images
+        if: failure() && steps.browser-tests.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: vrt-diff-images
+          path: .vitest-attachments/
+          retention-days: 1
 
       - name: Create draft release
         run: |
