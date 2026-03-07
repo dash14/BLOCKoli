@@ -1,6 +1,9 @@
-minimumReleaseAge: 4320 # 3 days
+minimumReleaseAge: 4320
 
 onlyBuiltDependencies:
   - '@parcel/watcher'
   - '@swc/core'
   - esbuild
+
+overrides:
+  rollup@<2.80.0: '>=2.80.0'
