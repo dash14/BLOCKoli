@@ -25,40 +25,7 @@ jobs:
           fi
           echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
 
-      - run: corepack enable
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
-        with:
-          node-version-file: 'package.json'
-          cache: 'pnpm'
-
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm build
-
-      - name: Run unit tests
-        run: pnpm test:unit
-
-      # Build Docker image with layer cache
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
-        with:
-          file: test/Dockerfile
-          load: true
-          tags: test-test:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Run browser tests
-        id: browser-tests
-        run: pnpm docker:test:browser
-
-      - name: Upload VRT diff images
-        if: failure() && steps.browser-tests.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: vrt-diff-images
-          path: .vitest-attachments/
-          retention-days: 1
+      - uses: ./.github/actions/test
 
       - name: Create draft release
         run: |
