@@ -31,10 +31,10 @@ runs:
         tags: test-test:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        env:
-          DOCKER_BUILD_CHECKS_ANNOTATIONS: false
-          DOCKER_BUILD_SUMMARY: false
-          DOCKER_BUILD_RECORD_UPLOAD: false
+      env:
+        DOCKER_BUILD_CHECKS_ANNOTATIONS: 'false'
+        DOCKER_BUILD_SUMMARY: 'false'
+        DOCKER_BUILD_RECORD_UPLOAD: 'false'
 
     - name: Run browser tests
       id: browser-tests
