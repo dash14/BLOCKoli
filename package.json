@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.3.0",
-    "@eslint/js": "^9.39.3",
+    "@eslint/js": "^9.39.4",
     "@testing-library/react": "^16.3.2",
     "@types/chrome": "^0.1.37",
     "@types/lodash-es": "^4.17.12",
