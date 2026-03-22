@@ -9,9 +9,11 @@ describe("FileInput component", () => {
     await renderWithChakra(
       <div data-testid="container">
         <FileInput accept=".json" onSelectFile={onSelectFile} />
-      </div>
+      </div>,
     );
-    const input = page.getByRole("textbox");
+    const input = page.elementLocator(
+      document.querySelector('input[type="file"]')!,
+    );
     await expect.element(input).toBeInTheDocument();
     await expect.element(input).toHaveAttribute("accept", ".json");
     await expect.element(input).toHaveAttribute("type", "file");
@@ -25,11 +27,11 @@ describe("FileInput component", () => {
   test("calls onSelectFile when file is selected", async () => {
     const onSelectFile = vi.fn();
     await renderWithChakra(
-      <FileInput accept=".json" onSelectFile={onSelectFile} />
+      <FileInput accept=".json" onSelectFile={onSelectFile} />,
     );
 
-    const input = page.getByRole("textbox");
-    const inputElement = (await input.element()) as HTMLInputElement;
+    const inputElement =
+      document.querySelector<HTMLInputElement>('input[type="file"]')!;
 
     // Create a mock file
     const file = new File(["{}"], "test.json", { type: "application/json" });
@@ -49,11 +51,11 @@ describe("FileInput component", () => {
   test("does not call onSelectFile when no file is selected", async () => {
     const onSelectFile = vi.fn();
     await renderWithChakra(
-      <FileInput accept=".json" onSelectFile={onSelectFile} />
+      <FileInput accept=".json" onSelectFile={onSelectFile} />,
     );
 
-    const input = page.getByRole("textbox");
-    const inputElement = (await input.element()) as HTMLInputElement;
+    const inputElement =
+      document.querySelector<HTMLInputElement>('input[type="file"]')!;
 
     // Dispatch change event without files
     inputElement.dispatchEvent(new Event("change", { bubbles: true }));
