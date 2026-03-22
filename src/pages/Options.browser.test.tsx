@@ -44,7 +44,7 @@ const sampleRuleSets: StoredRuleSets = [
 
 // Default mock return value factory
 function createMockReturnValue(
-  overrides: Partial<ReturnType<typeof mockUseRequestBlockClient>> = {}
+  overrides: Partial<ReturnType<typeof mockUseRequestBlockClient>> = {},
 ) {
   return {
     loaded: true,
@@ -71,7 +71,7 @@ describe("Options page", () => {
     await renderWithChakra(
       <div data-testid="container" style={{ width: 1024, height: 900 }}>
         <Options />
-      </div>
+      </div>,
     );
 
     // Verify page is rendered
@@ -83,19 +83,19 @@ describe("Options page", () => {
     // VRT screenshot
     await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
-      "Options-empty"
+      "Options-empty",
     );
   });
 
   test("renders with rule sets", async () => {
     mockUseRequestBlockClient.mockReturnValue(
-      createMockReturnValue({ ruleSets: sampleRuleSets })
+      createMockReturnValue({ ruleSets: sampleRuleSets }),
     );
 
     await renderWithChakra(
       <div data-testid="container" style={{ width: 1024, height: 900 }}>
         <Options />
-      </div>
+      </div>,
     );
 
     // Verify page is rendered with rule sets
@@ -107,19 +107,19 @@ describe("Options page", () => {
     // VRT screenshot
     await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
-      "Options-with-rules"
+      "Options-with-rules",
     );
   });
 
   test("renders with service disabled", async () => {
     mockUseRequestBlockClient.mockReturnValue(
-      createMockReturnValue({ ruleSets: sampleRuleSets, enabled: false })
+      createMockReturnValue({ ruleSets: sampleRuleSets, enabled: false }),
     );
 
     await renderWithChakra(
       <div data-testid="container" style={{ width: 1024, height: 900 }}>
         <Options />
-      </div>
+      </div>,
     );
 
     // Verify switch is unchecked
@@ -128,7 +128,7 @@ describe("Options page", () => {
     // VRT screenshot
     await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
-      "Options-disabled"
+      "Options-disabled",
     );
   });
 
@@ -138,7 +138,7 @@ describe("Options page", () => {
     await renderWithChakra(
       <div data-testid="container" style={{ width: 1024, height: 900 }}>
         <Options />
-      </div>
+      </div>,
     );
 
     // Click "Add a Rule Set" button
@@ -151,19 +151,19 @@ describe("Options page", () => {
     // VRT screenshot
     await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
-      "Options-add-ruleset-form"
+      "Options-add-ruleset-form",
     );
   });
 
   test("renders with accordion opened", async () => {
     mockUseRequestBlockClient.mockReturnValue(
-      createMockReturnValue({ ruleSets: sampleRuleSets })
+      createMockReturnValue({ ruleSets: sampleRuleSets }),
     );
 
     await renderWithChakra(
       <div data-testid="container" style={{ width: 1024, height: 900 }}>
         <Options />
-      </div>
+      </div>,
     );
 
     // Click first rule set title to open accordion
@@ -177,25 +177,25 @@ describe("Options page", () => {
     // VRT screenshot
     await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot(
-      "Options-accordion-open"
+      "Options-accordion-open",
     );
   });
 
   test("toggles enable state when switch is clicked", async () => {
     const changeState = vi.fn();
     mockUseRequestBlockClient.mockReturnValue(
-      createMockReturnValue({ changeState, enabled: false })
+      createMockReturnValue({ changeState, enabled: false }),
     );
 
     await renderWithChakra(
       <div data-testid="container" style={{ width: 1024, height: 900 }}>
         <Options />
-      </div>
+      </div>,
     );
 
     // In Chakra v3, click on the Switch control element
     const switchControl = document.querySelector(
-      '[data-scope="switch"][data-part="control"]'
+      '[data-scope="switch"][data-part="control"]',
     );
     expect(switchControl).not.toBeNull();
     await userEvent.click(switchControl!);
@@ -206,13 +206,13 @@ describe("Options page", () => {
   test("changes language when select is changed", async () => {
     const setLanguage = vi.fn();
     mockUseRequestBlockClient.mockReturnValue(
-      createMockReturnValue({ setLanguage })
+      createMockReturnValue({ setLanguage }),
     );
 
     await renderWithChakra(
       <div data-testid="container" style={{ width: 1024, height: 900 }}>
         <Options />
-      </div>
+      </div>,
     );
 
     // Change language to Japanese
@@ -228,13 +228,13 @@ describe("Options page", () => {
       ruleSets: [{ name: "Test", rules: [] }],
     });
     mockUseRequestBlockClient.mockReturnValue(
-      createMockReturnValue({ ruleSets: sampleRuleSets, performExport })
+      createMockReturnValue({ ruleSets: sampleRuleSets, performExport }),
     );
 
     await renderWithChakra(
       <div data-testid="container" style={{ width: 1024, height: 900 }}>
         <Options />
-      </div>
+      </div>,
     );
 
     // Open export/import dialog
@@ -249,13 +249,13 @@ describe("Options page", () => {
   test("imports rule sets successfully", async () => {
     const performImport = vi.fn().mockResolvedValue([true, []]);
     mockUseRequestBlockClient.mockReturnValue(
-      createMockReturnValue({ ruleSets: sampleRuleSets, performImport })
+      createMockReturnValue({ ruleSets: sampleRuleSets, performImport }),
     );
 
     await renderWithChakra(
       <div data-testid="container" style={{ width: 1024, height: 900 }}>
         <Options />
-      </div>
+      </div>,
     );
 
     // Open export/import dialog
@@ -263,8 +263,8 @@ describe("Options page", () => {
     await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
 
     // Select file for import using file input
-    const fileInputElement = page.getByRole("textbox");
-    const fileInput = (await fileInputElement.element()) as HTMLInputElement;
+    const fileInput =
+      document.querySelector<HTMLInputElement>('input[type="file"]')!;
     const validJson = JSON.stringify({
       format: "BLOCKoli",
       version: 1,
@@ -308,13 +308,13 @@ describe("Options page", () => {
         [{ message: "invalid_format", ruleSetNumber: 0 }],
       ]);
     mockUseRequestBlockClient.mockReturnValue(
-      createMockReturnValue({ ruleSets: sampleRuleSets, performImport })
+      createMockReturnValue({ ruleSets: sampleRuleSets, performImport }),
     );
 
     await renderWithChakra(
       <div data-testid="container" style={{ width: 1024, height: 900 }}>
         <Options />
-      </div>
+      </div>,
     );
 
     // Open export/import dialog
@@ -322,8 +322,8 @@ describe("Options page", () => {
     await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
 
     // Select file for import using file input
-    const fileInputElement = page.getByRole("textbox");
-    const fileInput = (await fileInputElement.element()) as HTMLInputElement;
+    const fileInput =
+      document.querySelector<HTMLInputElement>('input[type="file"]')!;
     const validJson = JSON.stringify({
       format: "BLOCKoli",
       version: 1,
@@ -360,13 +360,13 @@ describe("Options page", () => {
   test("shows error dialog on JSON parse error", async () => {
     const performImport = vi.fn();
     mockUseRequestBlockClient.mockReturnValue(
-      createMockReturnValue({ ruleSets: sampleRuleSets, performImport })
+      createMockReturnValue({ ruleSets: sampleRuleSets, performImport }),
     );
 
     await renderWithChakra(
       <div data-testid="container" style={{ width: 1024, height: 900 }}>
         <Options />
-      </div>
+      </div>,
     );
 
     // Open export/import dialog
@@ -374,8 +374,8 @@ describe("Options page", () => {
     await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
 
     // Select file with invalid JSON using file input
-    const fileInputElement = page.getByRole("textbox");
-    const fileInput = (await fileInputElement.element()) as HTMLInputElement;
+    const fileInput =
+      document.querySelector<HTMLInputElement>('input[type="file"]')!;
     const invalidJson = "{ invalid json }";
     const file = new File([invalidJson], "invalid.json", {
       type: "application/json",
