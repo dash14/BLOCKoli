@@ -72,7 +72,7 @@
     "sass-embedded": "^1.98.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.57.1",
-    "vite": "^7.3.1",
+    "vite": "^8.0.1",
     "vite-plugin-zip-pack": "^1.2.4",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.0",
