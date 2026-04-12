@@ -1,6 +1,6 @@
 minimumReleaseAge: 4320
 
-onlyBuiltDependencies:
+ignoredBuiltDependencies:
   - '@parcel/watcher'
   - '@swc/core'
   - esbuild
