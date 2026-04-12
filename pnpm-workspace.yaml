@@ -4,6 +4,3 @@ ignoredBuiltDependencies:
   - '@parcel/watcher'
   - '@swc/core'
   - esbuild
-
-overrides:
-  rollup@<2.80.0: '>=2.80.0'
