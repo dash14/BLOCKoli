@@ -1,5 +1,5 @@
 import { crx } from "@crxjs/vite-plugin";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import zipPack from "vite-plugin-zip-pack";
 import manifest from "./manifest.config";
@@ -11,10 +11,10 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
+    crx({ manifest }),
     react({
       jsxImportSource: "@emotion/react",
     }),
-    crx({ manifest }),
     zipPack({
       inDir: "dist",
       outDir: ".",
