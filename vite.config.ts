@@ -11,10 +11,10 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
+    crx({ manifest }),
     react({
       jsxImportSource: "@emotion/react",
     }),
-    crx({ manifest }),
     zipPack({
       inDir: "dist",
       outDir: ".",
