@@ -21,11 +21,9 @@
     "noFallthroughCasesInSwitch": true,
 
     "types": ["chrome", "@emotion/react/types/css-prop", "@vitest/browser/matchers"],
-
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@locales/*": ["_locales/*"]
+      "@/*": ["./src/*"],
+      "@locales/*": ["./_locales/*"]
     },
   },
   "include": ["src"],
