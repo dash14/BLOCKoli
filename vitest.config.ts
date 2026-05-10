@@ -1,11 +1,12 @@
 import react from "@vitejs/plugin-react-swc";
 import { playwright } from "@vitest/browser-playwright";
-import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
-    tsconfigPaths(),
     react({
       jsxImportSource: "@emotion/react",
     }),

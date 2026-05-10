@@ -1,15 +1,16 @@
 import { crx } from "@crxjs/vite-plugin";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
 import zipPack from "vite-plugin-zip-pack";
 import manifest from "./manifest.config";
 import pkg from "./package.json";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
-    tsconfigPaths(),
     react({
       jsxImportSource: "@emotion/react",
     }),

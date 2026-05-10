@@ -34,7 +34,7 @@ let moduleCode = standaloneCode(ajv, {
 // https://github.com/ajv-validator/ajv/issues/2209
 moduleCode = moduleCode.replace(
   `const func2 = require("ajv/dist/runtime/ucs2length").default`,
-  `import func2 from "ajv/dist/runtime/ucs2length"`
+  `import func2 from "ajv/lib/runtime/ucs2length"`
 )
 
 // Now you can write the module code to file

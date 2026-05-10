@@ -1,9 +1,10 @@
-minimumReleaseAge: 4320
-
-onlyBuiltDependencies:
-  - '@parcel/watcher'
-  - '@swc/core'
-  - esbuild
-
+minimumReleaseAge: 10080 # 7 days
+engineStrict: true
+allowBuilds:
+  '@parcel/watcher': false
+  '@swc/core': false
+  esbuild: false
+  unrs-resolver: false
+pmOnFail: download
 overrides:
-  rollup@<2.80.0: '>=2.80.0'
+  rollup@<2.80.0: ^2.80.0
