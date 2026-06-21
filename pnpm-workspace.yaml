@@ -7,4 +7,4 @@ allowBuilds:
   unrs-resolver: false
 pmOnFail: download
 overrides:
-  rollup@<2.80.0: ^2.80.0
+  rollup@<2.80.0: ^4.0.0
