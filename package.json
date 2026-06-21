@@ -9,7 +9,7 @@
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "24.12.0",
+      "version": "24.17.0",
       "onFail": "download"
     },
     "packageManager": {
@@ -76,7 +76,7 @@
     "globals": "^17.6.0",
     "happy-dom": "^20.9.0",
     "lodash-es": "^4.18.1",
-    "npm-run-all2": "^5.0.0",
+    "npm-run-all2": "^9.0.2",
     "playwright": "^1.59.1",
     "quicktype": "^23.2.6",
     "sass-embedded": "^1.99.0",
