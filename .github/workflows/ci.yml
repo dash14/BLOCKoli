@@ -23,11 +23,12 @@ jobs:
         with:
           files_ignore: |
             *.md
-            .github/**
-            !.github/workflows/ci.yml
+            .github/FUNDING.yml
+            .github/workflows/release-draft.yml
+            .vscode/**
+            renovate.json
             images/**
             LICENSE
-            FUNDING.yml
 
   test:
     needs: changes
