@@ -25,6 +25,7 @@ jobs:
             *.md
             .github/**
             !.github/workflows/ci.yml
+            !.github/actions/test/action.yml
             images/**
             LICENSE
             FUNDING.yml
