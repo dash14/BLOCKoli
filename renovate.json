@@ -10,9 +10,8 @@
   "internalChecksFilter": "strict",
   "packageRules": [
     {
-      "groupName": "playwright monorepo",
-      "matchManagers": ["dockerfile"],
-      "matchPackageNames": ["mcr.microsoft.com/playwright"]
+      "groupName": "playwright",
+      "matchPackageNames": ["playwright", "mcr.microsoft.com/playwright"]
     }
   ]
 }
