@@ -27,12 +27,19 @@ jobs:
 
       - uses: ./.github/actions/test
 
+      - name: Generate attestation
+        id: attest
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: 'block-oli_*.zip'
+
       - name: Create draft release
         run: |
           gh release create "v${VERSION}" \
             --draft \
             --title "v${VERSION}" \
             --generate-notes \
-            block-oli_*.zip
+            block-oli_*.zip \
+            "${{ steps.attest.outputs.bundle-path }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
