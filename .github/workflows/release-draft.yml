@@ -35,7 +35,11 @@ jobs:
         id: attest
         uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
         with:
-          subject-path: 'block-oli_*.zip'
+          subject-path: 'block-oli_${{ env.VERSION }}.zip'
+
+      - name: Rename attestation bundle
+        run: |
+          cp "${{ steps.attest.outputs.bundle-path }}" "block-oli_${VERSION}.zip.sigstore.json"
 
       - name: Create draft release
         run: |
@@ -43,7 +47,7 @@ jobs:
             --draft \
             --title "v${VERSION}" \
             --generate-notes \
-            block-oli_*.zip \
-            "${{ steps.attest.outputs.bundle-path }}"
+            "block-oli_${VERSION}.zip" \
+            "block-oli_${VERSION}.zip.sigstore.json"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
