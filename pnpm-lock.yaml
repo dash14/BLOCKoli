@@ -309,7 +309,7 @@ importers:
         version: 17.6.0
       happy-dom:
         specifier: ^20.9.0
-        version: 20.10.5
+        version: 20.10.6
       lodash-es:
         specifier: ^4.18.1
         version: 4.18.1
@@ -342,7 +342,7 @@ importers:
         version: 1.2.4(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))
       vitest:
         specifier: ^4.1.5
-        version: 4.1.9(@types/node@25.9.4)(@vitest/browser-playwright@4.1.9)(@vitest/coverage-v8@4.1.9)(happy-dom@20.10.5)(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))
+        version: 4.1.9(@types/node@25.9.4)(@vitest/browser-playwright@4.1.9)(@vitest/coverage-v8@4.1.9)(happy-dom@20.10.6)(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))
       vitest-browser-react:
         specifier: ^2.2.0
         version: 2.2.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.9)
@@ -1858,8 +1858,8 @@ packages:
     resolution: {integrity: sha512-x7uDjyz8Jx+QPbpCFCMQ8lltnQa4p4vSYHx6ADe8rVYRTdsyhCJbvSty5DAsLVmU6cGakl+r8HQYolKHxk/tiw==}
     deprecated: 'No longer supported; please update to a newer version. Details: https://github.com/graphql/graphql-js#version-support'
 
-  happy-dom@20.10.5:
-    resolution: {integrity: sha512-0aA6BQoMnpcRE/c1E8ZyF2jXnET7MJskereWOXher4CJuYjrI5esN0Az/1NPMD4KeWUbampBGw2MGqabMPFIbg==}
+  happy-dom@20.10.6:
+    resolution: {integrity: sha512-6QD0ilzDDt93tX44y8tbmZdAcdTRYDhUP+Asgi6pC8Pp5IA3cvaZGyoVN/EGtlq9ziT65iPuBBn3ASLr6hCgVw==}
     engines: {node: '>=20.0.0'}
 
   has-flag@4.0.0:
@@ -1903,8 +1903,8 @@ packages:
   immutable@5.1.6:
     resolution: {integrity: sha512-q1swsS8K7L8usSHuOqF2TAoCCkonYz0SG38wLAggaa4Wml70zixIvt2ql4coQ2C2B3hTjltJry4r6bULwgAXLQ==}
 
-  immutable@5.1.8:
-    resolution: {integrity: sha512-TM5YqrGeTsVIPPpILzeqZ8D2Zc2TvNgSDi88zPF2a4cyqQdWV/wVWBDRDbNzzrLeRWScrFcOX9lW2iX6GOtUDw==}
+  immutable@5.1.9:
+    resolution: {integrity: sha512-m8nVez3rwrgmWxtLMt1ZYXB2Lv7OKYn/disyxAlSDYAlKSlFoPPfIAmAM/M5xqL4m4C/wAPw7S2/CNaUii1Hxg==}
 
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
@@ -3978,7 +3978,7 @@ snapshots:
       '@vitest/mocker': 4.1.9(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))
       playwright: 1.61.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.9(@types/node@25.9.4)(@vitest/browser-playwright@4.1.9)(@vitest/coverage-v8@4.1.9)(happy-dom@20.10.5)(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))
+      vitest: 4.1.9(@types/node@25.9.4)(@vitest/browser-playwright@4.1.9)(@vitest/coverage-v8@4.1.9)(happy-dom@20.10.6)(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -3994,7 +3994,7 @@ snapshots:
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.1.0
-      vitest: 4.1.9(@types/node@25.9.4)(@vitest/browser-playwright@4.1.9)(@vitest/coverage-v8@4.1.9)(happy-dom@20.10.5)(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))
+      vitest: 4.1.9(@types/node@25.9.4)(@vitest/browser-playwright@4.1.9)(@vitest/coverage-v8@4.1.9)(happy-dom@20.10.6)(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))
       ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
@@ -4014,7 +4014,7 @@ snapshots:
       obug: 2.1.3
       std-env: 4.1.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.9(@types/node@25.9.4)(@vitest/browser-playwright@4.1.9)(@vitest/coverage-v8@4.1.9)(happy-dom@20.10.5)(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))
+      vitest: 4.1.9(@types/node@25.9.4)(@vitest/browser-playwright@4.1.9)(@vitest/coverage-v8@4.1.9)(happy-dom@20.10.6)(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))
     optionalDependencies:
       '@vitest/browser': 4.1.9(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))(vitest@4.1.9)
 
@@ -5089,7 +5089,7 @@ snapshots:
     dependencies:
       iterall: 1.1.3
 
-  happy-dom@20.10.5:
+  happy-dom@20.10.6:
     dependencies:
       '@types/node': 25.9.4
       '@types/whatwg-mimetype': 3.0.2
@@ -5132,7 +5132,7 @@ snapshots:
 
   immutable@5.1.6: {}
 
-  immutable@5.1.8:
+  immutable@5.1.9:
     optional: true
 
   import-fresh@3.3.1:
@@ -5781,7 +5781,7 @@ snapshots:
   sass@1.100.0:
     dependencies:
       chokidar: 5.0.0
-      immutable: 5.1.8
+      immutable: 5.1.9
       source-map-js: 1.2.1
     optionalDependencies:
       '@parcel/watcher': 2.5.6
@@ -6029,12 +6029,12 @@ snapshots:
     dependencies:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
-      vitest: 4.1.9(@types/node@25.9.4)(@vitest/browser-playwright@4.1.9)(@vitest/coverage-v8@4.1.9)(happy-dom@20.10.5)(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))
+      vitest: 4.1.9(@types/node@25.9.4)(@vitest/browser-playwright@4.1.9)(@vitest/coverage-v8@4.1.9)(happy-dom@20.10.6)(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))
     optionalDependencies:
       '@types/react': 19.2.17
       '@types/react-dom': 19.2.3(@types/react@19.2.17)
 
-  vitest@4.1.9(@types/node@25.9.4)(@vitest/browser-playwright@4.1.9)(@vitest/coverage-v8@4.1.9)(happy-dom@20.10.5)(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4)):
+  vitest@4.1.9(@types/node@25.9.4)(@vitest/browser-playwright@4.1.9)(@vitest/coverage-v8@4.1.9)(happy-dom@20.10.6)(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4)):
     dependencies:
       '@vitest/expect': 4.1.9
       '@vitest/mocker': 4.1.9(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))
@@ -6060,7 +6060,7 @@ snapshots:
       '@types/node': 25.9.4
       '@vitest/browser-playwright': 4.1.9(playwright@1.61.0)(vite@8.0.16(@types/node@25.9.4)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.8.4))(vitest@4.1.9)
       '@vitest/coverage-v8': 4.1.9(@vitest/browser@4.1.9)(vitest@4.1.9)
-      happy-dom: 20.10.5
+      happy-dom: 20.10.6
     transitivePeerDependencies:
       - msw
 
