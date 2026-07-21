@@ -1,7 +1,7 @@
 {
   "name": "block-oli",
   "private": true,
-  "version": "0.1.17",
+  "version": "0.1.18",
   "type": "module",
   "engines": {
     "npm": "please_use_pnpm_instead"
