@@ -5,7 +5,7 @@
     "helpers:pinGitHubActionDigests",
     "docker:pinDigests"
   ],
-  "schedule": ["* * * * 1"],
+  "schedule": ["* * * * 6"],
   "minimumReleaseAge": "14 days",
   "internalChecksFilter": "strict",
   "packageRules": [
