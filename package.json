@@ -81,7 +81,7 @@
     "playwright": "^1.61.1",
     "quicktype": "^23.3.25",
     "sass-embedded": "^1.100.0",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.0",
     "typescript-eslint": "^8.62.1",
     "vite": "^8.1.5",
     "vite-plugin-zip-pack": "^1.2.4",
