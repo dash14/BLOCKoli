@@ -2,7 +2,7 @@ services:
   test:
     build:
       context: ..
-      dockerfile: test/Dockerfile
+      dockerfile: docker/Dockerfile
     volumes:
       - ..:/app
       - node_modules:/app/node_modules
