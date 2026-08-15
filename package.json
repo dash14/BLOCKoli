@@ -18,7 +18,7 @@
       "onFail": "download"
     }
   },
-  "packageManager": "pnpm@11.17.0",
+  "packageManager": "pnpm@11.19.0",
   "scripts": {
     "dev": "vite",
     "build": "run-s build:*",
