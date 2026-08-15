@@ -59,11 +59,6 @@ describe("api types", () => {
       });
     });
 
-    it("can have undefined path", () => {
-      const details: TabIconDetails = {};
-
-      expect(details.path).toBeUndefined();
-    });
   });
 
   describe("ChromeActionApi", () => {

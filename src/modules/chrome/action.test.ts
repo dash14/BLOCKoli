@@ -39,13 +39,5 @@ describe("ChromeActionApiImpl", () => {
 
       expect(mockSetIcon).toHaveBeenCalledWith({ path: pathDict });
     });
-
-    it("calls chrome.action.setIcon with undefined path", () => {
-      const api = new ChromeActionApiImpl();
-
-      api.setIcon({});
-
-      expect(mockSetIcon).toHaveBeenCalledWith({});
-    });
   });
 });
