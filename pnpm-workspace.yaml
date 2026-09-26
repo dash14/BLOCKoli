@@ -1,4 +1,4 @@
-minimumReleaseAge: 10080 # 7 days
+minimumReleaseAge: 20160 # 14 days
 engineStrict: true
 allowBuilds:
   '@parcel/watcher': false
