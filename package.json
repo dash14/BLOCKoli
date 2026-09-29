@@ -64,9 +64,9 @@
     "@typescript-eslint/eslint-plugin": "^8.62.1",
     "@typescript-eslint/parser": "^8.62.1",
     "@vitejs/plugin-react": "^6.0.3",
-    "@vitest/browser": "^4.1.10",
-    "@vitest/browser-playwright": "^4.1.10",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/browser": "^5.0.0",
+    "@vitest/browser-playwright": "^5.0.0",
+    "@vitest/coverage-v8": "^5.0.0",
     "ajv": "^8.20.0",
     "deepmerge": "^4.3.1",
     "eslint": "^10.7.0",
@@ -85,7 +85,7 @@
     "typescript-eslint": "^8.62.1",
     "vite": "^8.3.0",
     "vite-plugin-zip-pack": "^1.2.4",
-    "vitest": "^4.1.10",
+    "vitest": "^5.0.0",
     "vitest-browser-react": "^2.2.0"
   }
 }
