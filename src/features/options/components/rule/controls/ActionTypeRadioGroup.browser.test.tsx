@@ -30,7 +30,7 @@ describe("ActionTypeRadioGroup component", () => {
     await renderWithChakra(
       <TestWrapper isEditing={false} actionType={RuleActionType.BLOCK} />
     );
-    await expect.element(page.getByText("Block")).toBeInTheDocument();
+    await expect.element(page.getByText("block")).toBeInTheDocument();
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "ActionTypeRadioGroup-view-block"
     );
@@ -40,7 +40,7 @@ describe("ActionTypeRadioGroup component", () => {
     await renderWithChakra(
       <TestWrapper isEditing={false} actionType={RuleActionType.ALLOW} />
     );
-    await expect.element(page.getByText("Allow")).toBeInTheDocument();
+    await expect.element(page.getByText("allow")).toBeInTheDocument();
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "ActionTypeRadioGroup-view-allow"
     );

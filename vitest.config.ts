@@ -28,6 +28,11 @@ export default defineConfig({
         extends: true,
         optimizeDeps: {
           include: ["react-icons/hi2", "react-transition-group"],
+          rolldownOptions: {
+            transform: {
+              define: { "process.env.NODE_ENV": JSON.stringify("development") },
+            },
+          },
         },
         test: {
           name: "browser",
