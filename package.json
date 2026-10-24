@@ -14,11 +14,11 @@
     },
     "packageManager": {
       "name": "pnpm",
-      "version": "12.10.0",
+      "version": "12.11.2",
       "onFail": "download"
     }
   },
-  "packageManager": "pnpm@12.10.0",
+  "packageManager": "pnpm@12.11.2",
   "scripts": {
     "dev": "vite",
     "build": "run-s build:*",
