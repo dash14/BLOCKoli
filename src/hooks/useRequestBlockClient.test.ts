@@ -4,6 +4,7 @@ import { describe, expect, it, vi, beforeEach, onTestFinished } from "vitest";
 import { Rule, RuleActionType } from "@/modules/core/rules";
 import { StoredRuleSets } from "@/modules/rules/stored";
 import logging from "@/modules/utils/logging";
+import { updateI18nLanguage } from "./useI18n";
 import { useRequestBlockClient } from "./useRequestBlockClient";
 
 // Mock chrome.runtime API
@@ -508,5 +509,114 @@ describe("useRequestBlockClient", () => {
     });
 
     expect(result.current.enabled).toBe(true);
+  });
+
+  describe("initial load ordering", () => {
+    // Holds the getLanguage response, the last call of the load, until the test releases it.
+    function holdInitialLoad(languageResponse: object) {
+      let release!: () => void;
+      const held = new Promise<void>((resolve) => (release = resolve));
+      const defaultImpl = mockSendMessage.getMockImplementation()!;
+      mockSendMessage.mockImplementation(async (request) => {
+        if (request.method === "getRuleSets") {
+          return {
+            type: "response",
+            success: true,
+            result: [{ name: "Stale Set", rules: [] }],
+          };
+        }
+        if (request.method === "getLanguage") {
+          await held;
+          return languageResponse;
+        }
+        return defaultImpl(request);
+      });
+      return release;
+    }
+
+    async function waitForGetLanguage() {
+      await waitFor(() => {
+        expect(mockSendMessage).toHaveBeenCalledWith(
+          expect.objectContaining({ method: "getLanguage" })
+        );
+      });
+    }
+
+    function broadcast(event: string, message: unknown) {
+      const listener = mockAddListener.mock.lastCall![0];
+      act(() => {
+        listener(
+          { type: "broadcast", service: "RequestBlock", event, message },
+          {},
+          vi.fn()
+        );
+      });
+    }
+
+    const loadedEn = { type: "response", success: true, result: "en" };
+
+    it("keeps broadcasts received during the load over the loaded values", async () => {
+      const release = holdInitialLoad(loadedEn);
+      const { result } = renderHook(() => useRequestBlockClient());
+      await waitForGetLanguage();
+
+      const fresh = [{ name: "Fresh Set", rules: [] }];
+      broadcast("changeState", "enable");
+      broadcast("updateRuleSets", fresh);
+
+      await act(async () => release());
+      await waitFor(() => {
+        expect(result.current.loaded).toBe(true);
+      });
+
+      expect(result.current.enabled).toBe(true);
+      expect(result.current.ruleSets).toStrictEqual(fresh);
+    });
+
+    it("keeps a language picked during the load over the loaded one", async () => {
+      const release = holdInitialLoad(loadedEn);
+      const { result } = renderHook(() => useRequestBlockClient());
+      await waitForGetLanguage();
+
+      await act(async () => {
+        await result.current.setLanguage("ja");
+      });
+
+      await act(async () => release());
+      await waitFor(() => {
+        expect(result.current.loaded).toBe(true);
+      });
+
+      expect(result.current.language).toBe("ja");
+      expect(updateI18nLanguage).not.toHaveBeenCalledWith("en");
+    });
+
+    it("does not apply a load that finishes after unmount", async () => {
+      const release = holdInitialLoad(loadedEn);
+      const { unmount } = renderHook(() => useRequestBlockClient());
+      await waitForGetLanguage();
+
+      unmount();
+      await act(async () => release());
+
+      expect(updateI18nLanguage).not.toHaveBeenCalled();
+    });
+
+    it("does not report a load that fails after unmount", async () => {
+      const logError = vi.spyOn(logging.getLogger("client"), "error");
+      onTestFinished(() => logError.mockRestore());
+      const release = holdInitialLoad({
+        type: "response",
+        success: false,
+        error: "storage error",
+      });
+      const { unmount } = renderHook(() => useRequestBlockClient());
+      await waitForGetLanguage();
+
+      unmount();
+      await act(async () => release());
+
+      expect(logError).not.toHaveBeenCalled();
+    });
   });
 });
