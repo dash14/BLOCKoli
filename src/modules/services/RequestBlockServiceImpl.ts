@@ -44,6 +44,9 @@ export class RequestBlockServiceImpl
   private action: ChromeActionApi;
   private i18n: ChromeI18nApi;
 
+  private regexValidator: RegexValidator = (regex, isCaseSensitive) =>
+    this.declarativeNetRequest.isRegexSupported({ regex, isCaseSensitive });
+
   constructor(
     emitter: EventEmitter<RequestBlock.Events>,
     store: ServiceConfigurationStore,
@@ -147,8 +150,7 @@ export class RequestBlockServiceImpl
     await this.declarativeNetRequest.updateDynamicRules(dynamicRules);
   }
 
-  // Rules saved before regex validation existed may hold a regex Chrome rejects,
-  // and one such rule would make updateDynamicRules fail for every rule.
+  // Imports done while disabled were not checked, and one regex Chrome rejects fails every rule.
   private async excludeUnsupportedRegex(
     rules: StoredRule[]
   ): Promise<StoredRule[]> {
@@ -162,9 +164,6 @@ export class RequestBlockServiceImpl
       return false;
     });
   }
-
-  private regexValidator: RegexValidator = (regex, isCaseSensitive) =>
-    this.declarativeNetRequest.isRegexSupported({ regex, isCaseSensitive });
 
   public async getMatchedRules(): Promise<MatchedRule[]> {
     let matchedRules =
