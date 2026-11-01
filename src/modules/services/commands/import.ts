@@ -37,13 +37,12 @@ export async function performImportCommand(
     return [false, regexErrors, []];
   }
 
-  // registration: the n-th rule set of a name replaces the n-th stored one of that name
+  // The n-th rule set of a name replaces the n-th stored one of that name; the rest are appended.
   const storedIndexes = new Map<string, number[]>();
-  storedRuleSets.forEach((ruleSet, index) => {
-    storedIndexes.set(ruleSet.name, [
-      ...(storedIndexes.get(ruleSet.name) ?? []),
-      index,
-    ]);
+  storedRuleSets.forEach(({ name }, index) => {
+    const indexes = storedIndexes.get(name);
+    if (indexes) indexes.push(index);
+    else storedIndexes.set(name, [index]);
   });
   for (const ruleSet of result.evaluated) {
     const newRuleSet: StoredRuleSet = {
