@@ -27,10 +27,19 @@ export function useRequestBlockClient() {
   useEffect(function () {
     log.debug("initialize");
 
-    service.addEventListener("changeState", (state) =>
-      setEnabled(state === "enable")
-    );
-    service.addEventListener("updateRuleSets", setRuleSets);
+    let active = true;
+    // A broadcast received during the initial load is newer than what the load returns.
+    let stateBroadcast = false;
+    let ruleSetsBroadcast = false;
+
+    service.addEventListener("changeState", (state) => {
+      stateBroadcast = true;
+      setEnabled(state === "enable");
+    });
+    service.addEventListener("updateRuleSets", (ruleSets) => {
+      ruleSetsBroadcast = true;
+      setRuleSets(ruleSets);
+    });
 
     (async () => {
       try {
@@ -38,12 +47,14 @@ export function useRequestBlockClient() {
         const isEnabled = await service.isEnabled();
         const storedRuleSets = await service.getRuleSets();
         const lang = await service.getLanguage();
-        setEnabled(isEnabled);
-        setRuleSets(storedRuleSets);
+        if (!active) return;
+        if (!stateBroadcast) setEnabled(isEnabled);
+        if (!ruleSetsBroadcast) setRuleSets(storedRuleSets);
         updateI18nLanguage(lang);
         setLanguageState(lang);
         setLoaded(true);
       } catch (error) {
+        if (!active) return;
         log.error("failed to load the initial state", error);
         setLoadFailed(true);
       }
@@ -51,6 +62,7 @@ export function useRequestBlockClient() {
 
     return () => {
       log.debug("destroy");
+      active = false;
       service.removeAllEventListeners();
     };
   }, [service]);
