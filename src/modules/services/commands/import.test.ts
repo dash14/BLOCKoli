@@ -110,6 +110,58 @@ describe("performImportCommand", () => {
     ]);
   });
 
+  it("should keep every rule set of the same name in the file", async () => {
+    const ruleSet = (name: string, domain: string) => ({
+      name,
+      rules: [
+        {
+          action: { type: RuleActionType.BLOCK },
+          condition: { requestDomains: [domain] },
+        },
+      ],
+    });
+    const stored = (name: string, id: number, domain: string) => ({
+      name,
+      rules: [{ id, ...ruleSet(name, domain).rules[0] }],
+    });
+    const unsaved = (name: string, domain: string) => ({
+      name,
+      rules: [{ id: RULE_ID_UNSAVED, ...ruleSet(name, domain).rules[0] }],
+    });
+
+    const target: ExportedRuleSets = {
+      format: "BLOCKoli",
+      version: 1,
+      ruleSets: [
+        ruleSet("a", "a1.example.com"),
+        ruleSet("b", "b1.example.com"),
+        ruleSet("a", "a2.example.com"),
+        ruleSet("a", "a3.example.com"),
+      ],
+    };
+    const storedRuleSets: StoredRuleSets = [
+      stored("a", 1, "old-a1.example.com"),
+      stored("c", 2, "old-c.example.com"),
+      stored("a", 3, "old-a2.example.com"),
+    ];
+
+    const [valid, errors, ruleSets] = await performImportCommand(
+      target,
+      storedRuleSets,
+      acceptAllRegex
+    );
+
+    expect(valid).toBeTruthy();
+    expect(errors).toStrictEqual([]);
+    expect(ruleSets).toStrictEqual([
+      unsaved("a", "a1.example.com"),
+      stored("c", 2, "old-c.example.com"),
+      unsaved("a", "a2.example.com"),
+      unsaved("b", "b1.example.com"),
+      unsaved("a", "a3.example.com"),
+    ]);
+  });
+
   // format error
   it("should detect format error", async () => {
     const target = {
