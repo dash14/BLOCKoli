@@ -373,11 +373,13 @@ describe("Options page", () => {
     await expect.element(page.getByText(/import failed/i)).toBeInTheDocument();
   });
 
-  test("shows error dialog when import throws", async () => {
-    const performImport = vi
-      .fn()
-      // The service worker sends errors back as strings
-      .mockRejectedValue("Error: Failed to update dynamic rules");
+  test.each([
+    // The service worker sends errors back as strings
+    ["a string", "Error: Failed to update dynamic rules"],
+    // Raised in the page itself, e.g. when the service worker does not answer
+    ["an Error", new Error("Failed to update dynamic rules")],
+  ])("shows error dialog when import throws %s", async (_, error) => {
+    const performImport = vi.fn().mockRejectedValue(error);
     mockUseRequestBlockClient.mockReturnValue(
       createMockReturnValue({ ruleSets: sampleRuleSets, performImport }),
     );
