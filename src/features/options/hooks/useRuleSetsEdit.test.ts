@@ -345,20 +345,53 @@ describe("useRuleSetsEdit", () => {
       expect(result.current.ruleSets[2]).toEqual(saved);
     });
 
-    test("keeps an unsaved rule set when rule sets before it are removed elsewhere", () => {
+    test("keeps each rule set's key when one before it is removed elsewhere", () => {
       const { result, rerender } = render([ruleSetA, ruleSetB]);
       act(() => {
         result.current.addRuleSet();
       });
-      const keys = result.current.entries.map((e) => e.key);
+      const [, keyB, keyNew] = result.current.entries.map((e) => e.key);
+
+      rerender({ ruleSets: [ruleSetB] });
+
+      expect(names(result.current.ruleSets)).toEqual(["B", "My Rule Set 1"]);
+      expect(result.current.entries.map((e) => e.key)).toEqual([keyB, keyNew]);
+    });
+
+    test("moves an unsaved rule set to the end when the one before it is removed elsewhere", () => {
+      const { result, rerender } = render([ruleSetA, ruleSetB]);
+      act(() => {
+        result.current.addRuleSet();
+      });
 
       rerender({ ruleSets: [ruleSetA] });
 
       expect(names(result.current.ruleSets)).toEqual(["A", "My Rule Set 1"]);
-      expect(result.current.entries.map((e) => e.key)).toEqual([
-        keys[0],
-        keys[2],
+    });
+
+    test("keeps an unsaved rule set first when rule sets are stored after it", () => {
+      const { result, rerender } = render([]);
+      act(() => {
+        result.current.addRuleSet();
+      });
+
+      rerender({ ruleSets: [imported] });
+
+      expect(names(result.current.ruleSets)).toEqual([
+        "My Rule Set 1",
+        "Imported",
       ]);
+    });
+
+    test("matches a rule set replaced by name, as an import does", () => {
+      const { result, rerender } = render([ruleSetA, ruleSetB]);
+      const keys = result.current.entries.map((e) => e.key);
+
+      const replacedB = { name: "B", rules: [{ ...savedRule, id: 9 }] };
+      rerender({ ruleSets: [ruleSetA, replacedB] });
+
+      expect(result.current.ruleSets).toEqual([ruleSetA, replacedB]);
+      expect(result.current.entries.map((e) => e.key)).toEqual(keys);
     });
 
     test("opens only a rule set that is alone when the list is first filled, or added", () => {
