@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { useRequestBlockClient } from "./useRequestBlockClient";
@@ -24,7 +25,7 @@ vi.mock("./useI18n", () => ({
 
 describe("useRequestBlockClient", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     // Default mock responses
     mockSendMessage.mockImplementation(async (request) => {
       if (request.method === "isEnabled") {
@@ -326,6 +327,25 @@ describe("useRequestBlockClient", () => {
 
     expect(mockRemoveListener).toHaveBeenCalledTimes(1);
     expect(mockRemoveListener).toHaveBeenCalledWith(listener);
+  });
+
+  it("keeps one message listener when StrictMode re-runs the effect", async () => {
+    const { result, unmount } = renderHook(() => useRequestBlockClient(), {
+      wrapper: StrictMode,
+    });
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true);
+    });
+
+    const added = mockAddListener.mock.calls.map(([listener]) => listener);
+    const removed = mockRemoveListener.mock.calls.map(([listener]) => listener);
+    expect(added.filter((listener) => !removed.includes(listener))).toHaveLength(1);
+
+    unmount();
+
+    const removedAfter = mockRemoveListener.mock.calls.map(([listener]) => listener);
+    expect(added.filter((listener) => !removedAfter.includes(listener))).toHaveLength(0);
   });
 
   it("updates rule sets when updateRuleSets event is received", async () => {

@@ -16,7 +16,7 @@ export function useRequestBlockClient() {
   const [ruleSets, setRuleSets] = useState<StoredRuleSets>([]);
   const [language, setLanguageState] = useState<string>("en");
 
-  // One proxy per mount; each proxy adds its own chrome.runtime.onMessage listener.
+  // Keep one proxy per mount so the effect adds and removes a single onMessage listener.
   const [service] = useState(() =>
     new MessageProxyFactory().create<RequestBlock.Service>(
       RequestBlock.ServiceId
