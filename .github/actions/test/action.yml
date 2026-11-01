@@ -30,7 +30,7 @@ runs:
       with:
         file: docker/Dockerfile
         load: true
-        tags: test-test:latest
+        tags: blockoli-test:latest
         cache-from: ${{ github.ref_name != github.event.repository.default_branch && 'type=gha' || '' }}
         cache-to: ${{ github.ref_name == github.event.repository.default_branch && 'type=gha,mode=max' || '' }}
       env:
