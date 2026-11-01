@@ -167,6 +167,26 @@ describe("useRequestBlockClient", () => {
     );
   });
 
+  it("updateRuleSets does not call service when ruleSets unchanged", async () => {
+    const { result } = renderHook(() => useRequestBlockClient());
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true);
+    });
+
+    mockSendMessage.mockClear();
+
+    await act(async () => {
+      await result.current.updateRuleSets([]);
+    });
+
+    expect(mockSendMessage).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: "updateRuleSets",
+      })
+    );
+  });
+
   it("updateRuleSets keeps the rule sets returned by the service", async () => {
     const { result } = renderHook(() => useRequestBlockClient());
 
@@ -190,7 +210,7 @@ describe("useRequestBlockClient", () => {
     expect(result.current.ruleSets).toStrictEqual(saved);
   });
 
-  it("updateRuleSets sends rule sets equal to a stale render's state", async () => {
+  it("updateRuleSets compares with the latest state, not a stale render's", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let capturedListener: any;
     mockAddListener.mockImplementation((listener) => {

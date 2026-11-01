@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import isEqual from "lodash-es/isEqual";
 import { MessageProxyFactory } from "@/modules/chrome/message/MessageProxy";
 import { ExportedRuleSets } from "@/modules/rules/export";
 import { StoredRuleSets } from "@/modules/rules/stored";
@@ -53,9 +54,17 @@ export function useRequestBlockClient() {
     }
   };
 
-  // The service skips unchanged rule sets and returns them with new rule IDs assigned.
+  // Compare with the latest state, not the one this render's callbacks closed over.
+  const latestRuleSets = useRef(ruleSets);
+  useEffect(() => {
+    latestRuleSets.current = ruleSets;
+  }, [ruleSets]);
+
   const updateRuleSets = async (updatedRuleSets: StoredRuleSets) => {
-    setRuleSets(await service.updateRuleSets(updatedRuleSets));
+    if (!isEqual(updatedRuleSets, latestRuleSets.current)) {
+      // New rules come back with the IDs the service assigned
+      setRuleSets(await service.updateRuleSets(updatedRuleSets));
+    }
   };
 
   const getMatchedRule = async () => {
