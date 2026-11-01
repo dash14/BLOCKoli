@@ -1,6 +1,8 @@
 import { StrictMode } from "react";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { Rule, RuleActionType } from "@/modules/core/rules";
+import { StoredRuleSets } from "@/modules/rules/stored";
 import { useRequestBlockClient } from "./useRequestBlockClient";
 
 // Mock chrome.runtime API
@@ -23,6 +25,11 @@ vi.mock("./useI18n", () => ({
   updateI18nLanguage: vi.fn(),
 }));
 
+const rule: Rule = {
+  action: { type: RuleActionType.BLOCK },
+  condition: { requestDomains: ["example.com"] },
+};
+
 describe("useRequestBlockClient", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -44,7 +51,7 @@ describe("useRequestBlockClient", () => {
         return { type: "response", success: true, result: undefined };
       }
       if (request.method === "updateRuleSets") {
-        return { type: "response", success: true, result: undefined };
+        return { type: "response", success: true, result: request.args[0] };
       }
       if (request.method === "getMatchedRules") {
         return { type: "response", success: true, result: [] };
@@ -160,24 +167,66 @@ describe("useRequestBlockClient", () => {
     );
   });
 
-  it("updateRuleSets does not call service when ruleSets unchanged", async () => {
+  it("updateRuleSets keeps the rule sets returned by the service", async () => {
     const { result } = renderHook(() => useRequestBlockClient());
 
     await waitFor(() => {
       expect(result.current.loaded).toBe(true);
     });
 
-    mockSendMessage.mockClear();
-
-    await act(async () => {
-      await result.current.updateRuleSets([]);
+    const unsaved: StoredRuleSets = [{ name: "Set", rules: [{ id: 0, ...rule }] }];
+    const saved: StoredRuleSets = [{ name: "Set", rules: [{ id: 5, ...rule }] }];
+    mockSendMessage.mockImplementation(async (request) => {
+      if (request.method === "updateRuleSets") {
+        return { type: "response", success: true, result: saved };
+      }
+      return { type: "response", success: true, result: null };
     });
 
-    expect(mockSendMessage).not.toHaveBeenCalledWith(
-      expect.objectContaining({
-        method: "updateRuleSets",
-      })
+    await act(async () => {
+      await result.current.updateRuleSets(unsaved);
+    });
+
+    expect(result.current.ruleSets).toStrictEqual(saved);
+  });
+
+  it("updateRuleSets sends rule sets equal to a stale render's state", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let capturedListener: any;
+    mockAddListener.mockImplementation((listener) => {
+      capturedListener = listener;
+    });
+
+    const { result } = renderHook(() => useRequestBlockClient());
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true);
+    });
+
+    // Captured while the state is still []
+    const updateRuleSets = result.current.updateRuleSets;
+
+    act(() => {
+      capturedListener(
+        {
+          type: "broadcast",
+          service: "RequestBlock",
+          event: "updateRuleSets",
+          message: [{ name: "From another page", rules: [] }],
+        },
+        {},
+        vi.fn()
+      );
+    });
+
+    await act(async () => {
+      await updateRuleSets([]);
+    });
+
+    expect(mockSendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ method: "updateRuleSets", args: [[]] })
     );
+    expect(result.current.ruleSets).toStrictEqual([]);
   });
 
   it("getMatchedRule calls service", async () => {
