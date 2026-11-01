@@ -48,6 +48,7 @@ function createMockReturnValue(
 ) {
   return {
     loaded: true,
+    loadFailed: false,
     enabled: true,
     ruleSets: [] as StoredRuleSets,
     language: "en",
@@ -101,6 +102,35 @@ describe("Options page", () => {
     );
     expect(heading).toBeDefined();
     expect(getComputedStyle(heading as Element).visibility).toBe("hidden");
+  });
+
+  test("shows an error instead of the editor when the initial load fails", async () => {
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ loaded: false, loadFailed: true })
+    );
+
+    await renderWithChakra(
+      <div data-testid="container" style={{ width: 1024, height: 900 }}>
+        <Options />
+      </div>,
+    );
+
+    expect(document.querySelector(".options.loading")).toBeNull();
+    await expect
+      .element(page.getByRole("alert"))
+      .toHaveTextContent(
+        "Could not load the settings. Close this page and open it again."
+      );
+    await expect.element(page.getByRole("checkbox")).not.toBeInTheDocument();
+    await expect
+      .element(page.getByText(/There are no rule sets available/i))
+      .not.toBeInTheDocument();
+
+    // VRT screenshot
+    await userEvent.unhover(page.getByRole("document"));
+    await expect(page.getByTestId("container")).toMatchScreenshot(
+      "Options-load-failed",
+    );
   });
 
   test("renders with rule sets", async () => {
