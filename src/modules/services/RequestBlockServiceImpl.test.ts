@@ -561,6 +561,60 @@ describe("RequestBlockServiceImpl", () => {
     });
   });
 
+  describe("stored rules with a regex Chrome does not support", () => {
+    const ruleSets: StoredRuleSets = [
+      {
+        name: "Test Set",
+        rules: [
+          {
+            id: 51,
+            action: { type: RuleActionType.BLOCK },
+            condition: { isRegexFilter: true, urlFilter: "foo(?=bar)" },
+          },
+          {
+            id: 52,
+            action: { type: RuleActionType.BLOCK },
+            condition: { isRegexFilter: true, urlFilter: "^https://ads\\." },
+          },
+        ],
+      },
+    ];
+
+    const appliedRuleIds = () =>
+      vi
+        .mocked(mockDeclarativeNetRequest.updateDynamicRules)
+        .mock.calls[0][0].addRules?.map((rule) => rule.id);
+
+    beforeEach(() => {
+      vi.mocked(mockDeclarativeNetRequest.isRegexSupported).mockImplementation(
+        async ({ regex }) =>
+          regex === "foo(?=bar)"
+            ? { isSupported: false, reason: "syntaxError" }
+            : { isSupported: true }
+      );
+    });
+
+    it("applies the other rules on enable", async () => {
+      vi.mocked(mockStore.loadRuleSets).mockResolvedValue(ruleSets);
+
+      await createService().enable();
+
+      expect(appliedRuleIds()).toContain(52);
+      expect(appliedRuleIds()).not.toContain(51);
+      expect(mockStore.saveState).toHaveBeenCalledWith("enable");
+    });
+
+    it("applies the other rules on update and still saves every rule", async () => {
+      vi.mocked(mockStore.loadState).mockResolvedValue("enable");
+
+      await createService().updateRuleSets(structuredClone(ruleSets));
+
+      expect(appliedRuleIds()).toContain(52);
+      expect(appliedRuleIds()).not.toContain(51);
+      expect(mockStore.saveRuleSets).toHaveBeenCalledWith(ruleSets);
+    });
+  });
+
   describe("getMatchedRules for rules no longer stored", () => {
     it("drops a matched rule whose id is not in any rule set", async () => {
       vi.mocked(mockStore.loadRuleSets).mockResolvedValue([]);

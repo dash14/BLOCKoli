@@ -6,6 +6,7 @@ import {
   ChromeRuntimeApi,
 } from "@/modules/chrome/api";
 import { Rule as ApiRule } from "@/modules/chrome/api";
+import { RegexValidator } from "@/modules/core/regex";
 import { RuleActionType } from "@/modules/core/rules";
 import { EventEmitter, ServiceBase } from "@/modules/core/service";
 import { convertToApiRule } from "@/modules/rules/convert";
@@ -13,8 +14,13 @@ import { ExportedRuleSets } from "@/modules/rules/export";
 import { MatchedRule, RulePointer } from "@/modules/rules/matched";
 import { getReservedRules } from "@/modules/rules/reserved";
 import { toRuleList, walkRules } from "@/modules/rules/rulesets";
-import { RULE_ID_UNSAVED, StoredRuleSets } from "@/modules/rules/stored";
+import {
+  RULE_ID_UNSAVED,
+  StoredRule,
+  StoredRuleSets,
+} from "@/modules/rules/stored";
 import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
+import { validateRegexSupport } from "@/modules/rules/validation/edit";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import logging from "@/modules/utils/logging";
@@ -128,7 +134,9 @@ export class RequestBlockServiceImpl
   private async applyRuleSets(ruleSets: StoredRuleSets): Promise<void> {
     const rules: ApiRule[] = [
       ...getReservedRules(this.runtime.getId()),
-      ...convertToApiRule(toRuleList(ruleSets)),
+      ...convertToApiRule(
+        await this.excludeUnsupportedRegex(toRuleList(ruleSets))
+      ),
     ];
 
     const prevRules = await this.declarativeNetRequest.getDynamicRules();
@@ -138,6 +146,25 @@ export class RequestBlockServiceImpl
 
     await this.declarativeNetRequest.updateDynamicRules(dynamicRules);
   }
+
+  // Rules saved before regex validation existed may hold a regex Chrome rejects,
+  // and one such rule would make updateDynamicRules fail for every rule.
+  private async excludeUnsupportedRegex(
+    rules: StoredRule[]
+  ): Promise<StoredRule[]> {
+    const errors = await Promise.all(
+      rules.map((rule) => validateRegexSupport(rule, this.regexValidator))
+    );
+    return rules.filter((rule, i) => {
+      const error = errors[i];
+      if (!error) return true;
+      log.warn("Skip a rule with an unsupported regex", rule.id, error.message);
+      return false;
+    });
+  }
+
+  private regexValidator: RegexValidator = (regex, isCaseSensitive) =>
+    this.declarativeNetRequest.isRegexSupported({ regex, isCaseSensitive });
 
   public async getMatchedRules(): Promise<MatchedRule[]> {
     let matchedRules =
@@ -243,8 +270,7 @@ export class RequestBlockServiceImpl
     const [valid, errors, ruleSets] = await performImportCommand(
       object,
       storedRuleSets,
-      (regex, isCaseSensitive) =>
-        this.declarativeNetRequest.isRegexSupported({ regex, isCaseSensitive })
+      this.regexValidator
     );
 
     if (valid) {
