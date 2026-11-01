@@ -10,6 +10,7 @@ import {
   RuleSetsValidationError,
   validateRuleSets,
 } from "@/modules/rules/validation/RuleSets";
+import { validateRegexSupport } from "@/modules/rules/validation/edit";
 
 export async function performImportCommand(
   object: object,
@@ -28,7 +29,6 @@ export async function performImportCommand(
     return [false, result.errors, []];
   }
 
-  // Chrome rejects the whole rule list if a single regex is not supported by RE2
   const regexErrors = await validateRegexFilters(
     result.evaluated,
     regexValidator
@@ -61,25 +61,16 @@ async function validateRegexFilters(
   ruleSets: RuleSets,
   regexValidator: RegexValidator
 ): Promise<RuleSetsValidationError[]> {
-  const errors: RuleSetsValidationError[] = [];
-  for (const [ruleSetNumber, ruleSet] of ruleSets.entries()) {
-    for (const [ruleNumber, rule] of ruleSet.rules.entries()) {
-      const { isRegexFilter, urlFilter } = rule.condition;
-      if (!isRegexFilter || !urlFilter) continue;
-      // Rules are applied without isUrlFilterCaseSensitive, which defaults to false
-      const result = await regexValidator(urlFilter, false);
-      if (!result.isSupported) {
-        errors.push({
-          ruleSetNumber,
-          ruleSetField: "rules",
-          ruleNumber,
-          ruleField: "condition.urlFilter",
-          message: result.reason ?? "Not supported regex",
-        });
-      }
-    }
-  }
-  return errors;
+  const checks = ruleSets.flatMap((ruleSet, ruleSetNumber) =>
+    ruleSet.rules.map(async (rule, ruleNumber) => {
+      const error = await validateRegexSupport(rule, regexValidator);
+      return (
+        error && { ruleSetNumber, ruleSetField: "rules", ruleNumber, ...error }
+      );
+    })
+  );
+  const errors = await Promise.all(checks);
+  return errors.filter((e) => e !== undefined);
 }
 
 function validateImportObject(

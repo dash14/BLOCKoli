@@ -376,7 +376,8 @@ describe("Options page", () => {
   test("shows error dialog when import throws", async () => {
     const performImport = vi
       .fn()
-      .mockRejectedValue(new Error("Failed to update dynamic rules"));
+      // The service worker sends errors back as strings
+      .mockRejectedValue("Error: Failed to update dynamic rules");
     mockUseRequestBlockClient.mockReturnValue(
       createMockReturnValue({ ruleSets: sampleRuleSets, performImport }),
     );
