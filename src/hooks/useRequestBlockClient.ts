@@ -16,6 +16,8 @@ export function useRequestBlockClient() {
   const [enabled, setEnabled] = useState(false);
   const [ruleSets, setRuleSets] = useState<StoredRuleSets>([]);
   const [language, setLanguageState] = useState<string>("en");
+  // A language picked on this page during the initial load wins over the loaded one.
+  const languageChosen = useRef(false);
 
   // Keep one proxy per mount so the effect adds and removes a single onMessage listener.
   const [service] = useState(() =>
@@ -50,8 +52,10 @@ export function useRequestBlockClient() {
         if (!active) return;
         if (!stateBroadcast) setEnabled(isEnabled);
         if (!ruleSetsBroadcast) setRuleSets(storedRuleSets);
-        updateI18nLanguage(lang);
-        setLanguageState(lang);
+        if (!languageChosen.current) {
+          updateI18nLanguage(lang);
+          setLanguageState(lang);
+        }
         setLoaded(true);
       } catch (error) {
         if (!active) return;
@@ -93,6 +97,7 @@ export function useRequestBlockClient() {
   };
 
   const setLanguage = async (lang: string) => {
+    languageChosen.current = true;
     updateI18nLanguage(lang);
     setLanguageState(lang);
     await service.setLanguage(lang);

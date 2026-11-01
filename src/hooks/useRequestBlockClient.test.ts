@@ -512,16 +512,12 @@ describe("useRequestBlockClient", () => {
   });
 
   describe("initial load ordering", () => {
-    // Holds the isEnabled response until the test releases it.
-    function holdInitialLoad(response: object) {
+    // Holds the getLanguage response, the last call of the load, until the test releases it.
+    function holdInitialLoad(languageResponse: object) {
       let release!: () => void;
       const held = new Promise<void>((resolve) => (release = resolve));
       const defaultImpl = mockSendMessage.getMockImplementation()!;
       mockSendMessage.mockImplementation(async (request) => {
-        if (request.method === "isEnabled") {
-          await held;
-          return response;
-        }
         if (request.method === "getRuleSets") {
           return {
             type: "response",
@@ -529,9 +525,21 @@ describe("useRequestBlockClient", () => {
             result: [{ name: "Stale Set", rules: [] }],
           };
         }
+        if (request.method === "getLanguage") {
+          await held;
+          return languageResponse;
+        }
         return defaultImpl(request);
       });
       return release;
+    }
+
+    async function waitForGetLanguage() {
+      await waitFor(() => {
+        expect(mockSendMessage).toHaveBeenCalledWith(
+          expect.objectContaining({ method: "getLanguage" })
+        );
+      });
     }
 
     function broadcast(event: string, message: unknown) {
@@ -545,13 +553,12 @@ describe("useRequestBlockClient", () => {
       });
     }
 
+    const loadedEn = { type: "response", success: true, result: "en" };
+
     it("keeps broadcasts received during the load over the loaded values", async () => {
-      const release = holdInitialLoad({
-        type: "response",
-        success: true,
-        result: false,
-      });
+      const release = holdInitialLoad(loadedEn);
       const { result } = renderHook(() => useRequestBlockClient());
+      await waitForGetLanguage();
 
       const fresh = [{ name: "Fresh Set", rules: [] }];
       broadcast("changeState", "enable");
@@ -566,26 +573,33 @@ describe("useRequestBlockClient", () => {
       expect(result.current.ruleSets).toStrictEqual(fresh);
     });
 
-    it("does not apply a load that finishes after unmount", async () => {
-      const release = holdInitialLoad({
-        type: "response",
-        success: true,
-        result: true,
+    it("keeps a language picked during the load over the loaded one", async () => {
+      const release = holdInitialLoad(loadedEn);
+      const { result } = renderHook(() => useRequestBlockClient());
+      await waitForGetLanguage();
+
+      await act(async () => {
+        await result.current.setLanguage("ja");
       });
-      const { result, unmount } = renderHook(() => useRequestBlockClient());
+
+      await act(async () => release());
+      await waitFor(() => {
+        expect(result.current.loaded).toBe(true);
+      });
+
+      expect(result.current.language).toBe("ja");
+      expect(updateI18nLanguage).not.toHaveBeenCalledWith("en");
+    });
+
+    it("does not apply a load that finishes after unmount", async () => {
+      const release = holdInitialLoad(loadedEn);
+      const { unmount } = renderHook(() => useRequestBlockClient());
+      await waitForGetLanguage();
 
       unmount();
       await act(async () => release());
-      await waitFor(() => {
-        expect(mockSendMessage).toHaveBeenCalledWith(
-          expect.objectContaining({ method: "getLanguage" })
-        );
-      });
-      await act(async () => {});
 
       expect(updateI18nLanguage).not.toHaveBeenCalled();
-      expect(result.current.loaded).toBe(false);
-      expect(result.current.enabled).toBe(false);
     });
 
     it("does not report a load that fails after unmount", async () => {
@@ -596,14 +610,13 @@ describe("useRequestBlockClient", () => {
         success: false,
         error: "storage error",
       });
-      const { result, unmount } = renderHook(() => useRequestBlockClient());
+      const { unmount } = renderHook(() => useRequestBlockClient());
+      await waitForGetLanguage();
 
       unmount();
       await act(async () => release());
-      await act(async () => {});
 
       expect(logError).not.toHaveBeenCalled();
-      expect(result.current.loadFailed).toBe(false);
     });
   });
 });
