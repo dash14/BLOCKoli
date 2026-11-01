@@ -71,7 +71,7 @@ export class RequestBlockServiceImpl
     await this.activate();
 
     await this.store.saveState("enable");
-    this.emitter.emit("changeState", "enable");
+    void this.emitter.emit("changeState", "enable");
   }
 
   public async disable(): Promise<void> {
@@ -83,7 +83,7 @@ export class RequestBlockServiceImpl
     await this.deactivate();
 
     await this.store.saveState("disable");
-    this.emitter.emit("changeState", "disable");
+    void this.emitter.emit("changeState", "disable");
   }
 
   public async isEnabled(): Promise<boolean> {
@@ -120,7 +120,7 @@ export class RequestBlockServiceImpl
     await this.store.saveRuleSets(ruleSets);
 
     // Emit a event
-    this.emitter.emit("updateRuleSets", ruleSets);
+    void this.emitter.emit("updateRuleSets", ruleSets);
 
     return ruleSets;
   }
