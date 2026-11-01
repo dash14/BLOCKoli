@@ -1,4 +1,4 @@
-/* v8 ignore file -- @preserve */
+/* v8 ignore file -- @preserve: only mounts the tested Options page */
 import ReactDOM from "react-dom/client";
 import { ChakraProvider } from "@chakra-ui/react";
 import Options from "./pages/Options";

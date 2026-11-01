@@ -88,7 +88,6 @@ function parseRuleSetInstancePath(paths: string[]): RuleSetInstancePath {
   }
 
   const ruleNumber = parseInt(nextItem, 10);
-  /* v8 ignore if -- @preserve */
   if (!isFinite(ruleNumber)) {
     return { ruleSetField };
   }

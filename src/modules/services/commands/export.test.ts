@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { ResourceType, RuleActionType } from "@/modules/core/rules";
+import {
+  RequestMethod,
+  ResourceType,
+  RuleActionType,
+} from "@/modules/core/rules";
 import { ExportedRuleSets } from "@/modules/rules/export";
 import { StoredRuleSets } from "@/modules/rules/stored";
 import { performExportCommand } from "./export";
@@ -82,5 +86,22 @@ describe("performExportCommand", () => {
     };
 
     expect(actual).toStrictEqual(expected);
+  });
+
+  it("keeps non-empty domain and method lists", () => {
+    const condition = {
+      initiatorDomains: ["a.example"],
+      requestDomains: ["b.example"],
+      requestMethods: [RequestMethod.GET],
+      resourceTypes: [ResourceType.SCRIPT],
+    };
+    const actual = performExportCommand([
+      {
+        name: "ruleset",
+        rules: [{ id: 1, action: { type: RuleActionType.BLOCK }, condition }],
+      },
+    ]);
+
+    expect(actual.ruleSets[0].rules[0].condition).toEqual(condition);
   });
 });

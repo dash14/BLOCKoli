@@ -289,9 +289,8 @@ function diffRules(rules: ApiRule[], prevRules: ApiRule[]) {
 }
 
 function isEqualRule(rule1: ApiRule, rule2: ApiRule) {
+  // Rules are paired by id, so only the rest is compared.
   return (
-    // id
-    rule1.id === rule2.id &&
     // action
     isEqual(rule1.action, rule2.action) &&
     // condition

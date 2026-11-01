@@ -27,11 +27,10 @@ export const Tags: React.FC<Props> = ({
         const div = elm as HTMLDivElement;
         return div.getBoundingClientRect().width;
       });
-      /* v8 ignore next -- @preserve */
-      if (widthList.length === 0) return;
-      /* v8 ignore next -- @preserve */
-      let currentWidth = widthList.shift() ?? 0;
-      for (const width of widthList) {
+      // The first tag always shows; the rest fill up to maxWidth.
+      const [first, ...rest] = widthList;
+      let currentWidth = first;
+      for (const width of rest) {
         const newWidth = currentWidth + gap + width;
         if (newWidth > maxWidth) {
           break;

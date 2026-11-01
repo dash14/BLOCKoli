@@ -1,4 +1,3 @@
-/* v8 ignore file -- @preserve */
 import { ReactElement } from "react";
 import { ChakraProvider } from "@chakra-ui/react";
 import { render } from "vitest-browser-react";

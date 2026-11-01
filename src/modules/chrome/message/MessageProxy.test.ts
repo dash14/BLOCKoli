@@ -301,6 +301,37 @@ describe("MessageProxyFactory", () => {
       expect(mockRemoveListener).toHaveBeenCalledTimes(1);
     });
 
+    it("removeAllEventListeners without any listener leaves chrome alone", () => {
+      const factory = new MessageProxyFactory();
+      const proxy = factory.create<TestService>("testService");
+
+      proxy.removeAllEventListeners();
+
+      expect(mockRemoveListener).not.toHaveBeenCalled();
+    });
+
+    it("acknowledges a broadcast for an event nobody listens to", () => {
+      const factory = new MessageProxyFactory();
+      const proxy = factory.create<TestService>("testService");
+      const handler = vi.fn();
+      proxy.addEventListener("onUpdate", handler);
+
+      const sendResponse = vi.fn();
+      messageListeners[0](
+        {
+          type: "broadcast",
+          service: "testService",
+          event: "onDelete",
+          message: { id: 1 },
+        },
+        {},
+        sendResponse
+      );
+
+      expect(handler).not.toHaveBeenCalled();
+      expect(sendResponse).toHaveBeenCalledWith(true);
+    });
+
     it("removeAllEventListeners clears all handlers", () => {
       const factory = new MessageProxyFactory();
       const proxy = factory.create<TestService>("testService");

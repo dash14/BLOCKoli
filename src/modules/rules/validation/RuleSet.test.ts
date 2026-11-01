@@ -157,6 +157,26 @@ describe("validateRuleSet: RuleSet", () => {
     });
   });
 
+  describe("Errors with and without a ruleNumber", () => {
+    it("keeps rule set errors alongside rule errors", () => {
+      const result = validateRuleSet({
+        rules: [{ action: { type: "block" }, condition: { resourceTypes: "x" } }],
+      });
+      expect(result).toEqual({
+        valid: false,
+        errors: [
+          { message: "must have required property 'name'" },
+          {
+            ruleSetField: "rules",
+            ruleNumber: 0,
+            ruleField: "condition.resourceTypes",
+            message: "must be array",
+          },
+        ],
+      });
+    });
+  });
+
   describe("A ruleNumber is specified in the Rule error", () => {
     it("[invalid] not array", () => {
       const ruleSet = {

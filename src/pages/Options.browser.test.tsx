@@ -87,6 +87,22 @@ describe("Options page", () => {
     );
   });
 
+  test("hides the page until the settings are loaded", async () => {
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ loaded: false })
+    );
+
+    await renderWithChakra(<Options />);
+
+    expect(document.querySelector(".options.loading")).not.toBeNull();
+    // Hidden content is left out of the accessibility tree, so look it up in the DOM.
+    const heading = Array.from(document.querySelectorAll("h1")).find(
+      (h) => h.textContent === "Options"
+    );
+    expect(heading).toBeDefined();
+    expect(getComputedStyle(heading as Element).visibility).toBe("hidden");
+  });
+
   test("renders with rule sets", async () => {
     mockUseRequestBlockClient.mockReturnValue(
       createMockReturnValue({ ruleSets: sampleRuleSets }),

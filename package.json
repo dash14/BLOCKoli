@@ -38,6 +38,7 @@
     "test:coverage:report": "open \"file://$(pwd)/coverage/index.html\"",
     "docker:test:browser": "sh docker/compose.sh run --build --rm test pnpm test:browser",
     "docker:test:update-snapshots": "sh docker/compose.sh run --build --rm test pnpm test:update-snapshots",
+    "docker:test:coverage": "sh docker/compose.sh run --build --rm test pnpm test:coverage",
     "docker:clean": "sh docker/compose.sh down --volumes --rmi local",
     "coverage": "vitest run --coverage"
   },

@@ -1,4 +1,3 @@
-/* v8 ignore file -- @preserve */
 export function download(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
