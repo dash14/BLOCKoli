@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { RegexValidator } from "@/modules/core/regex";
 import {
   RequestMethod,
   ResourceType,
@@ -9,7 +10,9 @@ import { RULE_ID_UNSAVED, StoredRuleSets } from "@/modules/rules/stored";
 import { performImportCommand } from "./import";
 
 describe("performImportCommand", () => {
-  it("should overwrite the rule set of the same name", () => {
+  const acceptAllRegex: RegexValidator = async () => ({ isSupported: true });
+
+  it("should overwrite the rule set of the same name", async () => {
     const target: ExportedRuleSets = {
       format: "BLOCKoli",
       version: 1,
@@ -62,9 +65,10 @@ describe("performImportCommand", () => {
       },
     ];
 
-    const [valid, errors, ruleSets] = performImportCommand(
+    const [valid, errors, ruleSets] = await performImportCommand(
       target,
-      storedRuleSets
+      storedRuleSets,
+      acceptAllRegex
     );
 
     expect(valid).toBeTruthy();
@@ -107,14 +111,18 @@ describe("performImportCommand", () => {
   });
 
   // format error
-  it("should detect format error", () => {
+  it("should detect format error", async () => {
     const target = {
       // format: "BLOCKoli",
       version: 1,
       ruleSets: [],
     };
 
-    const [valid, errors, ruleSets] = performImportCommand(target, []);
+    const [valid, errors, ruleSets] = await performImportCommand(
+      target,
+      [],
+      acceptAllRegex
+    );
 
     expect(valid).toBeFalsy();
     expect(errors).toStrictEqual([
@@ -126,14 +134,18 @@ describe("performImportCommand", () => {
     expect(ruleSets).toStrictEqual([]);
   });
 
-  it("should detect unknown format version", () => {
+  it("should detect unknown format version", async () => {
     const target = {
       format: "BLOCKoli",
       version: 0,
       ruleSets: [],
     };
 
-    const [valid, errors, ruleSets] = performImportCommand(target, []);
+    const [valid, errors, ruleSets] = await performImportCommand(
+      target,
+      [],
+      acceptAllRegex
+    );
 
     expect(valid).toBeFalsy();
     expect(errors).toStrictEqual([
@@ -144,7 +156,7 @@ describe("performImportCommand", () => {
     expect(ruleSets).toStrictEqual([]);
   });
 
-  it("should detect validation errors", () => {
+  it("should detect validation errors", async () => {
     const target = {
       format: "BLOCKoli",
       version: 1,
@@ -165,7 +177,11 @@ describe("performImportCommand", () => {
       ],
     };
 
-    const [valid, errors, ruleSets] = performImportCommand(target, []);
+    const [valid, errors, ruleSets] = await performImportCommand(
+      target,
+      [],
+      acceptAllRegex
+    );
 
     expect(valid).toBeFalsy();
     expect(errors).toStrictEqual([
@@ -183,5 +199,61 @@ describe("performImportCommand", () => {
       },
     ]);
     expect(ruleSets).toStrictEqual([]);
+  });
+
+  it("should reject a regex that Chrome does not support", async () => {
+    const target: ExportedRuleSets = {
+      format: "BLOCKoli",
+      version: 1,
+      ruleSets: [
+        {
+          name: "ruleset #0",
+          rules: [
+            {
+              action: { type: RuleActionType.BLOCK },
+              condition: { urlFilter: "example", isRegexFilter: true },
+            },
+            {
+              action: { type: RuleActionType.BLOCK },
+              condition: { urlFilter: "foo(?=bar)", isRegexFilter: true },
+            },
+            {
+              action: { type: RuleActionType.BLOCK },
+              condition: { urlFilter: "foo(?=bar)" },
+            },
+          ],
+        },
+      ],
+    };
+    const regexValidator = vi.fn<RegexValidator>(async (regex) =>
+      regex.includes("(?=")
+        ? { isSupported: false, reason: "syntaxError" }
+        : { isSupported: true }
+    );
+    const storedRuleSets: StoredRuleSets = [];
+
+    const [valid, errors, ruleSets] = await performImportCommand(
+      target,
+      storedRuleSets,
+      regexValidator
+    );
+
+    expect(valid).toBeFalsy();
+    expect(errors).toStrictEqual([
+      {
+        message: "syntaxError",
+        ruleField: "condition.urlFilter",
+        ruleNumber: 1,
+        ruleSetField: "rules",
+        ruleSetNumber: 0,
+      },
+    ]);
+    expect(ruleSets).toStrictEqual([]);
+    expect(storedRuleSets).toStrictEqual([]);
+    // Only regex filters are sent to Chrome
+    expect(regexValidator.mock.calls).toStrictEqual([
+      ["example", false],
+      ["foo(?=bar)", false],
+    ]);
   });
 });

@@ -26,6 +26,7 @@ import {
 import { RuleSetsEdit } from "@/features/options/components/ruleset/RuleSetsEdit";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
 import { useTitleFontAdjuster } from "@/hooks/useTitleFontAdjuster";
+import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
 import { download } from "@/modules/utils/download";
 import { useI18n } from "../hooks/useI18n";
 
@@ -69,7 +70,14 @@ const Options: React.FC = () => {
     }
 
     if (object) {
-      const [success, errors] = await performImport(object);
+      let success: boolean;
+      let errors: RuleSetsValidationError[];
+      try {
+        [success, errors] = await performImport(object);
+      } catch (e) {
+        success = false;
+        errors = [{ message: e instanceof Error ? e.message : String(e) }];
+      }
       if (success) {
         // reload, display succeeded dialog
         await importSuccessDialog.current?.open();

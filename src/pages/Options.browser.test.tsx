@@ -373,6 +373,58 @@ describe("Options page", () => {
     await expect.element(page.getByText(/import failed/i)).toBeInTheDocument();
   });
 
+  test("shows error dialog when import throws", async () => {
+    const performImport = vi
+      .fn()
+      .mockRejectedValue(new Error("Failed to update dynamic rules"));
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ ruleSets: sampleRuleSets, performImport }),
+    );
+
+    await renderWithChakra(
+      <div data-testid="container" style={{ width: 1024, height: 900 }}>
+        <Options />
+      </div>,
+    );
+
+    // Open export/import dialog
+    await page.getByRole("button", { name: /import and export/i }).click();
+    await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
+
+    // Select file for import using file input
+    const fileInput =
+      document.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const validJson = JSON.stringify({
+      format: "BLOCKoli",
+      version: 1,
+      ruleSets: [{ name: "Imported", rules: [] }],
+    });
+    const file = new File([validJson], "test.json", {
+      type: "application/json",
+    });
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+
+    // Wait for confirmation dialog to appear
+    await expect
+      .element(page.getByRole("button", { name: "Import", exact: true }).nth(0))
+      .toBeInTheDocument();
+
+    // Click Import to confirm
+    await page
+      .getByRole("button", { name: "Import", exact: true })
+      .nth(0)
+      .click();
+
+    // Error dialog should appear with the thrown message
+    await expect.element(page.getByText(/import failed/i)).toBeInTheDocument();
+    await expect
+      .element(page.getByText(/Failed to update dynamic rules/))
+      .toBeInTheDocument();
+  });
+
   test("shows error dialog on JSON parse error", async () => {
     const performImport = vi.fn();
     mockUseRequestBlockClient.mockReturnValue(
