@@ -1,6 +1,10 @@
 import { RegexValidator } from "@/modules/core/regex";
 import { Rule } from "@/modules/core/rules";
-import { RuleValidationResult, validateRule } from "./Rule";
+import {
+  RuleValidationError,
+  RuleValidationResult,
+  validateRule,
+} from "./Rule";
 
 export class RuleValidator {
   private regexValidator: RegexValidator;
@@ -11,22 +15,29 @@ export class RuleValidator {
   public async validate(rule: Rule): Promise<RuleValidationResult> {
     const result = validateRule(rule);
     if (result.valid) {
-      // Ask Chrome to verify regular expressions as well.
-      if (rule.condition.isRegexFilter && rule.condition.urlFilter) {
-        const v = await this.regexValidator(rule.condition.urlFilter, true);
-        if (!v.isSupported) {
-          return {
-            valid: false,
-            errors: [
-              {
-                ruleField: "condition.urlFilter",
-                message: v.reason ?? "Not supported regex",
-              },
-            ],
-          };
-        }
+      const error = await validateRegexSupport(rule, this.regexValidator);
+      if (error) {
+        return { valid: false, errors: [error] };
       }
     }
     return result;
   }
+}
+
+// One regex that RE2 rejects makes updateDynamicRules fail for every rule
+export async function validateRegexSupport(
+  rule: Rule,
+  regexValidator: RegexValidator
+): Promise<RuleValidationError | undefined> {
+  const { isRegexFilter, urlFilter } = rule.condition;
+  if (!isRegexFilter || !urlFilter) return undefined;
+
+  // Rules are applied without isUrlFilterCaseSensitive, which defaults to false
+  const result = await regexValidator(urlFilter, false);
+  if (result.isSupported) return undefined;
+
+  return {
+    ruleField: "condition.urlFilter",
+    message: result.reason ?? "Not supported regex",
+  };
 }

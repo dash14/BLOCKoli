@@ -240,9 +240,11 @@ export class RequestBlockServiceImpl
   ): Promise<[boolean, RuleSetsValidationError[]]> {
     const storedRuleSets = await this.store.loadRuleSets();
 
-    const [valid, errors, ruleSets] = performImportCommand(
+    const [valid, errors, ruleSets] = await performImportCommand(
       object,
-      storedRuleSets
+      storedRuleSets,
+      (regex, isCaseSensitive) =>
+        this.declarativeNetRequest.isRegexSupported({ regex, isCaseSensitive })
     );
 
     if (valid) {

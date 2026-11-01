@@ -1,3 +1,5 @@
+import { RegexValidator } from "@/modules/core/regex";
+import { RuleSets } from "@/modules/core/rules";
 import { ExportedRuleSets } from "@/modules/rules/export";
 import {
   RULE_ID_UNSAVED,
@@ -8,11 +10,13 @@ import {
   RuleSetsValidationError,
   validateRuleSets,
 } from "@/modules/rules/validation/RuleSets";
+import { validateRegexSupport } from "@/modules/rules/validation/edit";
 
-export function performImportCommand(
+export async function performImportCommand(
   object: object,
-  storedRuleSets: StoredRuleSets
-): [boolean, RuleSetsValidationError[], StoredRuleSets] {
+  storedRuleSets: StoredRuleSets,
+  regexValidator: RegexValidator
+): Promise<[boolean, RuleSetsValidationError[], StoredRuleSets]> {
   // validate meta data in JSON
   const [valid, errors, data] = validateImportObject(object);
   if (!valid) {
@@ -23,6 +27,14 @@ export function performImportCommand(
   const result = validateRuleSets(data.ruleSets);
   if (!result.valid) {
     return [false, result.errors, []];
+  }
+
+  const regexErrors = await validateRegexFilters(
+    result.evaluated,
+    regexValidator
+  );
+  if (regexErrors.length > 0) {
+    return [false, regexErrors, []];
   }
 
   // registration
@@ -43,6 +55,22 @@ export function performImportCommand(
   }
 
   return [true, [], storedRuleSets];
+}
+
+async function validateRegexFilters(
+  ruleSets: RuleSets,
+  regexValidator: RegexValidator
+): Promise<RuleSetsValidationError[]> {
+  const checks = ruleSets.flatMap((ruleSet, ruleSetNumber) =>
+    ruleSet.rules.map(async (rule, ruleNumber) => {
+      const error = await validateRegexSupport(rule, regexValidator);
+      return (
+        error && { ruleSetNumber, ruleSetField: "rules", ruleNumber, ...error }
+      );
+    })
+  );
+  const errors = await Promise.all(checks);
+  return errors.filter((e) => e !== undefined);
 }
 
 function validateImportObject(

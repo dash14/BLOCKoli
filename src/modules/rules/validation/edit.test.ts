@@ -93,7 +93,7 @@ describe("RuleValidator", () => {
 
         await validator.validate(rule);
 
-        expect(mockValidator).toHaveBeenCalledWith(".*\\.js$", true);
+        expect(mockValidator).toHaveBeenCalledWith(".*\\.js$", false);
       });
 
       it("does not call regexValidator when isRegexFilter is false", async () => {
@@ -255,7 +255,7 @@ describe("RuleValidator", () => {
         const result = await validator.validate(rule);
 
         expect(result.valid).toBe(true);
-        expect(mockValidator).toHaveBeenCalledWith("^https://.*$", true);
+        expect(mockValidator).toHaveBeenCalledWith("^https://.*$", false);
       });
 
       it("does not call regexValidator if schema validation fails", async () => {

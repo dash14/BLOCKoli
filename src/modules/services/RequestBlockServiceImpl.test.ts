@@ -69,6 +69,7 @@ describe("RequestBlockServiceImpl", () => {
       updateDynamicRules: vi.fn().mockResolvedValue(undefined),
       removeAllDynamicRules: vi.fn().mockResolvedValue(undefined),
       getMatchedRulesInActiveTab: vi.fn().mockResolvedValue([]),
+      isRegexSupported: vi.fn().mockResolvedValue({ isSupported: true }),
     } as unknown as ChromeDeclarativeNetRequestApi;
 
     // Setup mock action
@@ -677,6 +678,51 @@ describe("RequestBlockServiceImpl", () => {
       expect(errors).toEqual([]);
       expect(valid).toBe(true);
       expect(mockStore.saveRuleSets).toHaveBeenCalled();
+    });
+
+    it("rejects a regex that Chrome does not support without applying", async () => {
+      vi.mocked(mockStore.loadRuleSets).mockResolvedValue([]);
+      vi.mocked(mockStore.loadState).mockResolvedValue("enable");
+      vi.mocked(mockDeclarativeNetRequest.isRegexSupported).mockResolvedValue({
+        isSupported: false,
+        reason: "syntaxError",
+      });
+
+      const importData = {
+        format: "BLOCKoli",
+        version: 1,
+        ruleSets: [
+          {
+            name: "Imported Set",
+            rules: [
+              {
+                action: { type: RuleActionType.BLOCK },
+                condition: { urlFilter: "foo(?=bar)", isRegexFilter: true },
+              },
+            ],
+          },
+        ],
+      };
+
+      const service = createService();
+      const [valid, errors] = await service.import(importData);
+
+      expect(valid).toBe(false);
+      expect(errors).toEqual([
+        {
+          ruleSetNumber: 0,
+          ruleSetField: "rules",
+          ruleNumber: 0,
+          ruleField: "condition.urlFilter",
+          message: "syntaxError",
+        },
+      ]);
+      expect(mockDeclarativeNetRequest.isRegexSupported).toHaveBeenCalledWith({
+        regex: "foo(?=bar)",
+        isCaseSensitive: false,
+      });
+      expect(mockDeclarativeNetRequest.updateDynamicRules).not.toHaveBeenCalled();
+      expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
     });
   });
 });
