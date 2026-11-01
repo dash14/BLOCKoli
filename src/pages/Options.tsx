@@ -120,17 +120,20 @@ const Options: React.FC = () => {
           <BrandIcon marginRight="4px" />
           <Brand as="h1" fontSize={36} />
         </HStack>
-        <NativeSelect.Root size="xs" variant="outline" width={110}>
-          <NativeSelect.Field
-            borderColor="#C4D3AB"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-          >
-            <option value="en">English</option>
-            <option value="ja">日本語 (ja)</option>
-          </NativeSelect.Field>
-          <NativeSelect.Indicator />
-        </NativeSelect.Root>
+        {/* Changing the language would save it without having read the stored one */}
+        {!loadFailed && (
+          <NativeSelect.Root size="xs" variant="outline" width={110}>
+            <NativeSelect.Field
+              borderColor="#C4D3AB"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+            >
+              <option value="en">English</option>
+              <option value="ja">日本語 (ja)</option>
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        )}
       </HStack>
       <Container
         width="930px"

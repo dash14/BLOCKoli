@@ -122,6 +122,7 @@ describe("Options page", () => {
         "Could not load the settings. Close this page and open it again."
       );
     await expect.element(page.getByRole("checkbox")).not.toBeInTheDocument();
+    await expect.element(page.getByRole("combobox")).not.toBeInTheDocument();
     await expect
       .element(page.getByText(/There are no rule sets available/i))
       .not.toBeInTheDocument();

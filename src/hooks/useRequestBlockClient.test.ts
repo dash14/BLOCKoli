@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, onTestFinished } from "vitest";
 import { Rule, RuleActionType } from "@/modules/core/rules";
 import { StoredRuleSets } from "@/modules/rules/stored";
 import logging from "@/modules/utils/logging";
@@ -114,6 +114,7 @@ describe("useRequestBlockClient", () => {
     const logError = vi
       .spyOn(logging.getLogger("client"), "error")
       .mockImplementation(() => {});
+    onTestFinished(() => logError.mockRestore());
     mockSendMessage.mockImplementation(async (request) => {
       if (request.method === "isEnabled") {
         return { type: "response", success: true, result: true };
@@ -128,11 +129,12 @@ describe("useRequestBlockClient", () => {
     });
 
     expect(result.current.loaded).toBe(false);
+    // isEnabled succeeded, but a failed load applies none of the results
+    expect(result.current.enabled).toBe(false);
     expect(logError).toHaveBeenCalledWith(
       "failed to load the initial state",
       "storage error"
     );
-    logError.mockRestore();
   });
 
   it("changeState calls enable when enabled is true", async () => {

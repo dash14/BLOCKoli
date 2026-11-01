@@ -34,9 +34,12 @@ export function useRequestBlockClient() {
 
     (async () => {
       try {
-        setEnabled(await service.isEnabled());
-        setRuleSets(await service.getRuleSets());
+        // Set nothing until every call succeeds, so a failure leaves no partial state.
+        const isEnabled = await service.isEnabled();
+        const storedRuleSets = await service.getRuleSets();
         const lang = await service.getLanguage();
+        setEnabled(isEnabled);
+        setRuleSets(storedRuleSets);
         updateI18nLanguage(lang);
         setLanguageState(lang);
         setLoaded(true);
