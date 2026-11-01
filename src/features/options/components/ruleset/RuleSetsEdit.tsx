@@ -1,4 +1,4 @@
-import { createRef, useEffect, useState } from "react";
+import { createRef } from "react";
 import {
   Accordion,
   Box,
@@ -15,9 +15,7 @@ import { AccordionCustomTrigger } from "@/components/parts/AccordionCustomTrigge
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
 import { RulesEdit } from "@/features/options/components/rule/RulesEdit";
 import { useRuleSetsEdit } from "@/features/options/hooks/useRuleSetsEdit";
-import { useArrayKey } from "@/hooks/useArrayKey";
 import { useI18n } from "@/hooks/useI18n";
-import { push, removeAt } from "@/modules/core/array";
 import { StoredRuleSets } from "@/modules/rules/stored";
 import { RuleSetMenu } from "./RuleSetMenu";
 
@@ -42,52 +40,17 @@ export const RuleSetsEdit: React.FC<Props> = ({
 }) => {
   const i18n = useI18n();
 
-  const [accordionOpenStates, setAccordionOpenStates] = useState<number[][]>(
-    []
-  );
   const {
-    elementKeys,
-    resetElementLength,
-    pushElementKey,
-    removeElementKeyAt,
-  } = useArrayKey(originalRuleSets.length);
-
-  const addRuleSet = () => {
-    addRuleSetInHook();
-    // open new accordion
-    setAccordionOpenStates(push(accordionOpenStates, [0]));
-    // assign id for list rendering
-    pushElementKey();
-  };
-
-  const onRemoveRuleSetAt = (index: number) => {
-    setAccordionOpenStates(removeAt(accordionOpenStates, index));
-    removeElementKeyAt(index);
-  };
-
-  const {
-    ruleSets,
-    addRuleSet: addRuleSetInHook,
+    entries,
+    addRuleSet,
     updateRules,
     removeRuleSet,
     updateRuleSetTitle,
-  } = useRuleSetsEdit(originalRuleSets, onChange, onRemoveRuleSetAt);
-
-  useEffect(() => {
-    if (accordionOpenStates.length === 0 && originalRuleSets.length > 0) {
-      if (originalRuleSets.length === 1) {
-        setAccordionOpenStates([[0]]);
-      } else {
-        setAccordionOpenStates(originalRuleSets.map(() => []));
-      }
-      resetElementLength(originalRuleSets.length);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [originalRuleSets]);
+  } = useRuleSetsEdit(originalRuleSets, onChange);
 
   return (
     <>
-      {ruleSets.length > 0 ? (
+      {entries.length > 0 ? (
         <Heading
           as="h2"
           fontSize={18 + titleFontAdjuster}
@@ -101,18 +64,18 @@ export const RuleSetsEdit: React.FC<Props> = ({
       )}
 
       <SlideTransitionGroup style={listTransitionCss}>
-        {ruleSets.map((ruleSet, ruleSetIndex) => {
+        {entries.map(({ key, ruleSet, open }, ruleSetIndex) => {
           const nodeRef = createRef<HTMLDivElement>();
           return (
             <CSSTransition
-              key={elementKeys[ruleSetIndex]}
+              key={key}
               timeout={250}
               classNames="slide"
               nodeRef={nodeRef}
             >
               <div ref={nodeRef}>
                 <Accordion.Root
-                  defaultValue={accordionOpenStates[ruleSetIndex]?.map(String)}
+                  defaultValue={open ? ["0"] : []}
                   multiple
                 >
                   <Accordion.Item value="0" borderWidth="1px">
