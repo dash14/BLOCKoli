@@ -37,6 +37,7 @@ const Options: React.FC = () => {
 
   const {
     loaded,
+    loadFailed,
     enabled,
     changeState,
     ruleSets,
@@ -89,7 +90,8 @@ const Options: React.FC = () => {
   }
 
   // To prevent flickering when displaying pages,
-  // fade and turn off all transitions until loaded.
+  // fade and turn off all transitions until the first load finishes or fails.
+  const settled = loaded || loadFailed;
   const globalStyle = css`
     .options {
       transition: opacity 0.2s linear;
@@ -104,7 +106,7 @@ const Options: React.FC = () => {
   `;
 
   return (
-    <Box className={`options ${language}${loaded ? "" : " loading"}`}>
+    <Box className={`options ${language}${settled ? "" : " loading"}`}>
       <Global styles={globalStyle} />
       <HStack
         as="header"
@@ -118,17 +120,20 @@ const Options: React.FC = () => {
           <BrandIcon marginRight="4px" />
           <Brand as="h1" fontSize={36} />
         </HStack>
-        <NativeSelect.Root size="xs" variant="outline" width={110}>
-          <NativeSelect.Field
-            borderColor="#C4D3AB"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-          >
-            <option value="en">English</option>
-            <option value="ja">日本語 (ja)</option>
-          </NativeSelect.Field>
-          <NativeSelect.Indicator />
-        </NativeSelect.Root>
+        {/* Changing the language would save it without having read the stored one */}
+        {!loadFailed && (
+          <NativeSelect.Root size="xs" variant="outline" width={110}>
+            <NativeSelect.Field
+              borderColor="#C4D3AB"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+            >
+              <option value="en">English</option>
+              <option value="ja">日本語 (ja)</option>
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        )}
       </HStack>
       <Container
         width="930px"
@@ -138,41 +143,49 @@ const Options: React.FC = () => {
         borderRadius="lg"
         marginY={6}
         padding={8}
-        css={css({ visibility: loaded ? "visible" : "hidden" })}
+        css={css({ visibility: settled ? "visible" : "hidden" })}
       >
         <Heading as="h1" fontSize={28}>
           {i18n["Options"]}
         </Heading>
 
-        <HStack marginY={10}>
-          <Text fontSize={18 + titleFontAdjuster} marginRight={10}>
-            {i18n["EnableRules"]}
+        {loadFailed ? (
+          <Text role="alert" marginTop={10}>
+            {i18n["load_failed"]}
           </Text>
-          <Switch.Root
-            checked={enabled}
-            onCheckedChange={(e) => changeState(e.checked)}
-          >
-            <Switch.HiddenInput />
-            <Switch.Control>
-              <Switch.Thumb />
-            </Switch.Control>
-          </Switch.Root>
-        </HStack>
+        ) : (
+          <>
+            <HStack marginY={10}>
+              <Text fontSize={18 + titleFontAdjuster} marginRight={10}>
+                {i18n["EnableRules"]}
+              </Text>
+              <Switch.Root
+                checked={enabled}
+                onCheckedChange={(e) => changeState(e.checked)}
+              >
+                <Switch.HiddenInput />
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Root>
+            </HStack>
 
-        <RuleSetsEdit
-          ruleSets={ruleSets}
-          titleFontAdjuster={titleFontAdjuster}
-          onChange={updateRuleSets}
-        />
+            <RuleSetsEdit
+              ruleSets={ruleSets}
+              titleFontAdjuster={titleFontAdjuster}
+              onChange={updateRuleSets}
+            />
 
-        <Box as="hr" marginY={6} marginX={0} />
+            <Box as="hr" marginY={6} marginX={0} />
 
-        <ExportImportDialog
-          isEnableExport={ruleSets.length > 0}
-          onExport={onExport}
-          onImport={onImport}
-          i18n={i18n}
-        />
+            <ExportImportDialog
+              isEnableExport={ruleSets.length > 0}
+              onExport={onExport}
+              onImport={onImport}
+              i18n={i18n}
+            />
+          </>
+        )}
       </Container>
 
       <Container

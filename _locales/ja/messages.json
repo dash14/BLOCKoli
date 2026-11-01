@@ -202,6 +202,9 @@
   "initial_setup_message_2": {
     "message": "まず、以下のページからルールを設定してください。"
   },
+  "load_failed": {
+    "message": "設定を読み込めませんでした。この画面を閉じて、もう一度開いてください。"
+  },
 
   "ImportAndExportRules": {
     "message": "ルールのインポートとエクスポート"

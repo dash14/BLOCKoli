@@ -202,6 +202,9 @@
   "initial_setup_message_2": {
     "message": "First, please set up the rules on the page linked below."
   },
+  "load_failed": {
+    "message": "Could not load the settings. Close this page and open it again."
+  },
 
   "ImportAndExportRules": {
     "message": "Import and Export Rules"

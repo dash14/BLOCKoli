@@ -56,6 +56,7 @@ function createMockReturnValue(
 ) {
   return {
     loaded: true,
+    loadFailed: false,
     enabled: true,
     ruleSets: [] as StoredRuleSets,
     language: "en",
@@ -87,6 +88,31 @@ describe("Popup page", () => {
     // VRT screenshot
     await userEvent.unhover(page.getByRole("document"));
     await expect(page.getByTestId("container")).toMatchScreenshot("Popup-empty");
+  });
+
+  test("shows an error when the initial load fails", async () => {
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ loaded: false, loadFailed: true })
+    );
+
+    await renderWithChakra(
+      <div data-testid="container" style={{ width: 360, height: 320 }}>
+        <Popup />
+      </div>
+    );
+
+    await expect
+      .element(page.getByRole("alert"))
+      .toHaveTextContent(
+        "Could not load the settings. Close this page and open it again."
+      );
+    await expect.element(page.getByRole("main")).not.toBeInTheDocument();
+
+    // VRT screenshot
+    await userEvent.unhover(page.getByRole("document"));
+    await expect(page.getByTestId("container")).toMatchScreenshot(
+      "Popup-load-failed"
+    );
   });
 
   test("renders with rule sets", async () => {

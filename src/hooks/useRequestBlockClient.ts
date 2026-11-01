@@ -12,6 +12,7 @@ const log = logging.getLogger("client");
 
 export function useRequestBlockClient() {
   const [loaded, setLoaded] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [ruleSets, setRuleSets] = useState<StoredRuleSets>([]);
   const [language, setLanguageState] = useState<string>("en");
@@ -32,12 +33,20 @@ export function useRequestBlockClient() {
     service.addEventListener("updateRuleSets", setRuleSets);
 
     (async () => {
-      setEnabled(await service.isEnabled());
-      setRuleSets(await service.getRuleSets());
-      const lang = await service.getLanguage();
-      updateI18nLanguage(lang);
-      setLanguageState(lang);
-      setLoaded(true);
+      try {
+        // Set nothing until every call succeeds, so a failure leaves no partial state.
+        const isEnabled = await service.isEnabled();
+        const storedRuleSets = await service.getRuleSets();
+        const lang = await service.getLanguage();
+        setEnabled(isEnabled);
+        setRuleSets(storedRuleSets);
+        updateI18nLanguage(lang);
+        setLanguageState(lang);
+        setLoaded(true);
+      } catch (error) {
+        log.error("failed to load the initial state", error);
+        setLoadFailed(true);
+      }
     })();
 
     return () => {
@@ -89,6 +98,7 @@ export function useRequestBlockClient() {
 
   return {
     loaded,
+    loadFailed,
     enabled,
     ruleSets,
     language,

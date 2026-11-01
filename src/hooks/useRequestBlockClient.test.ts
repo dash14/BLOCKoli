@@ -1,8 +1,9 @@
 import { StrictMode } from "react";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, onTestFinished } from "vitest";
 import { Rule, RuleActionType } from "@/modules/core/rules";
 import { StoredRuleSets } from "@/modules/rules/stored";
+import logging from "@/modules/utils/logging";
 import { useRequestBlockClient } from "./useRequestBlockClient";
 
 // Mock chrome.runtime API
@@ -73,6 +74,7 @@ describe("useRequestBlockClient", () => {
     const { result } = renderHook(() => useRequestBlockClient());
 
     expect(result.current.loaded).toBe(false);
+    expect(result.current.loadFailed).toBe(false);
     expect(result.current.enabled).toBe(false);
     expect(result.current.ruleSets).toStrictEqual([]);
     expect(result.current.language).toBe("en");
@@ -105,6 +107,34 @@ describe("useRequestBlockClient", () => {
     expect(result.current.enabled).toBe(true);
     expect(result.current.ruleSets).toStrictEqual([{ name: "Test Set", rules: [] }]);
     expect(result.current.language).toBe("ja");
+    expect(result.current.loadFailed).toBe(false);
+  });
+
+  it("reports a failed initial load instead of staying in loading", async () => {
+    const logError = vi
+      .spyOn(logging.getLogger("client"), "error")
+      .mockImplementation(() => {});
+    onTestFinished(() => logError.mockRestore());
+    mockSendMessage.mockImplementation(async (request) => {
+      if (request.method === "isEnabled") {
+        return { type: "response", success: true, result: true };
+      }
+      return { type: "response", success: false, error: "storage error" };
+    });
+
+    const { result } = renderHook(() => useRequestBlockClient());
+
+    await waitFor(() => {
+      expect(result.current.loadFailed).toBe(true);
+    });
+
+    expect(result.current.loaded).toBe(false);
+    // isEnabled succeeded, but a failed load applies none of the results
+    expect(result.current.enabled).toBe(false);
+    expect(logError).toHaveBeenCalledWith(
+      "failed to load the initial state",
+      "storage error"
+    );
   });
 
   it("changeState calls enable when enabled is true", async () => {
