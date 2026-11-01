@@ -1,3 +1,5 @@
+name: blockoli
+
 services:
   test:
     build:
