@@ -162,9 +162,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  rollup@<2.80.0: ^4.0.0
-
 importers:
 
   .:
