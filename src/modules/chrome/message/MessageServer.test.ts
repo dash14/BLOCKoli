@@ -166,6 +166,17 @@ describe("MessageServer", () => {
       expect(mockLogError).not.toHaveBeenCalled();
     });
 
+    it("ignores the missing-receiver error when it is not an Error object", async () => {
+      mockSendMessage.mockRejectedValue(
+        "Could not establish connection. Receiving end does not exist."
+      );
+      const server = new MessageServer<TestService>("testService");
+
+      await expect(server.emit("onDelete", { id: 1 })).resolves.toBeUndefined();
+
+      expect(mockLogError).not.toHaveBeenCalled();
+    });
+
     it("resolves and logs other broadcast failures", async () => {
       const error = new Error("Extension context invalidated.");
       mockSendMessage.mockRejectedValue(error);
