@@ -72,14 +72,10 @@ export const MatchedRulesTable: React.FC<Props> = ({
                   {`${rule.rule.ruleSetName} #${rule.rule.number}`}
                 </Table.Cell>
                 <Table.Cell width="20px" paddingLeft="6px" paddingRight="10px">
-                  {rule.rule ? (
-                    rule.rule.isBlocking ? (
-                      <Icon as={LuBan} color="red" />
-                    ) : (
-                      <Icon as={LuCircleCheckBig} color="green" />
-                    )
+                  {rule.rule.isBlocking ? (
+                    <Icon as={LuBan} color="red" />
                   ) : (
-                    <Icon as={LuCircleHelp} color="blue.500" />
+                    <Icon as={LuCircleCheckBig} color="green" />
                   )}
                 </Table.Cell>
               </Table.Row>

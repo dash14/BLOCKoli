@@ -57,7 +57,39 @@ function TestWrapperWithNoRuleSetNumber() {
   );
 }
 
+function TestWrapperWithNoRuleField() {
+  const i18n = useI18n();
+  const ref = useRef<ImportFailedDialogHandle>(null);
+  return (
+    <>
+      <button
+        onClick={() =>
+          ref.current?.open([
+            {
+              message: "must have one or more valid condition",
+              ruleSetNumber: 1,
+              ruleSetField: "rules",
+              ruleNumber: 2,
+            },
+          ])
+        }
+      >
+        Open
+      </button>
+      <ImportFailedDialog ref={ref} i18n={i18n} />
+    </>
+  );
+}
+
 describe("ImportFailedDialog component", () => {
+  test("points at the rule when the error names no rule field", async () => {
+    await renderWithChakra(<TestWrapperWithNoRuleField />);
+    await page.getByRole("button", { name: "Open" }).click();
+    await expect
+      .element(page.getByText("(ruleSets[1].rules[2])", { exact: false }))
+      .toBeInTheDocument();
+  });
+
   test("renders dialog with errors", async () => {
     await renderWithChakra(<TestWrapper />);
     await page.getByRole("button", { name: "Open" }).click();

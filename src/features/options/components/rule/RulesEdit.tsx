@@ -7,7 +7,6 @@ import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGro
 import { useRulesEdit } from "@/features/options/hooks/useRulesEdit";
 import { useI18n } from "@/hooks/useI18n";
 import { RULE_ID_EDITING, StoredRule } from "@/modules/rules/stored";
-import { newRuleTemplate } from "@/modules/rules/template";
 import { RuleContainer } from "./RuleContainer";
 import { RuleEdit } from "./RuleEdit";
 
@@ -62,7 +61,7 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
             >
               <div ref={nodeRef}>
                 <RuleEdit
-                  rule={rule ?? newRuleTemplate}
+                  rule={rule}
                   isRemoveEnabled={
                     rule.id !== RULE_ID_EDITING &&
                     rules.filter((r) => r.id !== RULE_ID_EDITING).length > 1

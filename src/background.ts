@@ -1,4 +1,4 @@
-/* v8 ignore file -- @preserve */
+/* v8 ignore file -- @preserve: only hands Chrome events to Main */
 import { Main } from "./modules/worker/Main";
 
 const controller = new Main();

@@ -69,6 +69,12 @@ describe("useI18n", () => {
       expect(i18n["nonExistentKey"]).toBe("");
     });
 
+    it("returns empty string for non-existent key in Japanese", () => {
+      updateI18nLanguage("ja");
+      const i18n = useI18n();
+      expect(i18n["nonExistentKey"]).toBe("");
+    });
+
     it("uses chrome.i18n.getMessage when language is null and chrome.i18n is available", () => {
       const mockGetMessage = vi.fn().mockReturnValue("Mocked Message");
       vi.stubGlobal("chrome", {

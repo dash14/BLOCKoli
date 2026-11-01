@@ -31,14 +31,10 @@ export function useRuleSetsEdit(
     const newRuleSet = cloneDeep(newRuleSetTemplate);
     const nameWithNumPattern = new RegExp(`^${newRuleSet.name} (\\d+)`);
 
-    const maxNumber =
-      ruleSets
-        .map((ruleSet) => {
-          const result = nameWithNumPattern.exec(ruleSet.name);
-          return result ? parseInt(result[1], 10) : null;
-        })
-        .filter(Boolean)
-        .reduce((max, value) => Math.max(max ?? 0, value ?? 0), 0) ?? 0;
+    const maxNumber = ruleSets.reduce((max, ruleSet) => {
+      const result = nameWithNumPattern.exec(ruleSet.name);
+      return result ? Math.max(max, parseInt(result[1], 10)) : max;
+    }, 0);
 
     newRuleSet.name = `${newRuleSet.name} ${maxNumber + 1}`;
 

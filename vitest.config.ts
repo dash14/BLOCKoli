@@ -62,8 +62,17 @@ export default defineConfig({
       },
     ],
     coverage: {
-      reporter: ["text", "json-summary", "json", "html"],
+      reporter: [
+        "text",
+        ["text", { file: "summary.txt" }],
+        "json-summary",
+        "json",
+        "html",
+      ],
       include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/test/**"],
+      // Code left untested on purpose carries a v8 ignore comment saying why.
+      thresholds: { 100: true },
     },
   },
 });

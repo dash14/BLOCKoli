@@ -5,8 +5,11 @@ import type {
   ChromeI18nApi,
   ChromeRuntimeApi,
 } from "@/modules/chrome/api";
+import type { Rule as ApiRule } from "@/modules/chrome/api";
 import { RuleActionType } from "@/modules/core/rules";
+import { RequestMethod, ResourceType } from "@/modules/core/rules";
 import type { EventEmitter } from "@/modules/core/service";
+import { getReservedRules } from "@/modules/rules/reserved";
 import type { StoredRuleSets } from "@/modules/rules/stored";
 import { RULE_ID_UNSAVED } from "@/modules/rules/stored";
 import type * as RequestBlock from "@/modules/services/RequestBlockService";
@@ -475,6 +478,98 @@ describe("RequestBlockServiceImpl", () => {
       const result = await service.getMatchedRules();
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe("updateRuleSets diff against the current dynamic rules", () => {
+    const ruleSets: StoredRuleSets = [
+      {
+        name: "Test Set",
+        rules: [
+          {
+            id: 50,
+            action: { type: RuleActionType.BLOCK },
+            condition: {
+              requestDomains: ["a.example"],
+              initiatorDomains: ["b.example"],
+              urlFilter: "ads",
+              requestMethods: [RequestMethod.GET],
+              resourceTypes: [ResourceType.SCRIPT],
+            },
+          },
+        ],
+      },
+    ];
+    // What convertToApiRule makes of the rule above.
+    const applied: ApiRule = {
+      id: 50,
+      action: { type: RuleActionType.BLOCK },
+      condition: {
+        requestDomains: ["a.example"],
+        initiatorDomains: ["b.example"],
+        urlFilter: "ads",
+        requestMethods: [RequestMethod.GET],
+        resourceTypes: [ResourceType.SCRIPT],
+      },
+    };
+
+    const updateWith = async (current: ApiRule) => {
+      vi.mocked(mockStore.loadState).mockResolvedValue("enable");
+      vi.mocked(mockDeclarativeNetRequest.getDynamicRules).mockResolvedValue([
+        ...getReservedRules("test-extension-id"),
+        current,
+      ]);
+      await createService().updateRuleSets(structuredClone(ruleSets));
+      return vi.mocked(mockDeclarativeNetRequest.updateDynamicRules).mock
+        .calls[0][0];
+    };
+
+    it("leaves an unchanged rule alone", async () => {
+      expect(await updateWith(applied)).toEqual({
+        removeRuleIds: [],
+        addRules: [],
+      });
+    });
+
+    it.each<[string, (rule: ApiRule) => void]>([
+      ["action", (r) => (r.action = { type: RuleActionType.ALLOW })],
+      ["requestDomains", (r) => (r.condition.requestDomains = ["c.example"])],
+      [
+        "initiatorDomains",
+        (r) => (r.condition.initiatorDomains = ["c.example"]),
+      ],
+      ["urlFilter", (r) => (r.condition.urlFilter = "tracker")],
+      ["regexFilter", (r) => (r.condition.regexFilter = "^https://")],
+      [
+        "requestMethods",
+        (r) => (r.condition.requestMethods = [RequestMethod.POST]),
+      ],
+      [
+        "resourceTypes",
+        (r) => (r.condition.resourceTypes = [ResourceType.IMAGE]),
+      ],
+      ["priority", (r) => (r.priority = 2)],
+    ])("replaces a rule whose %s differs", async (_, change) => {
+      const current = structuredClone(applied);
+      change(current);
+
+      expect(await updateWith(current)).toEqual({
+        removeRuleIds: [50],
+        addRules: [applied],
+      });
+    });
+  });
+
+  describe("getMatchedRules for rules no longer stored", () => {
+    it("drops a matched rule whose id is not in any rule set", async () => {
+      vi.mocked(mockStore.loadRuleSets).mockResolvedValue([]);
+      vi.mocked(
+        mockDeclarativeNetRequest.getMatchedRulesInActiveTab
+      ).mockResolvedValue([
+        { rule: { ruleId: 99 }, timeStamp: 1234567890, tabId: 1 },
+      ]);
+
+      expect(await createService().getMatchedRules()).toEqual([]);
     });
   });
 

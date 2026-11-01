@@ -1,4 +1,4 @@
-/* v8 ignore file -- @preserve */
+/* v8 ignore file -- @preserve: wires the real Chrome APIs into the tested service */
 import { ChromeApiFactory } from "@/modules/chrome/factory";
 import { MessageServer } from "@/modules/chrome/message/MessageServer";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
