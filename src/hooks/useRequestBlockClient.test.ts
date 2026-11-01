@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { useRequestBlockClient } from "./useRequestBlockClient";
@@ -24,7 +25,7 @@ vi.mock("./useI18n", () => ({
 
 describe("useRequestBlockClient", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     // Default mock responses
     mockSendMessage.mockImplementation(async (request) => {
       if (request.method === "isEnabled") {
@@ -306,6 +307,75 @@ describe("useRequestBlockClient", () => {
     unmount();
 
     expect(mockRemoveListener).toHaveBeenCalled();
+  });
+
+  it("keeps a single message listener across re-renders", async () => {
+    const { result, rerender, unmount } = renderHook(() =>
+      useRequestBlockClient()
+    );
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true);
+    });
+    rerender();
+    rerender();
+
+    expect(mockAddListener).toHaveBeenCalledTimes(1);
+    const listener = mockAddListener.mock.calls[0][0];
+
+    unmount();
+
+    expect(mockRemoveListener).toHaveBeenCalledTimes(1);
+    expect(mockRemoveListener).toHaveBeenCalledWith(listener);
+  });
+
+  it("keeps one message listener when StrictMode re-runs the effect", async () => {
+    const { result, unmount } = renderHook(() => useRequestBlockClient(), {
+      wrapper: StrictMode,
+    });
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true);
+    });
+
+    const added = mockAddListener.mock.calls.map(([listener]) => listener);
+    const removed = mockRemoveListener.mock.calls.map(([listener]) => listener);
+    expect(added.filter((listener) => !removed.includes(listener))).toHaveLength(1);
+
+    unmount();
+
+    const removedAfter = mockRemoveListener.mock.calls.map(([listener]) => listener);
+    expect(added.filter((listener) => !removedAfter.includes(listener))).toHaveLength(0);
+  });
+
+  it("updates rule sets when updateRuleSets event is received", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let capturedListener: any;
+    mockAddListener.mockImplementation((listener) => {
+      capturedListener = listener;
+    });
+
+    const { result } = renderHook(() => useRequestBlockClient());
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true);
+    });
+
+    const ruleSets = [{ name: "Broadcast Set", rules: [] }];
+    act(() => {
+      capturedListener(
+        {
+          type: "broadcast",
+          service: "RequestBlock",
+          event: "updateRuleSets",
+          message: ruleSets,
+        },
+        {},
+        vi.fn()
+      );
+    });
+
+    expect(result.current.ruleSets).toStrictEqual(ruleSets);
   });
 
   it("updates enabled state when changeState event is received", async () => {

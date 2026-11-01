@@ -16,18 +16,20 @@ export function useRequestBlockClient() {
   const [ruleSets, setRuleSets] = useState<StoredRuleSets>([]);
   const [language, setLanguageState] = useState<string>("en");
 
-  const service = new MessageProxyFactory().create<RequestBlock.Service>(
-    RequestBlock.ServiceId
+  // Keep one proxy per mount so the effect adds and removes a single onMessage listener.
+  const [service] = useState(() =>
+    new MessageProxyFactory().create<RequestBlock.Service>(
+      RequestBlock.ServiceId
+    )
   );
-
-  service.addEventListener("changeState", (state) =>
-    setEnabled(state === "enable")
-  );
-
-  service.addEventListener("updateRuleSets", setRuleSets);
 
   useEffect(function () {
     log.debug("initialize");
+
+    service.addEventListener("changeState", (state) =>
+      setEnabled(state === "enable")
+    );
+    service.addEventListener("updateRuleSets", setRuleSets);
 
     (async () => {
       setEnabled(await service.isEnabled());
@@ -42,8 +44,7 @@ export function useRequestBlockClient() {
       log.debug("destroy");
       service.removeAllEventListeners();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [service]);
 
   const changeState = async (enabled: boolean) => {
     if (enabled) {
