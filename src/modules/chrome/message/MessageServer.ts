@@ -1,10 +1,16 @@
 import { EventEmitter, EventsOf, ServiceBase } from "@/modules/core/service";
+import logging from "@/modules/utils/logging";
 import {
   Message,
   BroadcastMessage,
   RequestMessage,
   ResponseMessage,
 } from "./types";
+
+const log = logging.getLogger("message");
+
+// Chrome rejects a broadcast with this when neither the popup nor the options page is open.
+const NO_RECEIVER_ERROR = "Receiving end does not exist.";
 
 export class MessageServer<T extends ServiceBase>
   implements EventEmitter<EventsOf<T>>
@@ -35,7 +41,12 @@ export class MessageServer<T extends ServiceBase>
       event,
       message,
     };
-    await chrome.runtime.sendMessage(broadcast);
+    try {
+      await chrome.runtime.sendMessage(broadcast);
+    } catch (error: unknown) {
+      if (String(error).includes(NO_RECEIVER_ERROR)) return;
+      log.error("Failed to broadcast", event, error);
+    }
   }
 
   private buildMessageListener(serviceObject: unknown) {

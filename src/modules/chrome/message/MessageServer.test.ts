@@ -4,6 +4,13 @@ import { ServiceBase } from "@/modules/core/service";
 import { MessageServer } from "./MessageServer";
 import type { ResponseMessage } from "./types";
 
+const { mockLogError } = vi.hoisted(() => ({ mockLogError: vi.fn() }));
+vi.mock("@/modules/utils/logging", () => ({
+  default: {
+    getLogger: () => ({ error: mockLogError }),
+  },
+}));
+
 interface TestEvents extends Events {
   onUpdate: { id: number; name: string };
   onDelete: { id: number };
@@ -71,6 +78,7 @@ describe("MessageServer", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    mockLogError.mockReset();
   });
 
   describe("constructor", () => {
@@ -144,6 +152,32 @@ describe("MessageServer", () => {
         event: "onDelete",
         message: { id: 42 },
       });
+    });
+    it("resolves without logging when no page is open to receive the broadcast", async () => {
+      mockSendMessage.mockRejectedValue(
+        new Error(
+          "Could not establish connection. Receiving end does not exist."
+        )
+      );
+      const server = new MessageServer<TestService>("testService");
+
+      await expect(server.emit("onDelete", { id: 1 })).resolves.toBeUndefined();
+
+      expect(mockLogError).not.toHaveBeenCalled();
+    });
+
+    it("resolves and logs other broadcast failures", async () => {
+      const error = new Error("Extension context invalidated.");
+      mockSendMessage.mockRejectedValue(error);
+      const server = new MessageServer<TestService>("testService");
+
+      await expect(server.emit("onDelete", { id: 1 })).resolves.toBeUndefined();
+
+      expect(mockLogError).toHaveBeenCalledWith(
+        "Failed to broadcast",
+        "onDelete",
+        error
+      );
     });
   });
 
