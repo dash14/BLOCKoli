@@ -1,6 +1,6 @@
 minimumReleaseAge: 20160 # 14 days
 minimumReleaseAgeExclude:
-  - happy-dom@21.0.4 # Security fix, released less than 14 days ago
+  - happy-dom@21.0.4 # Renovate security update
 minimumReleaseAgeExcludePrune: true
 engineStrict: true
 trustPolicy: no-downgrade
