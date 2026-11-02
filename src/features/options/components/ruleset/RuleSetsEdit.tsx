@@ -81,6 +81,8 @@ export const RuleSetsEdit: React.FC<Props> = ({
                   <Accordion.Item value="0" borderWidth="1px">
                     <AccordionCustomTrigger>
                       <EditableTitle
+                        // Remount to show a name changed in another window
+                        key={ruleSet.name}
                         defaultValue={ruleSet.name}
                         cursor="pointer"
                         flex="1"

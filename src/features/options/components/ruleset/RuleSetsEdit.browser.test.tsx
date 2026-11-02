@@ -276,6 +276,36 @@ describe("RuleSetsEdit component", () => {
     });
   });
 
+  describe("Rule set renamed elsewhere", () => {
+    function WithExternalRename() {
+      const [ruleSets, setRuleSets] = useState(singleRuleSet);
+      return (
+        <>
+          <button
+            onClick={() => setRuleSets([{ ...ruleSets[0], name: "Renamed" }])}
+          >
+            external rename
+          </button>
+          <RuleSetsEdit
+            ruleSets={ruleSets}
+            titleFontAdjuster={0}
+            onChange={setRuleSets}
+          />
+        </>
+      );
+    }
+
+    test("shows the new name", async () => {
+      await renderWithChakra(<WithExternalRename />);
+      await expect.element(page.getByText("My Rules")).toBeInTheDocument();
+
+      await page.getByRole("button", { name: "external rename" }).click();
+
+      await expect.element(page.getByText("Renamed")).toBeInTheDocument();
+      await expect.element(page.getByText("My Rules")).not.toBeInTheDocument();
+    });
+  });
+
   describe("Removing rule set", () => {
     test("removes rule set via menu", async () => {
       const onChangeCapture = vi.fn();
