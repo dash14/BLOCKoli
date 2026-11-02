@@ -592,7 +592,29 @@ describe("useRuleEdit", () => {
         expect(result.current.validationErrors.urlFilter).toEqual([
           "syntaxError",
         ]);
-        expect(result.current.isEditing).toBe(false);
+      });
+
+      test("shows the errors of a new initialRule", async () => {
+        const resolve = holdRegexChecks();
+        const { result, rerender } = renderHook(
+          ({ rule }) => useRuleEdit(rule, vi.fn(), vi.fn(), vi.fn()),
+          { initialProps: { rule: regexRule } }
+        );
+        await resolve("a");
+        expect(result.current.validationErrors.urlFilter).toEqual([]);
+
+        rerender({
+          rule: {
+            ...regexRule,
+            condition: { ...regexRule.condition, urlFilter: "b" },
+          },
+        });
+        await resolve("b");
+
+        expect(result.current.validationErrors.urlFilter).toEqual([
+          "syntaxError",
+        ]);
+        expect(result.current.isEditing).toBe(true);
       });
 
       test("ignores an earlier input whose check finishes later", async () => {
@@ -639,6 +661,25 @@ describe("useRuleEdit", () => {
         expect(onChange).not.toHaveBeenCalled();
         expect(result.current.isEditing).toBe(true);
         expect(result.current.isValid).toBe(false);
+      });
+
+      test("does not save a rule removed while its check runs", async () => {
+        const resolve = holdRegexChecks();
+        const onChange = vi.fn();
+        const { result, unmount } = renderHook(() =>
+          useRuleEdit(regexRule, onChange, vi.fn(), vi.fn())
+        );
+        await resolve("a");
+
+        let saving!: Promise<void>;
+        act(() => {
+          saving = result.current.save();
+        });
+        unmount();
+        await resolve("a");
+        await saving;
+
+        expect(onChange).not.toHaveBeenCalled();
       });
     });
   });

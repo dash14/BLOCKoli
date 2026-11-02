@@ -46,14 +46,21 @@ export function useRuleEdit(
   useEffect(() => {
     setRuleObject(initialRule);
     // For incomplete data, enter edit mode.
-    validateLatest(initialRule).then((result) => {
-      if (!result) return;
-      if (!result.valid) {
+    validate(initialRule).then((valid) => {
+      if (valid === false) {
         setIsEditing(true);
       }
-      setIsValid(result.valid);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialRule]);
+
+  // Unmounting drops a running check, so a pending save() skips onChange
+  useEffect(
+    () => () => {
+      latestValidation.current++;
+    },
+    []
+  );
 
   async function save() {
     // isValid may still be for an earlier input
@@ -127,7 +134,8 @@ export function useRuleEdit(
 
   async function validate(newRule: Rule) {
     const result = await validateLatest(newRule);
-    if (!result) return false;
+    // Undefined when a newer check has started
+    if (!result) return undefined;
     const errors: ValidationErrors = {
       requestDomains: [],
       initiatorDomains: [],
