@@ -62,7 +62,7 @@ export function useRuleSetsEdit(
 
   function updateRules(rules: StoredRule[], ruleSetIndex: number) {
     if (rules.length === 0) {
-      // Its first rule was canceled, or its last saved rule was removed
+      // A canceled first rule, or a saved set's last rule (not offered on the page)
       removeRuleSet(ruleSetIndex);
     } else {
       replaceRuleSet(ruleSetIndex, { ...entries[ruleSetIndex].ruleSet, rules });

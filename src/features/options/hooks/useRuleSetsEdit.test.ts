@@ -148,9 +148,8 @@ describe("useRuleSetsEdit", () => {
 
     test("removes a new rule set without calling onChange when its first rule is canceled", () => {
       const onChange = vi.fn();
-      const { result } = renderHook(() =>
-        useRuleSetsEdit([sampleRuleSets[0]], onChange)
-      );
+      const original = [sampleRuleSets[0]];
+      const { result } = renderHook(() => useRuleSetsEdit(original, onChange));
 
       act(() => {
         result.current.addRuleSet();
