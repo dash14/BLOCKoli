@@ -34,6 +34,8 @@ describe("ChromeDeclarativeNetRequestApiImpl", () => {
         getDynamicRules: mockGetDynamicRules,
         getMatchedRules: mockGetMatchedRules,
         isRegexSupported: mockIsRegexSupported,
+        MAX_NUMBER_OF_DYNAMIC_RULES: 30000,
+        MAX_NUMBER_OF_REGEX_RULES: 1000,
       },
       tabs: {
         query: mockTabsQuery,
@@ -197,6 +199,17 @@ describe("ChromeDeclarativeNetRequestApiImpl", () => {
 
       expect(mockGetMatchedRules).toHaveBeenCalledWith({ tabId: 1 });
       expect(result).toEqual([]);
+    });
+  });
+
+  describe("getRuleLimits", () => {
+    it("returns the limits Chrome defines for dynamic rules", () => {
+      const api = new ChromeDeclarativeNetRequestApiImpl();
+
+      expect(api.getRuleLimits()).toEqual({
+        maxDynamicRules: 30000,
+        maxRegexRules: 1000,
+      });
     });
   });
 

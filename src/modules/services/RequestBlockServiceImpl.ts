@@ -15,6 +15,7 @@ import { MatchedRule, RulePointer } from "@/modules/rules/matched";
 import { getReservedRules } from "@/modules/rules/reserved";
 import { toRuleList, walkRules } from "@/modules/rules/rulesets";
 import {
+  RULE_ID_EDITING,
   RULE_ID_UNSAVED,
   StoredRule,
   StoredRuleSets,
@@ -117,6 +118,9 @@ export class RequestBlockServiceImpl
       return ruleSets;
     }
 
+    // Chrome would reject the whole update, so refuse to save even while disabled
+    this.checkRuleLimits(ruleSets);
+
     // Assign ID to new rules
     await this.assignRuleId(ruleSets);
 
@@ -132,6 +136,31 @@ export class RequestBlockServiceImpl
     void this.emitter.emit("updateRuleSets", ruleSets);
 
     return ruleSets;
+  }
+
+  private checkRuleLimits(ruleSets: StoredRuleSets): void {
+    const { maxDynamicRules, maxRegexRules } =
+      this.declarativeNetRequest.getRuleLimits();
+    const maxRules =
+      maxDynamicRules - getReservedRules(this.runtime.getId()).length;
+
+    const rules = ruleSets
+      .flatMap((ruleSet) => ruleSet.rules)
+      .filter((rule) => rule.id !== RULE_ID_EDITING);
+    if (rules.length > maxRules) {
+      throw new Error(
+        `Too many rules: ${rules.length}, but at most ${maxRules} can be saved`
+      );
+    }
+
+    const regexRules = rules.filter(
+      ({ condition }) => condition.isRegexFilter && condition.urlFilter
+    );
+    if (regexRules.length > maxRegexRules) {
+      throw new Error(
+        `Too many regex rules: ${regexRules.length}, but at most ${maxRegexRules} can be saved`
+      );
+    }
   }
 
   private async applyRuleSets(ruleSets: StoredRuleSets): Promise<void> {

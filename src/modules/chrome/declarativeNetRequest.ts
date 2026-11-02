@@ -5,6 +5,7 @@ import {
   MatchedRuleInfo,
   RegexOptions,
   Rule,
+  RuleLimits,
   UpdateRuleOptions,
 } from "./api";
 
@@ -62,5 +63,12 @@ export class ChromeDeclarativeNetRequestApiImpl
       ...options,
       requireCapturing: false,
     });
+  }
+
+  getRuleLimits(): RuleLimits {
+    return {
+      maxDynamicRules: chrome.declarativeNetRequest.MAX_NUMBER_OF_DYNAMIC_RULES,
+      maxRegexRules: chrome.declarativeNetRequest.MAX_NUMBER_OF_REGEX_RULES,
+    };
   }
 }
