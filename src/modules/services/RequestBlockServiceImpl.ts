@@ -15,7 +15,6 @@ import { MatchedRule, RulePointer } from "@/modules/rules/matched";
 import { getReservedRules } from "@/modules/rules/reserved";
 import { toRuleList, walkRules } from "@/modules/rules/rulesets";
 import {
-  RULE_ID_EDITING,
   RULE_ID_UNSAVED,
   StoredRule,
   StoredRuleSets,
@@ -144,12 +143,10 @@ export class RequestBlockServiceImpl
     const maxRules =
       maxDynamicRules - getReservedRules(this.runtime.getId()).length;
 
-    const rules = ruleSets
-      .flatMap((ruleSet) => ruleSet.rules)
-      .filter((rule) => rule.id !== RULE_ID_EDITING);
+    const rules = ruleSets.flatMap((ruleSet) => ruleSet.rules);
     if (rules.length > maxRules) {
       throw new Error(
-        `Too many rules: ${rules.length}, but at most ${maxRules} can be saved`
+        `Too many rules: ${rules.length}, but Chrome allows at most ${maxRules}`
       );
     }
 
@@ -158,7 +155,7 @@ export class RequestBlockServiceImpl
     );
     if (regexRules.length > maxRegexRules) {
       throw new Error(
-        `Too many regex rules: ${regexRules.length}, but at most ${maxRegexRules} can be saved`
+        `Too many regex rules: ${regexRules.length}, but Chrome allows at most ${maxRegexRules}`
       );
     }
   }
@@ -231,6 +228,7 @@ export class RequestBlockServiceImpl
     log.info("Activate");
     // Apply rules
     const ruleSets = await this.store.loadRuleSets();
+    this.checkRuleLimits(ruleSets);
     await this.applyRuleSets(ruleSets);
 
     // Update icon

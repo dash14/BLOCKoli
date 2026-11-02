@@ -11,7 +11,7 @@ import { RequestMethod, ResourceType } from "@/modules/core/rules";
 import type { EventEmitter } from "@/modules/core/service";
 import { getReservedRules } from "@/modules/rules/reserved";
 import type { StoredRuleSets } from "@/modules/rules/stored";
-import { RULE_ID_EDITING, RULE_ID_UNSAVED } from "@/modules/rules/stored";
+import { RULE_ID_UNSAVED } from "@/modules/rules/stored";
 import type * as RequestBlock from "@/modules/services/RequestBlockService";
 import type { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import { RequestBlockServiceImpl } from "./RequestBlockServiceImpl";
@@ -641,7 +641,7 @@ describe("RequestBlockServiceImpl", () => {
       ];
 
       await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
-        "Too many rules: 3, but at most 2 can be saved"
+        "Too many rules: 3, but Chrome allows at most 2"
       );
       expect(mockStore.saveNextRuleId).not.toHaveBeenCalled();
       expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
@@ -651,20 +651,16 @@ describe("RequestBlockServiceImpl", () => {
       const ruleSets = [{ name: "a", rules: [rule(11, regex), rule(12, regex)] }];
 
       await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
-        "Too many regex rules: 2, but at most 1 can be saved"
+        "Too many regex rules: 2, but Chrome allows at most 1"
       );
       expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
     });
 
-    it("saves rules up to the limits, not counting a rule being edited", async () => {
+    it("saves rules up to the limits", async () => {
       const ruleSets = [
         {
           name: "a",
-          rules: [
-            rule(11, regex),
-            rule(12, { isRegexFilter: true }),
-            rule(RULE_ID_EDITING, regex),
-          ],
+          rules: [rule(11, regex), rule(12, { isRegexFilter: true })],
         },
       ];
 
@@ -672,9 +668,21 @@ describe("RequestBlockServiceImpl", () => {
 
       expect(mockStore.saveRuleSets).toHaveBeenCalledWith(ruleSets);
     });
+
+    it("refuses to enable when stored rules are over the limit", async () => {
+      vi.mocked(mockStore.loadRuleSets).mockResolvedValue([
+        { name: "a", rules: [rule(11), rule(12), rule(13)] },
+      ]);
+
+      await expect(createService().enable()).rejects.toThrow(
+        "Too many rules: 3, but Chrome allows at most 2"
+      );
+      expect(mockDeclarativeNetRequest.updateDynamicRules).not.toHaveBeenCalled();
+      expect(mockStore.saveState).not.toHaveBeenCalled();
+    });
   });
 
-  describe("getMatchedRules for rules no longer stored", () => {
+describe("getMatchedRules for rules no longer stored", () => {
     it("drops a matched rule whose id is not in any rule set", async () => {
       vi.mocked(mockStore.loadRuleSets).mockResolvedValue([]);
       vi.mocked(
