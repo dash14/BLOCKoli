@@ -28,7 +28,9 @@ export class MessageServer<T extends ServiceBase>
     chrome.runtime.onMessage.addListener(
       this.buildMessageListener(serviceObject)
     );
-    serviceObject.start();
+    serviceObject.start().catch((error: unknown) => {
+      log.error("Failed to start the service", error);
+    });
   }
 
   public async emit(

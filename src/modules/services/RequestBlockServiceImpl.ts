@@ -63,8 +63,8 @@ export class RequestBlockServiceImpl
     this.i18n = i18n;
   }
 
-  // Runs state changes one at a time: each reads stored state and Chrome's dynamic rules
-  // before writing them back, so overlapping calls could add the same rule ID twice.
+  // Runs state changes one at a time, since each reads state before writing it back.
+  // Queued tasks call the *Now methods; calling a queued method from one would deadlock.
   private queue: Promise<unknown> = Promise.resolve();
 
   private serialize<T>(task: () => Promise<T>): Promise<T> {
