@@ -40,6 +40,7 @@ describe("performImportCommand", () => {
 
     const storedRuleSets: StoredRuleSets = [
       {
+        id: "stored-1",
         name: "ruleset #1",
         rules: [
           {
@@ -54,6 +55,7 @@ describe("performImportCommand", () => {
         ],
       },
       {
+        id: "stored-2",
         name: "ruleset #2",
         rules: [
           {
@@ -75,7 +77,8 @@ describe("performImportCommand", () => {
     expect(errors).toStrictEqual([]);
     expect(ruleSets).toStrictEqual([
       {
-        // replaced
+        // replaced, keeping its ID
+        id: "stored-1",
         name: "ruleset #1",
         rules: [
           {
@@ -87,6 +90,7 @@ describe("performImportCommand", () => {
       },
       {
         // preserved
+        id: "stored-2",
         name: "ruleset #2",
         rules: [
           {
@@ -97,7 +101,8 @@ describe("performImportCommand", () => {
         ],
       },
       {
-        // add
+        // add, with a new ID
+        id: expect.any(String),
         name: "ruleset #0",
         rules: [
           {
@@ -121,10 +126,12 @@ describe("performImportCommand", () => {
       ],
     });
     const stored = (name: string, id: number, domain: string) => ({
+      id: `rs-${id}`,
       name,
       rules: [{ id, ...ruleSet(name, domain).rules[0] }],
     });
-    const unsaved = (name: string, domain: string) => ({
+    const unsaved = (name: string, domain: string, id: unknown) => ({
+      id,
       name,
       rules: [{ id: RULE_ID_UNSAVED, ...ruleSet(name, domain).rules[0] }],
     });
@@ -154,11 +161,47 @@ describe("performImportCommand", () => {
     expect(valid).toBeTruthy();
     expect(errors).toStrictEqual([]);
     expect(ruleSets).toStrictEqual([
-      unsaved("a", "a1.example.com"),
+      unsaved("a", "a1.example.com", "rs-1"),
       stored("c", 2, "old-c.example.com"),
-      unsaved("a", "a2.example.com"),
-      unsaved("b", "b1.example.com"),
-      unsaved("a", "a3.example.com"),
+      unsaved("a", "a2.example.com", "rs-3"),
+      unsaved("b", "b1.example.com", expect.any(String)),
+      unsaved("a", "a3.example.com", expect.any(String)),
+    ]);
+    const newIds = ruleSets.slice(3).map((ruleSet) => ruleSet.id);
+    expect(new Set(newIds).size).toBe(2);
+  });
+
+  it("accepts rule set IDs in the file but never uses them", async () => {
+    const fileRuleSet = (id: string, name: string) => ({
+      id,
+      name,
+      rules: [
+        {
+          action: { type: RuleActionType.BLOCK },
+          condition: { requestDomains: ["example.com"] },
+        },
+      ],
+    });
+    const target: ExportedRuleSets = {
+      format: "BLOCKoli",
+      version: 1,
+      ruleSets: [fileRuleSet("file-a", "a"), fileRuleSet("stored-b", "b")],
+    };
+    const storedRuleSets: StoredRuleSets = [
+      { id: "stored-a", name: "a", rules: [] },
+    ];
+
+    const [valid, errors, ruleSets] = await performImportCommand(
+      target,
+      storedRuleSets,
+      acceptAllRegex
+    );
+
+    expect(valid).toBeTruthy();
+    expect(errors).toStrictEqual([]);
+    expect(ruleSets.map((ruleSet) => ruleSet.id)).toStrictEqual([
+      "stored-a",
+      expect.not.stringMatching(/^(file-a|stored-b|stored-a)$/),
     ]);
   });
 

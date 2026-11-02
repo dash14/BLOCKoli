@@ -41,7 +41,10 @@ export function useRuleSetsEdit(
   }, [originalRuleSets]);
 
   function addRuleSet() {
-    const newRuleSet = cloneDeep(newRuleSetTemplate);
+    const newRuleSet = {
+      ...cloneDeep(newRuleSetTemplate),
+      id: crypto.randomUUID(),
+    };
     const nameWithNumPattern = new RegExp(`^${newRuleSet.name} (\\d+)`);
 
     const maxNumber = ruleSets.reduce((max, ruleSet) => {

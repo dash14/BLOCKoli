@@ -26,6 +26,7 @@ import Popup from "./Popup";
 // Test data
 const sampleRuleSets: StoredRuleSets = [
   {
+    id: "rs-1",
     name: "Block Ads",
     rules: [
       {

@@ -1,11 +1,7 @@
 import { RegexValidator } from "@/modules/core/regex";
 import { RuleSets } from "@/modules/core/rules";
 import { ExportedRuleSets } from "@/modules/rules/export";
-import {
-  RULE_ID_UNSAVED,
-  StoredRuleSet,
-  StoredRuleSets,
-} from "@/modules/rules/stored";
+import { RULE_ID_UNSAVED, StoredRuleSets } from "@/modules/rules/stored";
 import {
   RuleSetsValidationError,
   validateRuleSets,
@@ -45,15 +41,15 @@ export async function performImportCommand(
     else storedIndexes.set(name, [index]);
   });
   for (const ruleSet of result.evaluated) {
-    const newRuleSet: StoredRuleSet = {
-      name: ruleSet.name,
-      rules: ruleSet.rules.map((r) => ({ ...r, id: RULE_ID_UNSAVED })),
-    };
+    const rules = ruleSet.rules.map((r) => ({ ...r, id: RULE_ID_UNSAVED }));
     const existsIndex = storedIndexes.get(ruleSet.name)?.shift();
     if (existsIndex !== undefined) {
-      storedRuleSets[existsIndex] = newRuleSet;
+      // A replaced rule set keeps its ID; an ID in the file is never used
+      const { id } = storedRuleSets[existsIndex];
+      storedRuleSets[existsIndex] = { id, name: ruleSet.name, rules };
     } else {
-      storedRuleSets.push(newRuleSet);
+      const id = crypto.randomUUID();
+      storedRuleSets.push({ id, name: ruleSet.name, rules });
     }
   }
 

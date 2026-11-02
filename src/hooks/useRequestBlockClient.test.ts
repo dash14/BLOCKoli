@@ -189,7 +189,7 @@ describe("useRequestBlockClient", () => {
       expect(result.current.loaded).toBe(true);
     });
 
-    const newRuleSets = [{ name: "New Set", rules: [] }];
+    const newRuleSets = [{ id: "rs-new", name: "New Set", rules: [] }];
 
     await act(async () => {
       await result.current.updateRuleSets(newRuleSets);
@@ -231,8 +231,12 @@ describe("useRequestBlockClient", () => {
       expect(result.current.loaded).toBe(true);
     });
 
-    const unsaved: StoredRuleSets = [{ name: "Set", rules: [{ id: 0, ...rule }] }];
-    const saved: StoredRuleSets = [{ name: "Set", rules: [{ id: 5, ...rule }] }];
+    const unsaved: StoredRuleSets = [
+      { id: "rs-1", name: "Set", rules: [{ id: 0, ...rule }] },
+    ];
+    const saved: StoredRuleSets = [
+      { id: "rs-2", name: "Set", rules: [{ id: 5, ...rule }] },
+    ];
     mockSendMessage.mockImplementation(async (request) => {
       if (request.method === "updateRuleSets") {
         return {
@@ -295,7 +299,7 @@ describe("useRequestBlockClient", () => {
 
   describe("ordering by revision", () => {
     const named = (name: string): StoredRuleSets => [
-      { name, rules: [{ id: 1, ...rule }] },
+      { id: "rs-3", name, rules: [{ id: 1, ...rule }] },
     ];
     const versioned = (revision: number, name: string) => ({
       revision,

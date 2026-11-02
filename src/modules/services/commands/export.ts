@@ -6,8 +6,9 @@ import { StoredRuleSets } from "@/modules/rules/stored";
 export function performExportCommand(
   storedRuleSets: StoredRuleSets
 ): ExportedRuleSets {
+  // No IDs: older versions reject a rule set with an 'id' field on import
   const ruleSets = storedRuleSets.map((ruleSet) => ({
-    ...ruleSet,
+    name: ruleSet.name,
     rules: ruleSet.rules.map((rule) => ({
       // remove 'id' field
       action: rule.action,

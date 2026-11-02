@@ -150,6 +150,10 @@
       "title": "RuleSet",
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string",
+          "title": "id"
+        },
         "name": {
           "type": "string",
           "title": "name",

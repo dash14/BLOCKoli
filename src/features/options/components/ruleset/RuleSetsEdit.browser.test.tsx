@@ -37,6 +37,7 @@ function StatefulRuleSetsEdit({
 // Test data: two rule sets
 const twoRuleSets: StoredRuleSets = [
   {
+    id: "rs-1",
     name: "Block Ads",
     rules: [
       {
@@ -47,6 +48,7 @@ const twoRuleSets: StoredRuleSets = [
     ],
   },
   {
+    id: "rs-2",
     name: "Allow Trusted",
     rules: [
       {
@@ -61,6 +63,7 @@ const twoRuleSets: StoredRuleSets = [
 // Test data: single rule set
 const singleRuleSet: StoredRuleSets = [
   {
+    id: "rs-3",
     name: "My Rules",
     rules: [
       {
@@ -197,6 +200,7 @@ describe("RuleSetsEdit component", () => {
       // Test data with existing "My Rule Set 1"
       const ruleSetWithName1: StoredRuleSets = [
         {
+          id: "rs-4",
           name: "My Rule Set 1",
           rules: [
             {
@@ -228,6 +232,7 @@ describe("RuleSetsEdit component", () => {
 
   describe("Rule sets saved while adding one", () => {
     const importedRuleSet = {
+      id: "rs-imported",
       name: "Imported",
       rules: [
         {

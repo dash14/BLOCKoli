@@ -110,6 +110,37 @@ describe("RequestBlockServiceImpl", () => {
       });
     });
 
+    it("gives IDs to stored rule sets without one, and saves them under the next revision", async () => {
+      vi.mocked(mockStore.loadRuleSets).mockResolvedValue([
+        { name: "a", rules: [] },
+        { id: "rs-b", name: "b", rules: [] },
+      ] as unknown as StoredRuleSets);
+
+      await createService().start();
+
+      const saved = [
+        { id: expect.any(String), name: "a", rules: [] },
+        { id: "rs-b", name: "b", rules: [] },
+      ];
+      expect(mockStore.saveRuleSetsRevision).toHaveBeenCalledWith(8);
+      expect(mockStore.saveRuleSets).toHaveBeenCalledWith(saved);
+      expect(mockEmitter.emit).toHaveBeenCalledWith("updateRuleSets", {
+        revision: 8,
+        ruleSets: saved,
+      });
+    });
+
+    it("saves nothing when every stored rule set has an ID", async () => {
+      vi.mocked(mockStore.loadRuleSets).mockResolvedValue([
+        { id: "rs-a", name: "a", rules: [] },
+      ]);
+
+      await createService().start();
+
+      expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
+      expect(mockStore.saveRuleSetsRevision).not.toHaveBeenCalled();
+    });
+
     it("deactivates when disabled", async () => {
       vi.mocked(mockStore.loadState).mockResolvedValue("disable");
 
@@ -201,6 +232,7 @@ describe("RequestBlockServiceImpl", () => {
     it("returns rule sets from store", async () => {
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-1",
           name: "Test Set",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -217,9 +249,21 @@ describe("RequestBlockServiceImpl", () => {
   });
 
   describe("updateRuleSets", () => {
+    it("gives an ID to a rule set sent without one", async () => {
+      const result = await createService().updateRuleSets([
+        { name: "a", rules: [] },
+      ] as unknown as StoredRuleSets);
+
+      expect(result.ruleSets).toEqual([
+        { id: expect.any(String), name: "a", rules: [] },
+      ]);
+      expect(mockStore.saveRuleSets).toHaveBeenCalledWith(result.ruleSets);
+    });
+
     it("does nothing when rule sets are unchanged", async () => {
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-2",
           name: "Test Set",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -243,6 +287,7 @@ describe("RequestBlockServiceImpl", () => {
 
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-3",
           name: "Test Set",
           rules: [
             {
@@ -273,6 +318,7 @@ describe("RequestBlockServiceImpl", () => {
 
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-4",
           name: "Test Set",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -289,6 +335,7 @@ describe("RequestBlockServiceImpl", () => {
     it("replaces rules when rule is modified", async () => {
       const prevRuleSets: StoredRuleSets = [
         {
+          id: "rs-5",
           name: "Test Set",
           rules: [
             {
@@ -313,6 +360,7 @@ describe("RequestBlockServiceImpl", () => {
 
       const newRuleSets: StoredRuleSets = [
         {
+          id: "rs-6",
           name: "Test Set",
           rules: [
             {
@@ -341,6 +389,7 @@ describe("RequestBlockServiceImpl", () => {
     it("removes rules when rule is deleted", async () => {
       const prevRuleSets: StoredRuleSets = [
         {
+          id: "rs-7",
           name: "Test Set",
           rules: [
             {
@@ -377,6 +426,7 @@ describe("RequestBlockServiceImpl", () => {
       // Remove rule 51
       const newRuleSets: StoredRuleSets = [
         {
+          id: "rs-8",
           name: "Test Set",
           rules: [
             {
@@ -405,6 +455,7 @@ describe("RequestBlockServiceImpl", () => {
 
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-9",
           name: "Test Set",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -424,6 +475,7 @@ describe("RequestBlockServiceImpl", () => {
 
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-10",
           name: "Test Set",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -478,6 +530,7 @@ describe("RequestBlockServiceImpl", () => {
     it("filters out reserved rules and returns matched rules", async () => {
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-11",
           name: "Test Set",
           rules: [
             { id: 50, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -520,6 +573,7 @@ describe("RequestBlockServiceImpl", () => {
   describe("updateRuleSets diff against the current dynamic rules", () => {
     const ruleSets: StoredRuleSets = [
       {
+        id: "rs-12",
         name: "Test Set",
         rules: [
           {
@@ -599,6 +653,7 @@ describe("RequestBlockServiceImpl", () => {
   describe("stored rules with a regex Chrome does not support", () => {
     const ruleSets: StoredRuleSets = [
       {
+        id: "rs-13",
         name: "Test Set",
         rules: [
           {
@@ -653,6 +708,7 @@ describe("RequestBlockServiceImpl", () => {
   describe("updateRuleSets when applying fails", () => {
     const newRuleSets = (): StoredRuleSets => [
       {
+        id: "rs-14",
         name: "a",
         rules: [
           { id: 11, action: { type: RuleActionType.ALLOW }, condition: {} },
@@ -711,6 +767,7 @@ describe("RequestBlockServiceImpl", () => {
     };
     const withNewRule = (name: string): StoredRuleSets => [
       {
+        id: "rs-15",
         name,
         rules: [
           {
@@ -849,6 +906,7 @@ describe("RequestBlockServiceImpl", () => {
     it("saves rules up to the limits", async () => {
       const ruleSets = [
         {
+          id: "rs-a",
           name: "a",
           rules: [rule(11, regex), rule(12, { isRegexFilter: true })],
         },
@@ -861,7 +919,7 @@ describe("RequestBlockServiceImpl", () => {
 
     it("refuses to enable when stored rules are over the limit", async () => {
       vi.mocked(mockStore.loadRuleSets).mockResolvedValue([
-        { name: "a", rules: [rule(11), rule(12), rule(13)] },
+        { id: "rs-16", name: "a", rules: [rule(11), rule(12), rule(13)] },
       ]);
 
       await expect(createService().enable()).rejects.toThrow(
@@ -930,6 +988,7 @@ describe("getMatchedRules for rules no longer stored", () => {
     it("exports rule sets in BLOCKoli format", async () => {
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-17",
           name: "Test Set",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },

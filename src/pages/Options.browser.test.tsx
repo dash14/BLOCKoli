@@ -21,6 +21,7 @@ import Options from "./Options";
 // Test data
 const sampleRuleSets: StoredRuleSets = [
   {
+    id: "rs-1",
     name: "Block Ads",
     rules: [
       {
@@ -31,6 +32,7 @@ const sampleRuleSets: StoredRuleSets = [
     ],
   },
   {
+    id: "rs-2",
     name: "Allow Trusted",
     rules: [
       {

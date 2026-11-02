@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { RuleActionType } from "@/modules/core/rules";
-import { RULE_ID_EDITING, RULE_ID_UNSAVED } from "./stored";
+import { RULE_ID_EDITING, RULE_ID_UNSAVED, assignRuleSetIds } from "./stored";
 import type { StoredRule, StoredRules, StoredRuleSet, StoredRuleSets } from "./stored";
 
 describe("stored", () => {
@@ -94,6 +94,7 @@ describe("stored", () => {
   describe("StoredRuleSet", () => {
     it("has name and rules", () => {
       const ruleSet: StoredRuleSet = {
+        id: "rs-1",
         name: "My Rules",
         rules: [],
       };
@@ -104,6 +105,7 @@ describe("stored", () => {
 
     it("rules are StoredRules with required id", () => {
       const ruleSet: StoredRuleSet = {
+        id: "rs-1",
         name: "Test",
         rules: [
           { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -115,6 +117,7 @@ describe("stored", () => {
 
     it("can have multiple rules", () => {
       const ruleSet: StoredRuleSet = {
+        id: "rs-1",
         name: "Multiple",
         rules: [
           { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -130,8 +133,8 @@ describe("stored", () => {
   describe("StoredRuleSets", () => {
     it("is array of StoredRuleSet", () => {
       const ruleSets: StoredRuleSets = [
-        { name: "Set 1", rules: [] },
-        { name: "Set 2", rules: [] },
+        { id: "rs-2", name: "Set 1", rules: [] },
+        { id: "rs-3", name: "Set 2", rules: [] },
       ];
 
       expect(ruleSets).toHaveLength(2);
@@ -148,12 +151,14 @@ describe("stored", () => {
     it("can have nested rules", () => {
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-4",
           name: "Set A",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
           ],
         },
         {
+          id: "rs-1",
           name: "Set B",
           rules: [
             { id: 2, action: { type: RuleActionType.ALLOW }, condition: {} },
@@ -164,6 +169,36 @@ describe("stored", () => {
 
       expect(ruleSets[0].rules).toHaveLength(1);
       expect(ruleSets[1].rules).toHaveLength(2);
+    });
+  });
+
+  describe("assignRuleSetIds", () => {
+    const ruleSet = (id?: unknown) => ({ id, name: "a", rules: [] });
+
+    it("keeps the IDs rule sets already have", () => {
+      expect(assignRuleSetIds([ruleSet("x"), ruleSet("y")])).toEqual([
+        ruleSet("x"),
+        ruleSet("y"),
+      ]);
+    });
+
+    it("gives a new ID to a rule set without a usable one", () => {
+      const assigned = assignRuleSetIds([
+        { name: "a", rules: [] },
+        ruleSet(""),
+        ruleSet(1),
+      ]);
+
+      const ids = assigned.map((r) => r.id);
+      ids.forEach((id) => expect(id).toMatch(/^[0-9a-f-]{36}$/));
+      expect(new Set(ids).size).toBe(3);
+    });
+
+    it("gives a new ID to a rule set whose ID an earlier one has", () => {
+      const [first, second] = assignRuleSetIds([ruleSet("x"), ruleSet("x")]);
+
+      expect(first.id).toBe("x");
+      expect(second.id).not.toBe("x");
     });
   });
 });

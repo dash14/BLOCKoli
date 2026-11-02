@@ -110,6 +110,7 @@ export interface Rule {
 export type Rules = Rule[];
 
 export interface RuleSet {
+  id?: string;
   name: string;
   rules: Rules;
 }
