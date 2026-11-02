@@ -94,10 +94,13 @@ export class RequestBlockServiceImpl
 
   // Queued so the rule sets and their revision are read together
   public getRuleSets(): Promise<VersionedRuleSets> {
-    return this.serialize(async () => ({
-      revision: await this.store.loadRuleSetsRevision(),
-      ruleSets: await this.store.loadRuleSets(),
-    }));
+    return this.serialize(async () => {
+      const [revision, ruleSets] = await Promise.all([
+        this.store.loadRuleSetsRevision(),
+        this.store.loadRuleSets(),
+      ]);
+      return { revision, ruleSets };
+    });
   }
 
   public import(object: unknown): Promise<[boolean, RuleSetsValidationError[]]> {
@@ -145,8 +148,10 @@ export class RequestBlockServiceImpl
   ): Promise<VersionedRuleSets> {
     log.debug("updateRuleSets");
 
-    const prevRuleSets = await this.store.loadRuleSets();
-    const prevRevision = await this.store.loadRuleSetsRevision();
+    const [prevRuleSets, prevRevision] = await Promise.all([
+      this.store.loadRuleSets(),
+      this.store.loadRuleSetsRevision(),
+    ]);
     if (isEqual(ruleSets, prevRuleSets)) {
       log.debug("No updated");
       return { revision: prevRevision, ruleSets: prevRuleSets };
@@ -163,9 +168,10 @@ export class RequestBlockServiceImpl
 
     // Save the next ID first: if saving the rule sets fails, an ID is skipped rather than reused
     await this.store.saveNextRuleId(nextRuleId);
-    await this.store.saveRuleSets(assigned);
+    // Same for the revision, so stored rule sets never change under a revision already sent
     const saved = { revision: prevRevision + 1, ruleSets: assigned };
     await this.store.saveRuleSetsRevision(saved.revision);
+    await this.store.saveRuleSets(assigned);
 
     void this.emitter.emit("updateRuleSets", saved);
 

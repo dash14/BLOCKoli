@@ -27,6 +27,9 @@ export function useRequestBlockClient() {
   const held = useRef<VersionedRuleSets | undefined>(undefined);
   const latestRequest = useRef<StoredRuleSets>([]);
 
+  // Compare with the latest state, not the one this render's callbacks closed over.
+  const latestRuleSets = useRef<StoredRuleSets>([]);
+
   const receiveRuleSets = useCallback((received: VersionedRuleSets) => {
     if (pendingSaves.current > 0) {
       if (!held.current || received.revision > held.current.revision) {
@@ -34,6 +37,7 @@ export function useRequestBlockClient() {
       }
     } else if (received.revision > appliedRevision.current) {
       appliedRevision.current = received.revision;
+      latestRuleSets.current = received.ruleSets;
       setRuleSets(received.ruleSets);
     }
   }, []);
@@ -94,11 +98,6 @@ export function useRequestBlockClient() {
     }
   };
 
-  // Compare with the latest state, not the one this render's callbacks closed over.
-  const latestRuleSets = useRef(ruleSets);
-  useEffect(() => {
-    latestRuleSets.current = ruleSets;
-  }, [ruleSets]);
 
   const updateRuleSets = async (updatedRuleSets: StoredRuleSets) => {
     // Compare with what was last sent while saves wait, so an edit back is still sent

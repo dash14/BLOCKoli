@@ -443,7 +443,7 @@ describe("RequestBlockServiceImpl", () => {
       });
     });
 
-    it("saves the revision after the rule sets", async () => {
+    it("saves the revision before the rule sets", async () => {
       vi.mocked(mockStore.loadRuleSets).mockResolvedValue([]);
 
       await createService().updateRuleSets([
@@ -455,11 +455,10 @@ describe("RequestBlockServiceImpl", () => {
         },
       ]);
 
-      // A page reading the new revision then also finds the new rule sets
       expect(
-        vi.mocked(mockStore.saveRuleSets).mock.invocationCallOrder[0]
-      ).toBeLessThan(
         vi.mocked(mockStore.saveRuleSetsRevision).mock.invocationCallOrder[0]
+      ).toBeLessThan(
+        vi.mocked(mockStore.saveRuleSets).mock.invocationCallOrder[0]
       );
     });
   });
