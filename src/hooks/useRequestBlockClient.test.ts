@@ -35,13 +35,15 @@ const rule: Rule = {
 describe("useRequestBlockClient", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    // Saves answer with revisions above any a test broadcasts
+    let revision = 100;
     // Default mock responses
     mockSendMessage.mockImplementation(async (request) => {
       if (request.method === "isEnabled") {
         return { type: "response", success: true, result: false };
       }
       if (request.method === "getRuleSets") {
-        return { type: "response", success: true, result: [] };
+        return { type: "response", success: true, result: { revision: 0, ruleSets: [] } };
       }
       if (request.method === "getLanguage") {
         return { type: "response", success: true, result: "en" };
@@ -53,7 +55,11 @@ describe("useRequestBlockClient", () => {
         return { type: "response", success: true, result: undefined };
       }
       if (request.method === "updateRuleSets") {
-        return { type: "response", success: true, result: request.args[0] };
+        return {
+          type: "response",
+          success: true,
+          result: { revision: ++revision, ruleSets: request.args[0] },
+        };
       }
       if (request.method === "getMatchedRules") {
         return { type: "response", success: true, result: [] };
@@ -90,7 +96,7 @@ describe("useRequestBlockClient", () => {
         return {
           type: "response",
           success: true,
-          result: [{ name: "Test Set", rules: [] }],
+          result: { revision: 1, ruleSets: [{ name: "Test Set", rules: [] }] },
         };
       }
       if (request.method === "getLanguage") {
@@ -229,7 +235,11 @@ describe("useRequestBlockClient", () => {
     const saved: StoredRuleSets = [{ name: "Set", rules: [{ id: 5, ...rule }] }];
     mockSendMessage.mockImplementation(async (request) => {
       if (request.method === "updateRuleSets") {
-        return { type: "response", success: true, result: saved };
+        return {
+          type: "response",
+          success: true,
+          result: { revision: 1, ruleSets: saved },
+        };
       }
       return { type: "response", success: true, result: null };
     });
@@ -263,7 +273,10 @@ describe("useRequestBlockClient", () => {
           type: "broadcast",
           service: "RequestBlock",
           event: "updateRuleSets",
-          message: [{ name: "From another page", rules: [] }],
+          message: {
+            revision: 1,
+            ruleSets: [{ name: "From another page", rules: [] }],
+          },
         },
         {},
         vi.fn()
@@ -280,6 +293,142 @@ describe("useRequestBlockClient", () => {
     expect(result.current.ruleSets).toStrictEqual([]);
   });
 
+  describe("ordering by revision", () => {
+    const named = (name: string): StoredRuleSets => [
+      { name, rules: [{ id: 1, ...rule }] },
+    ];
+    const versioned = (revision: number, name: string) => ({
+      revision,
+      ruleSets: named(name),
+    });
+
+    // Holds each updateRuleSets request until the test answers it
+    const holdSaves = () => {
+      const answers: ((response: unknown) => void)[] = [];
+      const defaultImpl = mockSendMessage.getMockImplementation()!;
+      mockSendMessage.mockImplementation(async (request) =>
+        request.method === "updateRuleSets"
+          ? new Promise((resolve) => answers.push(resolve))
+          : defaultImpl(request)
+      );
+      return {
+        succeed: (index: number, result: unknown) =>
+          act(async () => answers[index]({ type: "response", success: true, result })),
+        fail: (index: number) =>
+          act(async () =>
+            answers[index]({ type: "response", success: false, error: "save failed" })
+          ),
+      };
+    };
+
+    const render = async () => {
+      const hook = renderHook(() => useRequestBlockClient());
+      await waitFor(() => expect(hook.result.current.loaded).toBe(true));
+      const listener = mockAddListener.mock.lastCall![0];
+      const broadcast = (message: unknown) =>
+        act(() =>
+          listener(
+            { type: "broadcast", service: "RequestBlock", event: "updateRuleSets", message },
+            {},
+            vi.fn()
+          )
+        );
+      return { result: hook.result, broadcast };
+    };
+
+    it("holds earlier results while a later save waits, then applies the newest", async () => {
+      const { result, broadcast } = await render();
+      const saves = holdSaves();
+
+      let first!: Promise<void>, second!: Promise<void>;
+      act(() => {
+        first = result.current.updateRuleSets(named("first"));
+        second = result.current.updateRuleSets(named("second"));
+      });
+      await saves.succeed(0, versioned(1, "first"));
+      broadcast(versioned(1, "first"));
+      await first;
+      expect(result.current.ruleSets).toStrictEqual([]);
+
+      await saves.succeed(1, versioned(2, "second"));
+      await second;
+      expect(result.current.ruleSets).toStrictEqual(named("second"));
+    });
+
+    it("keeps a newer broadcast that arrived before the page's own response", async () => {
+      const { result, broadcast } = await render();
+      const saves = holdSaves();
+
+      let save!: Promise<void>;
+      act(() => {
+        save = result.current.updateRuleSets(named("mine"));
+      });
+      broadcast(versioned(2, "another page, saved after mine"));
+      await saves.succeed(0, versioned(1, "mine"));
+      await save;
+
+      expect(result.current.ruleSets).toStrictEqual(
+        named("another page, saved after mine")
+      );
+    });
+
+    it("shows what an earlier save stored when the latest one fails", async () => {
+      const { result } = await render();
+      const saves = holdSaves();
+
+      let first!: Promise<void>, second!: Promise<void>;
+      act(() => {
+        first = result.current.updateRuleSets(named("first"));
+        second = result.current.updateRuleSets(named("second"));
+      });
+      const secondFailed = expect(second).rejects.toBe("save failed");
+      await saves.succeed(0, versioned(1, "first"));
+      await first;
+      await saves.fail(1);
+      await secondFailed;
+
+      expect(result.current.ruleSets).toStrictEqual(named("first"));
+    });
+
+    it("keeps the state when the only save fails", async () => {
+      const { result } = await render();
+      const saves = holdSaves();
+
+      let save!: Promise<void>;
+      act(() => {
+        save = result.current.updateRuleSets(named("failed"));
+      });
+      const failed = expect(save).rejects.toBe("save failed");
+      await saves.fail(0);
+      await failed;
+
+      expect(result.current.ruleSets).toStrictEqual([]);
+    });
+
+    it("ignores a broadcast older than what is shown", async () => {
+      const { result, broadcast } = await render();
+
+      broadcast(versioned(3, "newer"));
+      broadcast(versioned(2, "older"));
+
+      expect(result.current.ruleSets).toStrictEqual(named("newer"));
+    });
+
+    it("sends an edit back to the state from before a waiting save", async () => {
+      const { result } = await render();
+      holdSaves();
+
+      act(() => {
+        void result.current.updateRuleSets(named("renamed"));
+        void result.current.updateRuleSets([]);
+      });
+
+      expect(mockSendMessage).toHaveBeenLastCalledWith(
+        expect.objectContaining({ method: "updateRuleSets", args: [[]] })
+      );
+    });
+  });
+
   it("getMatchedRule calls service", async () => {
     const matchedRules = [{ ruleSetName: "Test", ruleName: "Rule 1" }];
     mockSendMessage.mockImplementation(async (request) => {
@@ -290,7 +439,7 @@ describe("useRequestBlockClient", () => {
         return { type: "response", success: true, result: false };
       }
       if (request.method === "getRuleSets") {
-        return { type: "response", success: true, result: [] };
+        return { type: "response", success: true, result: { revision: 0, ruleSets: [] } };
       }
       if (request.method === "getLanguage") {
         return { type: "response", success: true, result: "en" };
@@ -343,7 +492,7 @@ describe("useRequestBlockClient", () => {
         return { type: "response", success: true, result: false };
       }
       if (request.method === "getRuleSets") {
-        return { type: "response", success: true, result: [] };
+        return { type: "response", success: true, result: { revision: 0, ruleSets: [] } };
       }
       if (request.method === "getLanguage") {
         return { type: "response", success: true, result: "en" };
@@ -375,7 +524,7 @@ describe("useRequestBlockClient", () => {
         return { type: "response", success: true, result: false };
       }
       if (request.method === "getRuleSets") {
-        return { type: "response", success: true, result: [] };
+        return { type: "response", success: true, result: { revision: 0, ruleSets: [] } };
       }
       if (request.method === "getLanguage") {
         return { type: "response", success: true, result: "en" };
@@ -468,7 +617,7 @@ describe("useRequestBlockClient", () => {
           type: "broadcast",
           service: "RequestBlock",
           event: "updateRuleSets",
-          message: ruleSets,
+          message: { revision: 1, ruleSets },
         },
         {},
         vi.fn()
@@ -522,7 +671,7 @@ describe("useRequestBlockClient", () => {
           return {
             type: "response",
             success: true,
-            result: [{ name: "Stale Set", rules: [] }],
+            result: { revision: 1, ruleSets: [{ name: "Stale Set", rules: [] }] },
           };
         }
         if (request.method === "getLanguage") {
@@ -562,7 +711,7 @@ describe("useRequestBlockClient", () => {
 
       const fresh = [{ name: "Fresh Set", rules: [] }];
       broadcast("changeState", "enable");
-      broadcast("updateRuleSets", fresh);
+      broadcast("updateRuleSets", { revision: 2, ruleSets: fresh });
 
       await act(async () => release());
       await waitFor(() => {

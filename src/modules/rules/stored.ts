@@ -15,3 +15,9 @@ export interface StoredRuleSet {
 }
 
 export type StoredRuleSets = StoredRuleSet[];
+
+// Rule sets with the revision they were saved at, so pages can tell newer from older
+export interface VersionedRuleSets {
+  revision: number;
+  ruleSets: StoredRuleSets;
+}

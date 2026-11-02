@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import isEqual from "lodash-es/isEqual";
 import { MessageProxyFactory } from "@/modules/chrome/message/MessageProxy";
 import { ExportedRuleSets } from "@/modules/rules/export";
-import { StoredRuleSets } from "@/modules/rules/stored";
+import { StoredRuleSets, VersionedRuleSets } from "@/modules/rules/stored";
 import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
 import * as RequestBlock from "@/modules/services/RequestBlockService";
 import logging from "@/modules/utils/logging";
@@ -19,6 +19,29 @@ export function useRequestBlockClient() {
   // A language picked on this page during the initial load wins over the loaded one.
   const languageChosen = useRef(false);
 
+  // Responses and broadcasts arrive by separate channels, so the revision decides which is newer.
+  const appliedRevision = useRef(-1);
+  // While this page's own saves are waiting, the newest value is held and applied once they
+  // settle, so the editor does not fall back to rule sets from before the latest edit.
+  const pendingSaves = useRef(0);
+  const held = useRef<VersionedRuleSets | undefined>(undefined);
+  const latestRequest = useRef<StoredRuleSets>([]);
+
+  // Compare with the latest state, not the one this render's callbacks closed over.
+  const latestRuleSets = useRef<StoredRuleSets>([]);
+
+  const receiveRuleSets = useCallback((received: VersionedRuleSets) => {
+    if (pendingSaves.current > 0) {
+      if (!held.current || received.revision > held.current.revision) {
+        held.current = received;
+      }
+    } else if (received.revision > appliedRevision.current) {
+      appliedRevision.current = received.revision;
+      latestRuleSets.current = received.ruleSets;
+      setRuleSets(received.ruleSets);
+    }
+  }, []);
+
   // Keep one proxy per mount so the effect adds and removes a single onMessage listener.
   const [service] = useState(() =>
     new MessageProxyFactory().create<RequestBlock.Service>(
@@ -30,18 +53,14 @@ export function useRequestBlockClient() {
     log.debug("initialize");
 
     let active = true;
-    // A broadcast received during the initial load is newer than what the load returns.
+    // A state broadcast received during the initial load is newer than what the load returns.
     let stateBroadcast = false;
-    let ruleSetsBroadcast = false;
 
     service.addEventListener("changeState", (state) => {
       stateBroadcast = true;
       setEnabled(state === "enable");
     });
-    service.addEventListener("updateRuleSets", (ruleSets) => {
-      ruleSetsBroadcast = true;
-      setRuleSets(ruleSets);
-    });
+    service.addEventListener("updateRuleSets", receiveRuleSets);
 
     (async () => {
       try {
@@ -51,7 +70,7 @@ export function useRequestBlockClient() {
         const lang = await service.getLanguage();
         if (!active) return;
         if (!stateBroadcast) setEnabled(isEnabled);
-        if (!ruleSetsBroadcast) setRuleSets(storedRuleSets);
+        receiveRuleSets(storedRuleSets);
         if (!languageChosen.current) {
           updateI18nLanguage(lang);
           setLanguageState(lang);
@@ -69,7 +88,7 @@ export function useRequestBlockClient() {
       active = false;
       service.removeAllEventListeners();
     };
-  }, [service]);
+  }, [service, receiveRuleSets]);
 
   const changeState = async (enabled: boolean) => {
     if (enabled) {
@@ -79,16 +98,25 @@ export function useRequestBlockClient() {
     }
   };
 
-  // Compare with the latest state, not the one this render's callbacks closed over.
-  const latestRuleSets = useRef(ruleSets);
-  useEffect(() => {
-    latestRuleSets.current = ruleSets;
-  }, [ruleSets]);
 
   const updateRuleSets = async (updatedRuleSets: StoredRuleSets) => {
-    if (!isEqual(updatedRuleSets, latestRuleSets.current)) {
+    // Compare with what was last sent while saves wait, so an edit back is still sent
+    const current =
+      pendingSaves.current > 0 ? latestRequest.current : latestRuleSets.current;
+    if (isEqual(updatedRuleSets, current)) return;
+
+    latestRequest.current = updatedRuleSets;
+    pendingSaves.current++;
+    try {
       // New rules come back with the IDs the service assigned
-      setRuleSets(await service.updateRuleSets(updatedRuleSets));
+      receiveRuleSets(await service.updateRuleSets(updatedRuleSets));
+    } finally {
+      pendingSaves.current--;
+      if (pendingSaves.current === 0 && held.current) {
+        const newest = held.current;
+        held.current = undefined;
+        receiveRuleSets(newest);
+      }
     }
   };
 

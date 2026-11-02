@@ -8,6 +8,8 @@ export interface ServiceConfigurationStore {
   loadNextRuleId(): Promise<number>;
   saveRuleSets(ruleSets: StoredRuleSets): Promise<void>;
   loadRuleSets(): Promise<StoredRuleSets>;
+  saveRuleSetsRevision(revision: number): Promise<void>;
+  loadRuleSetsRevision(): Promise<number>;
   saveLanguage(lang: string | undefined): Promise<void>;
   loadLanguage(): Promise<string | undefined>;
 }

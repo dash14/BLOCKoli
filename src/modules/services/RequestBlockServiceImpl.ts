@@ -18,6 +18,7 @@ import {
   RULE_ID_UNSAVED,
   StoredRule,
   StoredRuleSets,
+  VersionedRuleSets,
 } from "@/modules/rules/stored";
 import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
 import { validateRegexSupport } from "@/modules/rules/validation/edit";
@@ -85,8 +86,21 @@ export class RequestBlockServiceImpl
     return this.serialize(() => this.disableNow());
   }
 
-  public updateRuleSets(ruleSets: StoredRuleSets): Promise<StoredRuleSets> {
+  public updateRuleSets(
+    ruleSets: StoredRuleSets
+  ): Promise<VersionedRuleSets> {
     return this.serialize(() => this.updateRuleSetsNow(ruleSets));
+  }
+
+  // Queued so the rule sets and their revision are read together
+  public getRuleSets(): Promise<VersionedRuleSets> {
+    return this.serialize(async () => {
+      const [revision, ruleSets] = await Promise.all([
+        this.store.loadRuleSetsRevision(),
+        this.store.loadRuleSets(),
+      ]);
+      return { revision, ruleSets };
+    });
   }
 
   public import(object: unknown): Promise<[boolean, RuleSetsValidationError[]]> {
@@ -129,22 +143,18 @@ export class RequestBlockServiceImpl
     return (await this.store.loadState()) === "enable";
   }
 
-  public async getRuleSets(): Promise<StoredRuleSets> {
-    // Load from store
-    const ruleSets = await this.store.loadRuleSets();
-    log.debug("loadRuleSets from store", ruleSets);
-    return ruleSets;
-  }
-
   private async updateRuleSetsNow(
     ruleSets: StoredRuleSets
-  ): Promise<StoredRuleSets> {
+  ): Promise<VersionedRuleSets> {
     log.debug("updateRuleSets");
 
-    const prevRuleSets = await this.getRuleSets();
+    const [prevRuleSets, prevRevision] = await Promise.all([
+      this.store.loadRuleSets(),
+      this.store.loadRuleSetsRevision(),
+    ]);
     if (isEqual(ruleSets, prevRuleSets)) {
       log.debug("No updated");
-      return ruleSets;
+      return { revision: prevRevision, ruleSets: prevRuleSets };
     }
 
     // Chrome would reject the whole update, so refuse to save even while disabled
@@ -158,11 +168,14 @@ export class RequestBlockServiceImpl
 
     // Save the next ID first: if saving the rule sets fails, an ID is skipped rather than reused
     await this.store.saveNextRuleId(nextRuleId);
+    // Same for the revision, so stored rule sets never change under a revision already sent
+    const saved = { revision: prevRevision + 1, ruleSets: assigned };
+    await this.store.saveRuleSetsRevision(saved.revision);
     await this.store.saveRuleSets(assigned);
 
-    void this.emitter.emit("updateRuleSets", assigned);
+    void this.emitter.emit("updateRuleSets", saved);
 
-    return assigned;
+    return saved;
   }
 
   private checkRuleLimits(ruleSets: StoredRuleSets): void {
@@ -233,7 +246,7 @@ export class RequestBlockServiceImpl
       (rule) => !reservedIds.has(rule.rule.ruleId)
     );
 
-    const ruleSets = await this.getRuleSets();
+    const ruleSets = await this.store.loadRuleSets();
     const pointers = this.convertToRulePointers(ruleSets);
 
     const results: MatchedRule[] = [];
@@ -316,7 +329,7 @@ export class RequestBlockServiceImpl
   }
 
   public async export(): Promise<ExportedRuleSets> {
-    const stored = await this.getRuleSets();
+    const stored = await this.store.loadRuleSets();
     return performExportCommand(stored);
   }
 
