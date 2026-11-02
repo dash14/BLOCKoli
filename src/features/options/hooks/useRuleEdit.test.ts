@@ -671,6 +671,9 @@ describe("useRuleEdit", () => {
         );
         await resolve("a");
 
+        act(() => {
+          result.current.updateUrlFilter("a");
+        });
         let saving!: Promise<void>;
         act(() => {
           saving = result.current.save();
@@ -679,6 +682,72 @@ describe("useRuleEdit", () => {
         await resolve("a");
         await saving;
 
+        expect(onChange).not.toHaveBeenCalled();
+      });
+
+      test("calls the latest onChange after waiting on the check", async () => {
+        const resolve = holdRegexChecks();
+        const first = vi.fn();
+        const latest = vi.fn();
+        const { result, rerender } = renderHook(
+          ({ onChange }) => useRuleEdit(regexRule, onChange, vi.fn(), vi.fn()),
+          { initialProps: { onChange: first } }
+        );
+        await resolve("a");
+
+        act(() => {
+          result.current.updateUrlFilter("a");
+        });
+        let saving!: Promise<void>;
+        act(() => {
+          saving = result.current.save();
+        });
+        rerender({ onChange: latest });
+        await resolve("a");
+        await act(() => saving);
+
+        expect(first).not.toHaveBeenCalled();
+        expect(latest).toHaveBeenCalledWith(regexRule);
+      });
+
+      test("saves without checking again when the rule was already checked", async () => {
+        const resolve = holdRegexChecks();
+        const onChange = vi.fn();
+        const { result } = renderHook(() =>
+          useRuleEdit(regexRule, onChange, vi.fn(), vi.fn())
+        );
+        await resolve("a");
+        mockIsRegexSupported.mockClear();
+
+        act(() => {
+          void result.current.save();
+        });
+
+        expect(onChange).toHaveBeenCalledWith(regexRule);
+        expect(mockIsRegexSupported).not.toHaveBeenCalled();
+      });
+
+      test("checks a rule known to be invalid again on save", async () => {
+        const resolve = holdRegexChecks();
+        const onChange = vi.fn();
+        const rejectedRule: Rule = {
+          ...regexRule,
+          condition: { ...regexRule.condition, urlFilter: "b" },
+        };
+        const { result } = renderHook(() =>
+          useRuleEdit(rejectedRule, onChange, vi.fn(), vi.fn())
+        );
+        await resolve("b");
+        mockIsRegexSupported.mockClear();
+
+        let saving!: Promise<void>;
+        act(() => {
+          saving = result.current.save();
+        });
+        await resolve("b");
+        await act(() => saving);
+
+        expect(mockIsRegexSupported).toHaveBeenCalledTimes(1);
         expect(onChange).not.toHaveBeenCalled();
       });
     });

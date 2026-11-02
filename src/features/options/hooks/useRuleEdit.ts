@@ -36,12 +36,20 @@ export function useRuleEdit(
 
   // Checks await Chrome and can finish out of order; only the latest counts
   const latestValidation = useRef(0);
+  // The rule that isValid was computed for
+  const validatedRule = useRef<Rule>(undefined);
 
-  async function validateLatest(rule: Rule) {
+  async function validateLatest(target: Rule) {
     const validation = ++latestValidation.current;
-    const result = await ruleValidator.validate(rule);
+    const result = await ruleValidator.validate(target);
     return validation === latestValidation.current ? result : undefined;
   }
+
+  // A save that waited on Chrome calls the onChange of the latest render
+  const latestOnChange = useRef(onChange);
+  useEffect(() => {
+    latestOnChange.current = onChange;
+  }, [onChange]);
 
   useEffect(() => {
     setRuleObject(initialRule);
@@ -64,9 +72,11 @@ export function useRuleEdit(
 
   async function save() {
     // isValid may still be for an earlier input
-    if (!(await validate(rule))) return;
+    if (validatedRule.current !== rule || !isValid) {
+      if (!(await validate(rule))) return;
+    }
     setIsEditing(false);
-    onChange(rule);
+    latestOnChange.current(rule);
   }
 
   function cancel() {
@@ -155,6 +165,7 @@ export function useRuleEdit(
     }
     setValidationErrors(errors);
     setIsValid(result.valid);
+    validatedRule.current = newRule;
     return result.valid;
   }
 
