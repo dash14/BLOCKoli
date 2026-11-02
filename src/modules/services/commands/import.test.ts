@@ -101,8 +101,7 @@ describe("performImportCommand", () => {
         ],
       },
       {
-        // add, with a new ID
-        id: expect.any(String),
+        // add, without an ID until the service saves it
         name: "ruleset #0",
         rules: [
           {
@@ -130,8 +129,8 @@ describe("performImportCommand", () => {
       name,
       rules: [{ id, ...ruleSet(name, domain).rules[0] }],
     });
-    const unsaved = (name: string, domain: string, id: unknown) => ({
-      id,
+    const unsaved = (name: string, domain: string, id?: string) => ({
+      ...(id && { id }),
       name,
       rules: [{ id: RULE_ID_UNSAVED, ...ruleSet(name, domain).rules[0] }],
     });
@@ -164,11 +163,9 @@ describe("performImportCommand", () => {
       unsaved("a", "a1.example.com", "rs-1"),
       stored("c", 2, "old-c.example.com"),
       unsaved("a", "a2.example.com", "rs-3"),
-      unsaved("b", "b1.example.com", expect.any(String)),
-      unsaved("a", "a3.example.com", expect.any(String)),
+      unsaved("b", "b1.example.com"),
+      unsaved("a", "a3.example.com"),
     ]);
-    const newIds = ruleSets.slice(3).map((ruleSet) => ruleSet.id);
-    expect(new Set(newIds).size).toBe(2);
   });
 
   it("accepts rule set IDs in the file but never uses them", async () => {
@@ -201,7 +198,7 @@ describe("performImportCommand", () => {
     expect(errors).toStrictEqual([]);
     expect(ruleSets.map((ruleSet) => ruleSet.id)).toStrictEqual([
       "stored-a",
-      expect.not.stringMatching(/^(file-a|stored-b|stored-a)$/),
+      undefined,
     ]);
   });
 

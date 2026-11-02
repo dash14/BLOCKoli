@@ -108,7 +108,7 @@ function filterAvailableRuleSets(entries: RuleSetEntry[]): StoredRuleSets {
     .filter((ruleSet) => ruleSet.rules.length > 0);
 }
 
-// Stored rule sets have no ID of their own, so match them by their rules' IDs, then by name.
+// Stored rule sets are matched by their rules' IDs, then by name, not by their own IDs yet.
 // Unsaved entries are not in storage; each follows the saved entry it came after.
 function mergeEntries(
   stored: StoredRuleSets,

@@ -1,4 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  onTestFinished,
+  vi,
+} from "vitest";
 import type {
   ChromeActionApi,
   ChromeDeclarativeNetRequestApi,
@@ -14,6 +21,7 @@ import type { StoredRuleSets } from "@/modules/rules/stored";
 import { RULE_ID_UNSAVED } from "@/modules/rules/stored";
 import type * as RequestBlock from "@/modules/services/RequestBlockService";
 import type { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
+import logging from "@/modules/utils/logging";
 import { RequestBlockServiceImpl } from "./RequestBlockServiceImpl";
 
 describe("RequestBlockServiceImpl", () => {
@@ -127,6 +135,30 @@ describe("RequestBlockServiceImpl", () => {
       expect(mockEmitter.emit).toHaveBeenCalledWith("updateRuleSets", {
         revision: 8,
         ruleSets: saved,
+      });
+    });
+
+    it("still applies the rules when giving IDs fails", async () => {
+      vi.mocked(mockStore.loadState).mockResolvedValue("enable");
+      vi.mocked(mockStore.loadRuleSets).mockResolvedValue([
+        { name: "a", rules: [] },
+      ] as unknown as StoredRuleSets);
+      const error = new Error("quota");
+      vi.mocked(mockStore.saveRuleSetsRevision).mockRejectedValue(error);
+      const logError = vi
+        .spyOn(logging.getLogger("RequestBlock"), "error")
+        .mockImplementation(() => {});
+      onTestFinished(() => logError.mockRestore());
+
+      await createService().start();
+
+      expect(logError).toHaveBeenCalledWith(
+        "Failed to give IDs to the stored rule sets",
+        error
+      );
+      expect(mockDeclarativeNetRequest.updateDynamicRules).toHaveBeenCalled();
+      expect(mockAction.setIcon).toHaveBeenCalledWith({
+        path: "./images/icon16.png",
       });
     });
 
@@ -246,13 +278,27 @@ describe("RequestBlockServiceImpl", () => {
 
       expect(result).toEqual({ revision: 7, ruleSets });
     });
+
+    it("gives IDs to stored rule sets without one before returning them", async () => {
+      vi.mocked(mockStore.loadRuleSets).mockResolvedValue([
+        { name: "a", rules: [] },
+      ] as unknown as StoredRuleSets);
+
+      const result = await createService().getRuleSets();
+
+      expect(result).toEqual({
+        revision: 8,
+        ruleSets: [{ id: expect.any(String), name: "a", rules: [] }],
+      });
+      expect(mockStore.saveRuleSets).toHaveBeenCalledWith(result.ruleSets);
+    });
   });
 
   describe("updateRuleSets", () => {
     it("gives an ID to a rule set sent without one", async () => {
       const result = await createService().updateRuleSets([
         { name: "a", rules: [] },
-      ] as unknown as StoredRuleSets);
+      ]);
 
       expect(result.ruleSets).toEqual([
         { id: expect.any(String), name: "a", rules: [] },
