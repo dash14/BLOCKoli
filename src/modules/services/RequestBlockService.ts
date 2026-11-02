@@ -22,5 +22,5 @@ export interface Service extends ServiceBase<Events> {
   getLanguage(): Promise<string>;
   setLanguage(lang: string): Promise<void>;
   export(): Promise<ExportedRuleSets>;
-  import(object: object): Promise<[boolean, RuleSetsValidationError[]]>;
+  import(object: unknown): Promise<[boolean, RuleSetsValidationError[]]>;
 }

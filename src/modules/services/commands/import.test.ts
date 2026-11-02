@@ -163,6 +163,28 @@ describe("performImportCommand", () => {
   });
 
   // format error
+  it.each([
+    ["null", null],
+    ["a number", 1],
+    ["a string", "BLOCKoli"],
+    ["an array", []],
+  ])("should detect format error when the file holds %s", async (_, target) => {
+    const [valid, errors, ruleSets] = await performImportCommand(
+      target,
+      [],
+      acceptAllRegex
+    );
+
+    expect(valid).toBeFalsy();
+    expect(errors).toStrictEqual([
+      {
+        message:
+          "The format is incorrect, please specify what was exported by BLOCKoli",
+      },
+    ]);
+    expect(ruleSets).toStrictEqual([]);
+  });
+
   it("should detect format error", async () => {
     const target = {
       // format: "BLOCKoli",

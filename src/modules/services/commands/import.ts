@@ -13,7 +13,7 @@ import {
 import { validateRegexSupport } from "@/modules/rules/validation/edit";
 
 export async function performImportCommand(
-  object: object,
+  object: unknown,
   storedRuleSets: StoredRuleSets,
   regexValidator: RegexValidator
 ): Promise<[boolean, RuleSetsValidationError[], StoredRuleSets]> {
@@ -77,12 +77,12 @@ async function validateRegexFilters(
 }
 
 function validateImportObject(
-  object: object
+  object: unknown
 ): [true, [], ExportedRuleSets] | [false, RuleSetsValidationError[], []] {
   const errors: RuleSetsValidationError[] = [];
   // format check
-  const data = object as ExportedRuleSets;
-  if (!data.format || data.format !== "BLOCKoli") {
+  const data = object as ExportedRuleSets | null;
+  if (typeof data !== "object" || data === null || data.format !== "BLOCKoli") {
     errors.push({
       message:
         "The format is incorrect, please specify what was exported by BLOCKoli",

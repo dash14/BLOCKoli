@@ -108,7 +108,7 @@ export function useRequestBlockClient() {
   };
 
   const performImport = async (
-    object: object
+    object: unknown
   ): Promise<[boolean, RuleSetsValidationError[]]> => {
     return await service.import(object);
   };
