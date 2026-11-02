@@ -459,6 +459,49 @@ describe("Options page", () => {
       .toBeInTheDocument();
   });
 
+  test("passes JSON holding null to the import and shows its errors", async () => {
+    const performImport = vi
+      .fn()
+      .mockResolvedValue([false, [{ message: "The format is incorrect" }]]);
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ ruleSets: sampleRuleSets, performImport }),
+    );
+
+    await renderWithChakra(
+      <div data-testid="container" style={{ width: 1024, height: 900 }}>
+        <Options />
+      </div>,
+    );
+
+    // Open export/import dialog
+    await page.getByRole("button", { name: /import and export/i }).click();
+    await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
+
+    // Select a file whose JSON is null
+    const fileInput =
+      document.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const file = new File(["null"], "null.json", { type: "application/json" });
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+
+    // Click Import to confirm
+    await expect
+      .element(page.getByRole("button", { name: "Import", exact: true }).nth(0))
+      .toBeInTheDocument();
+    await page
+      .getByRole("button", { name: "Import", exact: true })
+      .nth(0)
+      .click();
+
+    await expect.element(page.getByText(/import failed/i)).toBeInTheDocument();
+    await expect
+      .element(page.getByText(/The format is incorrect/))
+      .toBeInTheDocument();
+    expect(performImport).toHaveBeenCalledWith(null);
+  });
+
   test("shows error dialog on JSON parse error", async () => {
     const performImport = vi.fn();
     mockUseRequestBlockClient.mockReturnValue(

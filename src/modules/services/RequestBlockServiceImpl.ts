@@ -291,7 +291,7 @@ export class RequestBlockServiceImpl
   }
 
   public async import(
-    object: object
+    object: unknown
   ): Promise<[boolean, RuleSetsValidationError[]]> {
     const storedRuleSets = await this.store.loadRuleSets();
 

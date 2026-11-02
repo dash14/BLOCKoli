@@ -62,30 +62,28 @@ const Options: React.FC = () => {
 
   async function onImport(file: File) {
     const text = await file.text();
-    let object: object | null = null;
+    let object: unknown;
     try {
       object = JSON.parse(text);
     } catch {
-      // parse error
       await importFailedDialog.current?.open([{ message: "JSON parse error" }]);
+      return;
     }
 
-    if (object) {
-      let success: boolean;
-      let errors: RuleSetsValidationError[];
-      try {
-        [success, errors] = await performImport(object);
-      } catch (e) {
-        success = false;
-        errors = [{ message: e instanceof Error ? e.message : String(e) }];
-      }
-      if (success) {
-        // reload, display succeeded dialog
-        await importSuccessDialog.current?.open();
-      } else {
-        // display errors
-        await importFailedDialog.current?.open(errors);
-      }
+    let success: boolean;
+    let errors: RuleSetsValidationError[];
+    try {
+      [success, errors] = await performImport(object);
+    } catch (e) {
+      success = false;
+      errors = [{ message: e instanceof Error ? e.message : String(e) }];
+    }
+    if (success) {
+      // reload, display succeeded dialog
+      await importSuccessDialog.current?.open();
+    } else {
+      // display errors
+      await importFailedDialog.current?.open(errors);
     }
   }
 
