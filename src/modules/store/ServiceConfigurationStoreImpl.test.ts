@@ -177,6 +177,35 @@ describe("ServiceConfigurationStoreImpl", () => {
     });
   });
 
+  describe("saveRuleSetsRevision", () => {
+    it("saves the rule sets revision", async () => {
+      const store = createStore();
+      await store.saveRuleSetsRevision(3);
+
+      expect(mockStorage.set).toHaveBeenCalledWith("ruleSetsRevision", 3);
+    });
+  });
+
+  describe("loadRuleSetsRevision", () => {
+    it("returns the stored revision", async () => {
+      vi.mocked(mockStorage.get).mockResolvedValue(3);
+
+      const store = createStore();
+      const result = await store.loadRuleSetsRevision();
+
+      expect(mockStorage.get).toHaveBeenCalledWith("ruleSetsRevision");
+      expect(result).toBe(3);
+    });
+
+    it("returns 0 when nothing is stored", async () => {
+      vi.mocked(mockStorage.get).mockResolvedValue(undefined);
+
+      const store = createStore();
+
+      expect(await store.loadRuleSetsRevision()).toBe(0);
+    });
+  });
+
   describe("saveLanguage", () => {
     it("saves language when provided", async () => {
       const store = createStore();

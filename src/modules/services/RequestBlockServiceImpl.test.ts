@@ -53,6 +53,8 @@ describe("RequestBlockServiceImpl", () => {
       saveRuleSets: vi.fn().mockResolvedValue(undefined),
       loadNextRuleId: vi.fn().mockResolvedValue(100),
       saveNextRuleId: vi.fn().mockResolvedValue(undefined),
+      loadRuleSetsRevision: vi.fn().mockResolvedValue(7),
+      saveRuleSetsRevision: vi.fn().mockResolvedValue(undefined),
       loadLanguage: vi.fn().mockResolvedValue(undefined),
       saveLanguage: vi.fn().mockResolvedValue(undefined),
     };
@@ -210,7 +212,7 @@ describe("RequestBlockServiceImpl", () => {
       const service = createService();
       const result = await service.getRuleSets();
 
-      expect(result).toEqual(ruleSets);
+      expect(result).toEqual({ revision: 7, ruleSets });
     });
   });
 
@@ -229,7 +231,7 @@ describe("RequestBlockServiceImpl", () => {
       const service = createService();
       const result = await service.updateRuleSets(ruleSets);
 
-      expect(result).toEqual(ruleSets);
+      expect(result).toEqual({ revision: 7, ruleSets });
       expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
       expect(mockEmitter.emit).not.toHaveBeenCalled();
     });
@@ -255,7 +257,7 @@ describe("RequestBlockServiceImpl", () => {
       const service = createService();
       const result = await service.updateRuleSets(ruleSets);
 
-      expect(result[0]?.rules[0]?.id).toBe(100);
+      expect(result.ruleSets[0]?.rules[0]?.id).toBe(100);
       expect(mockStore.saveNextRuleId).toHaveBeenCalledWith(101);
       // If saving the rule sets fails, an ID is skipped rather than reused
       expect(
@@ -430,10 +432,35 @@ describe("RequestBlockServiceImpl", () => {
       ];
 
       const service = createService();
-      await service.updateRuleSets(ruleSets);
+      const result = await service.updateRuleSets(ruleSets);
 
       expect(mockStore.saveRuleSets).toHaveBeenCalledWith(ruleSets);
-      expect(mockEmitter.emit).toHaveBeenCalledWith("updateRuleSets", ruleSets);
+      expect(mockStore.saveRuleSetsRevision).toHaveBeenCalledWith(8);
+      expect(result).toEqual({ revision: 8, ruleSets });
+      expect(mockEmitter.emit).toHaveBeenCalledWith("updateRuleSets", {
+        revision: 8,
+        ruleSets,
+      });
+    });
+
+    it("saves the revision after the rule sets", async () => {
+      vi.mocked(mockStore.loadRuleSets).mockResolvedValue([]);
+
+      await createService().updateRuleSets([
+        {
+          name: "Test Set",
+          rules: [
+            { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
+          ],
+        },
+      ]);
+
+      // A page reading the new revision then also finds the new rule sets
+      expect(
+        vi.mocked(mockStore.saveRuleSets).mock.invocationCallOrder[0]
+      ).toBeLessThan(
+        vi.mocked(mockStore.saveRuleSetsRevision).mock.invocationCallOrder[0]
+      );
     });
   });
 
@@ -673,6 +700,15 @@ describe("RequestBlockServiceImpl", () => {
       vi.mocked(mockStore.saveRuleSets).mockImplementation(async (value) => {
         ruleSets = value;
       });
+      let revision = 0;
+      vi.mocked(mockStore.loadRuleSetsRevision).mockImplementation(
+        async () => revision
+      );
+      vi.mocked(mockStore.saveRuleSetsRevision).mockImplementation(
+        async (value) => {
+          revision = value;
+        }
+      );
     };
     const withNewRule = (name: string): StoredRuleSets => [
       {
@@ -697,8 +733,10 @@ describe("RequestBlockServiceImpl", () => {
         service.updateRuleSets(withNewRule("b")),
       ]);
 
-      expect(first[0].rules[0].id).toBe(100);
-      expect(second[0].rules[0].id).toBe(101);
+      expect(first).toMatchObject({ revision: 1 });
+      expect(first.ruleSets[0].rules[0].id).toBe(100);
+      expect(second).toMatchObject({ revision: 2 });
+      expect(second.ruleSets[0].rules[0].id).toBe(101);
       expect(mockStore.saveNextRuleId).toHaveBeenLastCalledWith(102);
     });
 
@@ -714,7 +752,19 @@ describe("RequestBlockServiceImpl", () => {
       const next = service.updateRuleSets(withNewRule("b"));
 
       await expect(failed).rejects.toThrow("apply failed");
-      expect((await next)[0].rules[0].id).toBe(100);
+      expect((await next).ruleSets[0].rules[0].id).toBe(100);
+    });
+
+    it("reads the rule sets only after a running update has saved them", async () => {
+      useStatefulStore();
+      const service = createService();
+
+      const [saved, read] = await Promise.all([
+        service.updateRuleSets(withNewRule("a")),
+        service.getRuleSets(),
+      ]);
+
+      expect(read).toEqual(saved);
     });
 
     it("applies an import only after a running start has finished", async () => {
