@@ -280,6 +280,111 @@ describe("useRequestBlockClient", () => {
     expect(result.current.ruleSets).toStrictEqual([]);
   });
 
+  describe("overlapping saves", () => {
+    // Holds each updateRuleSets request until the test answers it
+    const holdSaves = () => {
+      const answers: ((response: unknown) => void)[] = [];
+      mockSendMessage.mockImplementation(async (request) => {
+        if (request.method === "updateRuleSets") {
+          return new Promise((resolve) => answers.push(resolve));
+        }
+        return { type: "response", success: true, result: null };
+      });
+      return {
+        succeed: (index: number, result: StoredRuleSets) =>
+          act(async () => answers[index]({ type: "response", success: true, result })),
+        fail: (index: number) =>
+          act(async () =>
+            answers[index]({ type: "response", success: false, error: "save failed" })
+          ),
+      };
+    };
+    const ruleSetsNamed = (name: string): StoredRuleSets => [
+      { name, rules: [{ id: 1, ...rule }] },
+    ];
+
+    const render = async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let broadcast: any;
+      mockAddListener.mockImplementation((listener) => {
+        broadcast = (ruleSets: StoredRuleSets) =>
+          act(() =>
+            listener(
+              {
+                type: "broadcast",
+                service: "RequestBlock",
+                event: "updateRuleSets",
+                message: ruleSets,
+              },
+              {},
+              vi.fn()
+            )
+          );
+      });
+      const hook = renderHook(() => useRequestBlockClient());
+      await waitFor(() => expect(hook.result.current.loaded).toBe(true));
+      return { result: hook.result, broadcast: (r: StoredRuleSets) => broadcast(r) };
+    };
+
+    it("applies only the response to the latest save", async () => {
+      const { result, broadcast } = await render();
+      const saves = holdSaves();
+
+      let first!: Promise<void>, second!: Promise<void>;
+      act(() => {
+        first = result.current.updateRuleSets(ruleSetsNamed("first"));
+        second = result.current.updateRuleSets(ruleSetsNamed("second"));
+      });
+
+      await saves.succeed(0, ruleSetsNamed("first"));
+      broadcast(ruleSetsNamed("first"));
+      await first;
+      expect(result.current.ruleSets).toStrictEqual([]);
+
+      await saves.succeed(1, ruleSetsNamed("second"));
+      await second;
+      expect(result.current.ruleSets).toStrictEqual(ruleSetsNamed("second"));
+    });
+
+    it("shows what an earlier save stored when the latest one fails", async () => {
+      const { result } = await render();
+      const saves = holdSaves();
+
+      let first!: Promise<void>, second!: Promise<void>;
+      act(() => {
+        first = result.current.updateRuleSets(ruleSetsNamed("first"));
+        second = result.current.updateRuleSets(ruleSetsNamed("second"));
+      });
+
+      const secondFailed = expect(second).rejects.toBe("save failed");
+      await saves.succeed(0, ruleSetsNamed("first"));
+      await first;
+      await saves.fail(1);
+      await secondFailed;
+
+      expect(result.current.ruleSets).toStrictEqual(ruleSetsNamed("first"));
+    });
+
+    it("keeps the state when the only save fails, and applies broadcasts again after", async () => {
+      const { result, broadcast } = await render();
+      const saves = holdSaves();
+
+      let save!: Promise<void>;
+      act(() => {
+        save = result.current.updateRuleSets(ruleSetsNamed("failed"));
+      });
+      const failed = expect(save).rejects.toBe("save failed");
+      await saves.fail(0);
+      await failed;
+      expect(result.current.ruleSets).toStrictEqual([]);
+
+      broadcast(ruleSetsNamed("from another page"));
+      expect(result.current.ruleSets).toStrictEqual(
+        ruleSetsNamed("from another page")
+      );
+    });
+  });
+
   it("getMatchedRule calls service", async () => {
     const matchedRules = [{ ruleSetName: "Test", ruleName: "Rule 1" }];
     mockSendMessage.mockImplementation(async (request) => {

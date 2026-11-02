@@ -18,6 +18,12 @@ export function useRequestBlockClient() {
   const [language, setLanguageState] = useState<string>("en");
   // A language picked on this page during the initial load wins over the loaded one.
   const languageChosen = useRef(false);
+  // While this page waits for its own save, older responses and broadcasts would show
+  // rule sets from before its latest edit, so only the latest save's response is applied.
+  const latestSave = useRef(0);
+  const pendingSaves = useRef(0);
+  // What the newest successful save of the current run stored; the service answers in order.
+  const savedInRun = useRef<StoredRuleSets | undefined>(undefined);
 
   // Keep one proxy per mount so the effect adds and removes a single onMessage listener.
   const [service] = useState(() =>
@@ -40,7 +46,7 @@ export function useRequestBlockClient() {
     });
     service.addEventListener("updateRuleSets", (ruleSets) => {
       ruleSetsBroadcast = true;
-      setRuleSets(ruleSets);
+      if (pendingSaves.current === 0) setRuleSets(ruleSets);
     });
 
     (async () => {
@@ -86,9 +92,23 @@ export function useRequestBlockClient() {
   }, [ruleSets]);
 
   const updateRuleSets = async (updatedRuleSets: StoredRuleSets) => {
-    if (!isEqual(updatedRuleSets, latestRuleSets.current)) {
+    if (isEqual(updatedRuleSets, latestRuleSets.current)) return;
+
+    const save = ++latestSave.current;
+    if (pendingSaves.current++ === 0) savedInRun.current = undefined;
+    try {
       // New rules come back with the IDs the service assigned
-      setRuleSets(await service.updateRuleSets(updatedRuleSets));
+      const saved = await service.updateRuleSets(updatedRuleSets);
+      savedInRun.current = saved;
+      if (save === latestSave.current) setRuleSets(saved);
+    } catch (error) {
+      // Show what the earlier saves stored, not the rule sets from before them
+      if (save === latestSave.current && savedInRun.current) {
+        setRuleSets(savedInRun.current);
+      }
+      throw error;
+    } finally {
+      pendingSaves.current--;
     }
   };
 
