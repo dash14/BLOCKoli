@@ -81,8 +81,12 @@ function validateImportObject(
 ): [true, [], ExportedRuleSets] | [false, RuleSetsValidationError[], []] {
   const errors: RuleSetsValidationError[] = [];
   // format check
-  const data = object as ExportedRuleSets | null;
-  if (typeof data !== "object" || data === null || data.format !== "BLOCKoli") {
+  if (
+    typeof object !== "object" ||
+    object === null ||
+    !("format" in object) ||
+    object.format !== "BLOCKoli"
+  ) {
     errors.push({
       message:
         "The format is incorrect, please specify what was exported by BLOCKoli",
@@ -90,6 +94,7 @@ function validateImportObject(
     return [false, errors, []];
   }
 
+  const data = object as ExportedRuleSets;
   if (!data.version || data.version !== 1) {
     errors.push({
       message: "The file format version is not supported",
