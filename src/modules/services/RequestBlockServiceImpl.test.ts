@@ -656,6 +656,109 @@ describe("RequestBlockServiceImpl", () => {
     });
   });
 
+  describe("overlapping state changes", () => {
+    // Like chrome.storage: keeps what was saved and returns copies
+    const useStatefulStore = () => {
+      let nextRuleId = 100;
+      let ruleSets: StoredRuleSets = [];
+      vi.mocked(mockStore.loadNextRuleId).mockImplementation(
+        async () => nextRuleId
+      );
+      vi.mocked(mockStore.saveNextRuleId).mockImplementation(async (id) => {
+        nextRuleId = id;
+      });
+      vi.mocked(mockStore.loadRuleSets).mockImplementation(async () =>
+        structuredClone(ruleSets)
+      );
+      vi.mocked(mockStore.saveRuleSets).mockImplementation(async (value) => {
+        ruleSets = value;
+      });
+    };
+    const withNewRule = (name: string): StoredRuleSets => [
+      {
+        name,
+        rules: [
+          {
+            id: RULE_ID_UNSAVED,
+            action: { type: RuleActionType.BLOCK },
+            condition: {},
+          },
+        ],
+      },
+    ];
+
+    it("gives new rules in overlapping updates different IDs", async () => {
+      useStatefulStore();
+      vi.mocked(mockStore.loadState).mockResolvedValue("enable");
+      const service = createService();
+
+      const [first, second] = await Promise.all([
+        service.updateRuleSets(withNewRule("a")),
+        service.updateRuleSets(withNewRule("b")),
+      ]);
+
+      expect(first[0].rules[0].id).toBe(100);
+      expect(second[0].rules[0].id).toBe(101);
+      expect(mockStore.saveNextRuleId).toHaveBeenLastCalledWith(102);
+    });
+
+    it("runs the next change after one that failed", async () => {
+      useStatefulStore();
+      vi.mocked(mockStore.loadState).mockResolvedValue("enable");
+      vi.mocked(
+        mockDeclarativeNetRequest.updateDynamicRules
+      ).mockRejectedValueOnce(new Error("apply failed"));
+      const service = createService();
+
+      const failed = service.updateRuleSets(withNewRule("a"));
+      const next = service.updateRuleSets(withNewRule("b"));
+
+      await expect(failed).rejects.toThrow("apply failed");
+      expect((await next)[0].rules[0].id).toBe(100);
+    });
+
+    it("applies an import only after a running start has finished", async () => {
+      useStatefulStore();
+      vi.mocked(mockStore.loadState).mockResolvedValue("enable");
+      // Hold start inside its first Chrome call until the import has had a chance to run
+      let release = () => {};
+      vi.mocked(
+        mockDeclarativeNetRequest.getDynamicRules
+      ).mockImplementationOnce(
+        () => new Promise((resolve) => (release = () => resolve([])))
+      );
+      const service = createService();
+
+      const started = service.start();
+      const imported = service.import({
+        format: "BLOCKoli",
+        version: 1,
+        ruleSets: [
+          {
+            name: "a",
+            rules: [
+              {
+                action: { type: RuleActionType.BLOCK },
+                condition: { requestDomains: ["example.com"] },
+              },
+            ],
+          },
+        ],
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      release();
+      await started;
+      expect(await imported).toEqual([true, []]);
+
+      const calls = vi.mocked(mockDeclarativeNetRequest.getDynamicRules).mock
+        .invocationCallOrder;
+      const applied = vi.mocked(mockDeclarativeNetRequest.updateDynamicRules)
+        .mock.invocationCallOrder;
+      // start reads and writes the dynamic rules before the import reads them
+      expect(applied[0]).toBeLessThan(calls[1]);
+    });
+  });
+
   describe("rule count limits", () => {
     // One rule is reserved, so two of the three dynamic rules are left for rule sets.
     beforeEach(() => {

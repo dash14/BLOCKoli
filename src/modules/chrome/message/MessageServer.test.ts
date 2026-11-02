@@ -113,6 +113,22 @@ describe("MessageServer", () => {
       expect(service.startCalled).toBe(true);
     });
 
+    it("logs a failed service start instead of leaving it unhandled", async () => {
+      const server = new MessageServer<TestService>("testService");
+      const service = new TestService({ emit: vi.fn() });
+      const error = new Error("start failed");
+      vi.spyOn(service, "start").mockRejectedValue(error);
+
+      server.start(service);
+
+      await vi.waitFor(() =>
+        expect(mockLogError).toHaveBeenCalledWith(
+          "Failed to start the service",
+          error
+        )
+      );
+    });
+
     it("does not register listener twice when start is called multiple times", () => {
       const server = new MessageServer<TestService>("testService");
       const mockEmitter: EventEmitter<TestEvents> = {
