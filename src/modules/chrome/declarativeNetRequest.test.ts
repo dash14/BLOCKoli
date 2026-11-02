@@ -4,11 +4,10 @@ import { ChromeDeclarativeNetRequestApiImpl } from "./declarativeNetRequest";
 import type { Rule } from "./api";
 
 // Mock logging
+const log = vi.hoisted(() => ({ debug: vi.fn(), warn: vi.fn() }));
 vi.mock("@/modules/utils/logging", () => ({
   default: {
-    getLogger: () => ({
-      debug: vi.fn(),
-    }),
+    getLogger: () => log,
   },
 }));
 
@@ -180,15 +179,32 @@ describe("ChromeDeclarativeNetRequestApiImpl", () => {
       expect(result1).toEqual(matchedRules);
 
       // Second call - rate limit exceeded, returns cached value
+      const error = new Error("Rate limit exceeded");
+      mockGetMatchedRules.mockRejectedValueOnce(error);
+      const result2 = await api.getMatchedRulesInActiveTab();
+      expect(result2).toEqual(matchedRules);
+      expect(log.warn).toHaveBeenCalledWith(
+        "getMatchedRules failed, using the cached result",
+        error
+      );
+    });
+
+    it("does not return the cached value of another tab", async () => {
+      const matchedRules = [
+        { rule: { ruleId: 1 }, tabId: 1, timeStamp: 1234567890 },
+      ];
+      mockGetMatchedRules.mockResolvedValueOnce({
+        rulesMatchedInfo: matchedRules,
+      });
+      const api = new ChromeDeclarativeNetRequestApiImpl();
+      await api.getMatchedRulesInActiveTab();
+
+      mockTabsQuery.mockResolvedValue([{ id: 2, url: "https://example.com" }]);
       mockGetMatchedRules.mockRejectedValueOnce(
         new Error("Rate limit exceeded")
       );
-      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
-      const result2 = await api.getMatchedRulesInActiveTab();
-      expect(result2).toEqual(matchedRules);
-
-      consoleSpy.mockRestore();
+      expect(await api.getMatchedRulesInActiveTab()).toEqual([]);
     });
 
     it("handles tab without url property", async () => {

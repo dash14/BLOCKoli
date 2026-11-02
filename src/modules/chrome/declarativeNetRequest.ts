@@ -11,7 +11,8 @@ import {
 
 const log = logging.getLogger("net");
 
-let matchedRuleCache: MatchedRuleInfo[] = [];
+// Each tab's last result, for when getMatchedRules is over its call quota
+const matchedRuleCache = new Map<number | undefined, MatchedRuleInfo[]>();
 
 export class ChromeDeclarativeNetRequestApiImpl
   implements ChromeDeclarativeNetRequestApi
@@ -47,12 +48,11 @@ export class ChromeDeclarativeNetRequestApiImpl
       const rules = await chrome.declarativeNetRequest.getMatchedRules({
         tabId: tab.id,
       });
-      matchedRuleCache = rules.rulesMatchedInfo;
+      matchedRuleCache.set(tab.id, rules.rulesMatchedInfo);
       return rules.rulesMatchedInfo;
     } catch (e) {
-      // rate limit exceeded. return cached value
-      console.log(e);
-      return matchedRuleCache;
+      log.warn("getMatchedRules failed, using the cached result", e);
+      return matchedRuleCache.get(tab.id) ?? [];
     }
   }
 
