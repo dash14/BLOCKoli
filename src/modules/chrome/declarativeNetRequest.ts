@@ -11,7 +11,11 @@ import {
 
 const log = logging.getLogger("net");
 
-let matchedRuleCache: MatchedRuleInfo[] = [];
+// Last result per tab and page, for when getMatchedRules is over its quota
+const matchedRuleCache = new Map<
+  number,
+  { url?: string; rules: MatchedRuleInfo[] }
+>();
 
 export class ChromeDeclarativeNetRequestApiImpl
   implements ChromeDeclarativeNetRequestApi
@@ -40,19 +44,23 @@ export class ChromeDeclarativeNetRequestApiImpl
       return [];
     }
     const tab = tabs[0];
-    if (tab.url?.includes("chrome://")) {
+    if (tab.id === undefined || tab.url?.includes("chrome://")) {
       return [];
     }
     try {
       const rules = await chrome.declarativeNetRequest.getMatchedRules({
         tabId: tab.id,
       });
-      matchedRuleCache = rules.rulesMatchedInfo;
+      matchedRuleCache.set(tab.id, {
+        url: tab.url,
+        rules: rules.rulesMatchedInfo,
+      });
       return rules.rulesMatchedInfo;
     } catch (e) {
-      // rate limit exceeded. return cached value
-      console.log(e);
-      return matchedRuleCache;
+      log.warn("getMatchedRules failed, using the cached result", e);
+      const cached = matchedRuleCache.get(tab.id);
+      // Matches from the page the tab showed before do not apply
+      return cached && cached.url === tab.url ? cached.rules : [];
     }
   }
 
