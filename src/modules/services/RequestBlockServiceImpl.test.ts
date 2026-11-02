@@ -257,6 +257,12 @@ describe("RequestBlockServiceImpl", () => {
 
       expect(result[0]?.rules[0]?.id).toBe(100);
       expect(mockStore.saveNextRuleId).toHaveBeenCalledWith(101);
+      // If saving the rule sets fails, an ID is skipped rather than reused
+      expect(
+        vi.mocked(mockStore.saveNextRuleId).mock.invocationCallOrder[0]
+      ).toBeLessThan(
+        vi.mocked(mockStore.saveRuleSets).mock.invocationCallOrder[0]
+      );
     });
 
     it("applies rules when enabled", async () => {
@@ -623,6 +629,7 @@ describe("RequestBlockServiceImpl", () => {
       {
         name: "a",
         rules: [
+          { id: 11, action: { type: RuleActionType.ALLOW }, condition: {} },
           {
             id: RULE_ID_UNSAVED,
             action: { type: RuleActionType.BLOCK },
@@ -646,20 +653,6 @@ describe("RequestBlockServiceImpl", () => {
       expect(mockStore.saveNextRuleId).not.toHaveBeenCalled();
       expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
       expect(ruleSets).toEqual(newRuleSets());
-    });
-
-    it("saves the next rule ID before the rule sets", async () => {
-      vi.mocked(mockStore.loadNextRuleId).mockResolvedValue(100);
-
-      const saved = await createService().updateRuleSets(newRuleSets());
-
-      expect(saved[0].rules[0].id).toBe(100);
-      expect(mockStore.saveNextRuleId).toHaveBeenCalledWith(101);
-      expect(
-        vi.mocked(mockStore.saveNextRuleId).mock.invocationCallOrder[0]
-      ).toBeLessThan(
-        vi.mocked(mockStore.saveRuleSets).mock.invocationCallOrder[0]
-      );
     });
   });
 
