@@ -62,8 +62,8 @@ export function useRuleSetsEdit(
 
   function updateRules(rules: StoredRule[], ruleSetIndex: number) {
     if (rules.length === 0) {
-      // add -> cancel
-      setEntries(removeAt(entries, ruleSetIndex));
+      // Its first rule was canceled, or its last saved rule was removed
+      removeRuleSet(ruleSetIndex);
     } else {
       replaceRuleSet(ruleSetIndex, { ...entries[ruleSetIndex].ruleSet, rules });
     }

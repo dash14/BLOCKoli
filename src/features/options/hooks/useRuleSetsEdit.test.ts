@@ -143,6 +143,24 @@ describe("useRuleSetsEdit", () => {
       expect(result.current.ruleSets).toHaveLength(1);
       expect(result.current.ruleSets[0].name).toBe("Allow Trusted");
       expect(result.current.entries.map((e) => e.key)).toEqual([2]);
+      expect(onChange).toHaveBeenCalledWith([sampleRuleSets[1]]);
+    });
+
+    test("removes a new rule set without calling onChange when its first rule is canceled", () => {
+      const onChange = vi.fn();
+      const { result } = renderHook(() =>
+        useRuleSetsEdit([sampleRuleSets[0]], onChange)
+      );
+
+      act(() => {
+        result.current.addRuleSet();
+      });
+      act(() => {
+        result.current.updateRules([], 1);
+      });
+
+      expect(result.current.ruleSets).toEqual([sampleRuleSets[0]]);
+      expect(onChange).not.toHaveBeenCalled();
     });
 
     test("filters out RULE_ID_EDITING rules when calling onChange", () => {
