@@ -120,21 +120,19 @@ export class RequestBlockServiceImpl
     // Chrome would reject the whole update, so refuse to save even while disabled
     this.checkRuleLimits(ruleSets);
 
-    // Assign ID to new rules
-    await this.assignRuleId(ruleSets);
+    const [assigned, nextRuleId] = await this.assignRuleId(ruleSets);
 
-    // Update to chrome
     if (await this.isEnabled()) {
-      await this.applyRuleSets(ruleSets);
+      await this.applyRuleSets(assigned);
     }
 
-    // Save to store
-    await this.store.saveRuleSets(ruleSets);
+    // Save the next ID first: if saving the rule sets fails, an ID is skipped rather than reused
+    await this.store.saveNextRuleId(nextRuleId);
+    await this.store.saveRuleSets(assigned);
 
-    // Emit a event
-    void this.emitter.emit("updateRuleSets", ruleSets);
+    void this.emitter.emit("updateRuleSets", assigned);
 
-    return ruleSets;
+    return assigned;
   }
 
   private checkRuleLimits(ruleSets: StoredRuleSets): void {
@@ -245,16 +243,20 @@ export class RequestBlockServiceImpl
     this.action.setIcon({ path: DISABLED_ICON });
   }
 
-  private async assignRuleId(ruleSets: StoredRuleSets): Promise<void> {
+  // Returns copies with IDs on new rules, and the next free ID, without saving it
+  private async assignRuleId(
+    ruleSets: StoredRuleSets
+  ): Promise<[StoredRuleSets, number]> {
     let nextId = await this.store.loadNextRuleId();
-    ruleSets.forEach((ruleSet) => {
-      ruleSet.rules.forEach((rule) => {
-        if (!rule.id || rule.id === RULE_ID_UNSAVED) {
-          rule.id = nextId++;
-        }
-      });
-    });
-    await this.store.saveNextRuleId(nextId);
+    const assigned = ruleSets.map((ruleSet) => ({
+      ...ruleSet,
+      rules: ruleSet.rules.map((rule) =>
+        !rule.id || rule.id === RULE_ID_UNSAVED
+          ? { ...rule, id: nextId++ }
+          : rule
+      ),
+    }));
+    return [assigned, nextId];
   }
 
   private convertToRulePointers(ruleSets: StoredRuleSets): RulePointers {

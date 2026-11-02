@@ -257,6 +257,12 @@ describe("RequestBlockServiceImpl", () => {
 
       expect(result[0]?.rules[0]?.id).toBe(100);
       expect(mockStore.saveNextRuleId).toHaveBeenCalledWith(101);
+      // If saving the rule sets fails, an ID is skipped rather than reused
+      expect(
+        vi.mocked(mockStore.saveNextRuleId).mock.invocationCallOrder[0]
+      ).toBeLessThan(
+        vi.mocked(mockStore.saveRuleSets).mock.invocationCallOrder[0]
+      );
     });
 
     it("applies rules when enabled", async () => {
@@ -615,6 +621,38 @@ describe("RequestBlockServiceImpl", () => {
       expect(appliedRuleIds()).toContain(52);
       expect(appliedRuleIds()).not.toContain(51);
       expect(mockStore.saveRuleSets).toHaveBeenCalledWith(ruleSets);
+    });
+  });
+
+  describe("updateRuleSets when applying fails", () => {
+    const newRuleSets = (): StoredRuleSets => [
+      {
+        name: "a",
+        rules: [
+          { id: 11, action: { type: RuleActionType.ALLOW }, condition: {} },
+          {
+            id: RULE_ID_UNSAVED,
+            action: { type: RuleActionType.BLOCK },
+            condition: {},
+          },
+        ],
+      },
+    ];
+
+    it("keeps the next rule ID and the caller's rule sets unchanged", async () => {
+      vi.mocked(mockStore.loadState).mockResolvedValue("enable");
+      vi.mocked(mockDeclarativeNetRequest.updateDynamicRules).mockRejectedValue(
+        new Error("apply failed")
+      );
+      const ruleSets = newRuleSets();
+
+      await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
+        "apply failed"
+      );
+
+      expect(mockStore.saveNextRuleId).not.toHaveBeenCalled();
+      expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
+      expect(ruleSets).toEqual(newRuleSets());
     });
   });
 
