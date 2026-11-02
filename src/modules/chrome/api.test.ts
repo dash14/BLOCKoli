@@ -269,6 +269,7 @@ describe("api types", () => {
         isRegexSupported: async (_options: RegexOptions) => ({
           isSupported: true,
         }),
+        getRuleLimits: () => ({ maxDynamicRules: 30000, maxRegexRules: 1000 }),
       };
 
       expect(api.updateDynamicRules).toBeDefined();
@@ -276,6 +277,7 @@ describe("api types", () => {
       expect(api.removeAllDynamicRules).toBeDefined();
       expect(api.getMatchedRulesInActiveTab).toBeDefined();
       expect(api.isRegexSupported).toBeDefined();
+      expect(api.getRuleLimits).toBeDefined();
     });
   });
 });

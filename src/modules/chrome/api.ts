@@ -129,10 +129,16 @@ export interface IsRegexSupportedResult {
   reason?: `${UnsupportedRegexReason}`;
 }
 
+export interface RuleLimits {
+  maxDynamicRules: number;
+  maxRegexRules: number;
+}
+
 export interface ChromeDeclarativeNetRequestApi {
   updateDynamicRules(options: UpdateRuleOptions): Promise<void>;
   getDynamicRules(): Promise<Rule[]>;
   removeAllDynamicRules(): Promise<void>;
   getMatchedRulesInActiveTab(): Promise<MatchedRuleInfo[]>;
   isRegexSupported(options: RegexOptions): Promise<IsRegexSupportedResult>;
+  getRuleLimits(): RuleLimits;
 }

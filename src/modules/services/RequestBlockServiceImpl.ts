@@ -117,6 +117,9 @@ export class RequestBlockServiceImpl
       return ruleSets;
     }
 
+    // Chrome would reject the whole update, so refuse to save even while disabled
+    this.checkRuleLimits(ruleSets);
+
     // Assign ID to new rules
     await this.assignRuleId(ruleSets);
 
@@ -132,6 +135,29 @@ export class RequestBlockServiceImpl
     void this.emitter.emit("updateRuleSets", ruleSets);
 
     return ruleSets;
+  }
+
+  private checkRuleLimits(ruleSets: StoredRuleSets): void {
+    const { maxDynamicRules, maxRegexRules } =
+      this.declarativeNetRequest.getRuleLimits();
+    const maxRules =
+      maxDynamicRules - getReservedRules(this.runtime.getId()).length;
+
+    const rules = ruleSets.flatMap((ruleSet) => ruleSet.rules);
+    if (rules.length > maxRules) {
+      throw new Error(
+        `Too many rules: ${rules.length}, but Chrome allows at most ${maxRules}`
+      );
+    }
+
+    const regexRules = rules.filter(
+      ({ condition }) => condition.isRegexFilter && condition.urlFilter
+    );
+    if (regexRules.length > maxRegexRules) {
+      throw new Error(
+        `Too many regex rules: ${regexRules.length}, but Chrome allows at most ${maxRegexRules}`
+      );
+    }
   }
 
   private async applyRuleSets(ruleSets: StoredRuleSets): Promise<void> {
@@ -202,6 +228,7 @@ export class RequestBlockServiceImpl
     log.info("Activate");
     // Apply rules
     const ruleSets = await this.store.loadRuleSets();
+    this.checkRuleLimits(ruleSets);
     await this.applyRuleSets(ruleSets);
 
     // Update icon

@@ -70,6 +70,9 @@ describe("RequestBlockServiceImpl", () => {
       removeAllDynamicRules: vi.fn().mockResolvedValue(undefined),
       getMatchedRulesInActiveTab: vi.fn().mockResolvedValue([]),
       isRegexSupported: vi.fn().mockResolvedValue({ isSupported: true }),
+      getRuleLimits: vi
+        .fn()
+        .mockReturnValue({ maxDynamicRules: 30000, maxRegexRules: 1000 }),
     } as unknown as ChromeDeclarativeNetRequestApi;
 
     // Setup mock action
@@ -615,7 +618,71 @@ describe("RequestBlockServiceImpl", () => {
     });
   });
 
-  describe("getMatchedRules for rules no longer stored", () => {
+  describe("rule count limits", () => {
+    // One rule is reserved, so two of the three dynamic rules are left for rule sets.
+    beforeEach(() => {
+      vi.mocked(mockDeclarativeNetRequest.getRuleLimits).mockReturnValue({
+        maxDynamicRules: 3,
+        maxRegexRules: 1,
+      });
+      vi.mocked(mockStore.loadState).mockResolvedValue("disable");
+    });
+
+    const rule = (id: number, condition: StoredRuleSets[0]["rules"][0]["condition"] = {}) => ({
+      id,
+      action: { type: RuleActionType.BLOCK },
+      condition,
+    });
+    const regex = { isRegexFilter: true, urlFilter: "^https://" };
+
+    it("refuses to save more rules than Chrome allows, even while disabled", async () => {
+      const ruleSets = [
+        { name: "a", rules: [rule(11), rule(12), rule(RULE_ID_UNSAVED)] },
+      ];
+
+      await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
+        "Too many rules: 3, but Chrome allows at most 2"
+      );
+      expect(mockStore.saveNextRuleId).not.toHaveBeenCalled();
+      expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
+    });
+
+    it("refuses to save more regex rules than Chrome allows", async () => {
+      const ruleSets = [{ name: "a", rules: [rule(11, regex), rule(12, regex)] }];
+
+      await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
+        "Too many regex rules: 2, but Chrome allows at most 1"
+      );
+      expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
+    });
+
+    it("saves rules up to the limits", async () => {
+      const ruleSets = [
+        {
+          name: "a",
+          rules: [rule(11, regex), rule(12, { isRegexFilter: true })],
+        },
+      ];
+
+      await createService().updateRuleSets(ruleSets);
+
+      expect(mockStore.saveRuleSets).toHaveBeenCalledWith(ruleSets);
+    });
+
+    it("refuses to enable when stored rules are over the limit", async () => {
+      vi.mocked(mockStore.loadRuleSets).mockResolvedValue([
+        { name: "a", rules: [rule(11), rule(12), rule(13)] },
+      ]);
+
+      await expect(createService().enable()).rejects.toThrow(
+        "Too many rules: 3, but Chrome allows at most 2"
+      );
+      expect(mockDeclarativeNetRequest.updateDynamicRules).not.toHaveBeenCalled();
+      expect(mockStore.saveState).not.toHaveBeenCalled();
+    });
+  });
+
+describe("getMatchedRules for rules no longer stored", () => {
     it("drops a matched rule whose id is not in any rule set", async () => {
       vi.mocked(mockStore.loadRuleSets).mockResolvedValue([]);
       vi.mocked(
