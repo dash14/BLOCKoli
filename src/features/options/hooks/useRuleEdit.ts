@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import cloneDeep from "lodash-es/cloneDeep";
 import { createRegexValidator } from "@/modules/chrome/regex";
 import {
@@ -34,21 +34,49 @@ export function useRuleEdit(
     resourceTypes: [],
   });
 
+  // Checks await Chrome and can finish out of order; only the latest counts
+  const latestValidation = useRef(0);
+  // The rule that isValid was computed for
+  const validatedRule = useRef<Rule>(undefined);
+
+  async function validateLatest(target: Rule) {
+    const validation = ++latestValidation.current;
+    const result = await ruleValidator.validate(target);
+    return validation === latestValidation.current ? result : undefined;
+  }
+
+  // A save that waited on Chrome calls the onChange of the latest render
+  const latestOnChange = useRef(onChange);
+  useEffect(() => {
+    latestOnChange.current = onChange;
+  }, [onChange]);
+
   useEffect(() => {
     setRuleObject(initialRule);
     // For incomplete data, enter edit mode.
-    ruleValidator.validate(rule).then(({ valid }) => {
-      if (!valid) {
+    validate(initialRule).then((valid) => {
+      if (valid === false) {
         setIsEditing(true);
       }
-      setIsValid(valid);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialRule]);
 
-  function save() {
+  // Unmounting drops a running check, so a pending save() skips onChange
+  useEffect(
+    () => () => {
+      latestValidation.current++;
+    },
+    []
+  );
+
+  async function save() {
+    // isValid may still be for an earlier input
+    if (validatedRule.current !== rule || !isValid) {
+      if (!(await validate(rule))) return;
+    }
     setIsEditing(false);
-    onChange(rule);
+    latestOnChange.current(rule);
   }
 
   function cancel() {
@@ -115,7 +143,9 @@ export function useRuleEdit(
   }
 
   async function validate(newRule: Rule) {
-    const result = await ruleValidator.validate(newRule);
+    const result = await validateLatest(newRule);
+    // Undefined when a newer check has started
+    if (!result) return undefined;
     const errors: ValidationErrors = {
       requestDomains: [],
       initiatorDomains: [],
@@ -135,6 +165,8 @@ export function useRuleEdit(
     }
     setValidationErrors(errors);
     setIsValid(result.valid);
+    validatedRule.current = newRule;
+    return result.valid;
   }
 
   function resetRuleObject() {

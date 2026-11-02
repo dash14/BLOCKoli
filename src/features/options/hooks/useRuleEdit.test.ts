@@ -120,6 +120,25 @@ describe("useRuleEdit", () => {
         "newdomain.com",
       ]);
     });
+
+    test("validates the new rule when initialRule changes", async () => {
+      const { result, rerender } = renderHook(
+        ({ rule }) => useRuleEdit(rule, vi.fn(), vi.fn(), vi.fn()),
+        { initialProps: { rule: validRule } }
+      );
+
+      await waitFor(() => {
+        expect(result.current.isValid).toBe(true);
+      });
+      expect(result.current.isEditing).toBe(false);
+
+      rerender({ rule: invalidRule });
+
+      await waitFor(() => {
+        expect(result.current.isValid).toBe(false);
+      });
+      expect(result.current.isEditing).toBe(true);
+    });
   });
 
   describe("enterEditMode", () => {
@@ -357,8 +376,8 @@ describe("useRuleEdit", () => {
         );
       });
 
-      act(() => {
-        result.current.save();
+      await act(async () => {
+        await result.current.save();
       });
 
       expect(onChange).toHaveBeenCalledTimes(1);
@@ -523,6 +542,214 @@ describe("useRuleEdit", () => {
         (errors) => errors.length > 0
       );
       expect(hasErrors).toBe(false);
+    });
+
+    describe("results arriving out of order", () => {
+      const regexRule: Rule = {
+        action: { type: RuleActionType.BLOCK },
+        condition: { urlFilter: "a", isRegexFilter: true },
+      };
+
+      // Holds isRegexSupported until resolve() is called with the regex
+      function holdRegexChecks() {
+        const pending: { regex: string; resolve: () => void }[] = [];
+        mockIsRegexSupported.mockImplementation(
+          (regex: string) =>
+            new Promise((resolve) => {
+              pending.push({
+                regex,
+                resolve: () =>
+                  resolve({
+                    isSupported: regex === "a",
+                    reason: "syntaxError",
+                  }),
+              });
+            })
+        );
+        return async (regex: string) => {
+          await act(async () => {
+            pending
+              .filter((p) => p.regex === regex)
+              .forEach((p) => p.resolve());
+          });
+        };
+      }
+
+      test("keeps the result of the latest input", async () => {
+        const resolve = holdRegexChecks();
+        const { result } = renderHook(() =>
+          useRuleEdit(regexRule, vi.fn(), vi.fn(), vi.fn())
+        );
+
+        act(() => {
+          result.current.updateUrlFilter("b");
+        });
+        await resolve("b");
+        // The initial check finishes last but is older
+        await resolve("a");
+
+        expect(result.current.isValid).toBe(false);
+        expect(result.current.validationErrors.urlFilter).toEqual([
+          "syntaxError",
+        ]);
+      });
+
+      test("shows the errors of a new initialRule", async () => {
+        const resolve = holdRegexChecks();
+        const { result, rerender } = renderHook(
+          ({ rule }) => useRuleEdit(rule, vi.fn(), vi.fn(), vi.fn()),
+          { initialProps: { rule: regexRule } }
+        );
+        await resolve("a");
+        expect(result.current.validationErrors.urlFilter).toEqual([]);
+
+        rerender({
+          rule: {
+            ...regexRule,
+            condition: { ...regexRule.condition, urlFilter: "b" },
+          },
+        });
+        await resolve("b");
+
+        expect(result.current.validationErrors.urlFilter).toEqual([
+          "syntaxError",
+        ]);
+        expect(result.current.isEditing).toBe(true);
+      });
+
+      test("ignores an earlier input whose check finishes later", async () => {
+        const resolve = holdRegexChecks();
+        const { result } = renderHook(() =>
+          useRuleEdit(regexRule, vi.fn(), vi.fn(), vi.fn())
+        );
+        await resolve("a");
+
+        act(() => {
+          result.current.updateUrlFilter("b");
+        });
+        act(() => {
+          result.current.updateUrlFilter("a");
+        });
+        await resolve("a");
+        await resolve("b");
+
+        expect(result.current.isValid).toBe(true);
+      });
+
+      test("save checks the rule again instead of using a stale isValid", async () => {
+        const resolve = holdRegexChecks();
+        const onChange = vi.fn();
+        const { result } = renderHook(() =>
+          useRuleEdit(regexRule, onChange, vi.fn(), vi.fn())
+        );
+        await resolve("a");
+        expect(result.current.isValid).toBe(true);
+
+        act(() => {
+          result.current.enterEditMode();
+        });
+        act(() => {
+          result.current.updateUrlFilter("b");
+        });
+        let saving!: Promise<void>;
+        act(() => {
+          saving = result.current.save();
+        });
+        await resolve("b");
+        await act(() => saving);
+
+        expect(onChange).not.toHaveBeenCalled();
+        expect(result.current.isEditing).toBe(true);
+        expect(result.current.isValid).toBe(false);
+      });
+
+      test("does not save a rule removed while its check runs", async () => {
+        const resolve = holdRegexChecks();
+        const onChange = vi.fn();
+        const { result, unmount } = renderHook(() =>
+          useRuleEdit(regexRule, onChange, vi.fn(), vi.fn())
+        );
+        await resolve("a");
+
+        act(() => {
+          result.current.updateUrlFilter("a");
+        });
+        let saving!: Promise<void>;
+        act(() => {
+          saving = result.current.save();
+        });
+        unmount();
+        await resolve("a");
+        await saving;
+
+        expect(onChange).not.toHaveBeenCalled();
+      });
+
+      test("calls the latest onChange after waiting on the check", async () => {
+        const resolve = holdRegexChecks();
+        const first = vi.fn();
+        const latest = vi.fn();
+        const { result, rerender } = renderHook(
+          ({ onChange }) => useRuleEdit(regexRule, onChange, vi.fn(), vi.fn()),
+          { initialProps: { onChange: first } }
+        );
+        await resolve("a");
+
+        act(() => {
+          result.current.updateUrlFilter("a");
+        });
+        let saving!: Promise<void>;
+        act(() => {
+          saving = result.current.save();
+        });
+        rerender({ onChange: latest });
+        await resolve("a");
+        await act(() => saving);
+
+        expect(first).not.toHaveBeenCalled();
+        expect(latest).toHaveBeenCalledWith(regexRule);
+      });
+
+      test("saves without checking again when the rule was already checked", async () => {
+        const resolve = holdRegexChecks();
+        const onChange = vi.fn();
+        const { result } = renderHook(() =>
+          useRuleEdit(regexRule, onChange, vi.fn(), vi.fn())
+        );
+        await resolve("a");
+        mockIsRegexSupported.mockClear();
+
+        act(() => {
+          void result.current.save();
+        });
+
+        expect(onChange).toHaveBeenCalledWith(regexRule);
+        expect(mockIsRegexSupported).not.toHaveBeenCalled();
+      });
+
+      test("checks a rule known to be invalid again on save", async () => {
+        const resolve = holdRegexChecks();
+        const onChange = vi.fn();
+        const rejectedRule: Rule = {
+          ...regexRule,
+          condition: { ...regexRule.condition, urlFilter: "b" },
+        };
+        const { result } = renderHook(() =>
+          useRuleEdit(rejectedRule, onChange, vi.fn(), vi.fn())
+        );
+        await resolve("b");
+        mockIsRegexSupported.mockClear();
+
+        let saving!: Promise<void>;
+        act(() => {
+          saving = result.current.save();
+        });
+        await resolve("b");
+        await act(() => saving);
+
+        expect(mockIsRegexSupported).toHaveBeenCalledTimes(1);
+        expect(onChange).not.toHaveBeenCalled();
+      });
     });
   });
 
