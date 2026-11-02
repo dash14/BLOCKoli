@@ -226,6 +226,86 @@ describe("RuleSetsEdit component", () => {
     });
   });
 
+  describe("Rule sets saved while adding one", () => {
+    const importedRuleSet = {
+      name: "Imported",
+      rules: [
+        {
+          id: 3,
+          action: { type: RuleActionType.BLOCK },
+          condition: { requestDomains: ["imported.example.com"] },
+        },
+      ],
+    };
+
+    // Saves rule sets from outside, as an import or another window does
+    function WithExternalSave() {
+      const [ruleSets, setRuleSets] = useState(singleRuleSet);
+      return (
+        <>
+          <button onClick={() => setRuleSets([...ruleSets, importedRuleSet])}>
+            external save
+          </button>
+          <RuleSetsEdit
+            ruleSets={ruleSets}
+            titleFontAdjuster={0}
+            onChange={setRuleSets}
+          />
+        </>
+      );
+    }
+
+    test("keeps the new rule set and the imported one apart, and cancels only the new one", async () => {
+      await renderWithChakra(<WithExternalSave />);
+
+      await page.getByRole("button", { name: /add a rule set/i }).click();
+      await expect.element(page.getByText("My Rule Set 1")).toBeInTheDocument();
+
+      await page.getByRole("button", { name: "external save" }).click();
+
+      await expect.element(page.getByText("Imported")).toBeInTheDocument();
+      await expect.element(page.getByText("My Rule Set 1")).toBeInTheDocument();
+
+      await page.getByRole("button", { name: "Cancel" }).click();
+
+      await expect
+        .element(page.getByText("My Rule Set 1"))
+        .not.toBeInTheDocument();
+      await expect.element(page.getByText("Imported")).toBeInTheDocument();
+      await expect.element(page.getByText("My Rules")).toBeInTheDocument();
+    });
+  });
+
+  describe("Rule set renamed elsewhere", () => {
+    function WithExternalRename() {
+      const [ruleSets, setRuleSets] = useState(singleRuleSet);
+      return (
+        <>
+          <button
+            onClick={() => setRuleSets([{ ...ruleSets[0], name: "Renamed" }])}
+          >
+            external rename
+          </button>
+          <RuleSetsEdit
+            ruleSets={ruleSets}
+            titleFontAdjuster={0}
+            onChange={setRuleSets}
+          />
+        </>
+      );
+    }
+
+    test("shows the new name", async () => {
+      await renderWithChakra(<WithExternalRename />);
+      await expect.element(page.getByText("My Rules")).toBeInTheDocument();
+
+      await page.getByRole("button", { name: "external rename" }).click();
+
+      await expect.element(page.getByText("Renamed")).toBeInTheDocument();
+      await expect.element(page.getByText("My Rules")).not.toBeInTheDocument();
+    });
+  });
+
   describe("Removing rule set", () => {
     test("removes rule set via menu", async () => {
       const onChangeCapture = vi.fn();

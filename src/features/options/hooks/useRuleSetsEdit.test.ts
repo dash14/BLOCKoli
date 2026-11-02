@@ -39,9 +39,8 @@ describe("useRuleSetsEdit", () => {
   describe("initial state", () => {
     test("returns originalRuleSets", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
       const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange, onRemoveRuleSetAt)
+        useRuleSetsEdit(sampleRuleSets, onChange)
       );
 
       expect(result.current.ruleSets).toEqual(sampleRuleSets);
@@ -49,9 +48,8 @@ describe("useRuleSetsEdit", () => {
 
     test("returns empty array when originalRuleSets is empty", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
       const { result } = renderHook(() =>
-        useRuleSetsEdit([], onChange, onRemoveRuleSetAt)
+        useRuleSetsEdit([], onChange)
       );
 
       expect(result.current.ruleSets).toEqual([]);
@@ -61,9 +59,8 @@ describe("useRuleSetsEdit", () => {
   describe("addRuleSet", () => {
     test("adds new rule set with sequential name", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
       const { result } = renderHook(() =>
-        useRuleSetsEdit([], onChange, onRemoveRuleSetAt)
+        useRuleSetsEdit([], onChange)
       );
 
       act(() => {
@@ -78,13 +75,12 @@ describe("useRuleSetsEdit", () => {
 
     test("respects existing 'My Rule Set N' naming", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
       const existingRuleSets: StoredRuleSets = [
         { name: "My Rule Set 1", rules: [savedRule] },
         { name: "My Rule Set 3", rules: [savedRule] },
       ];
       const { result } = renderHook(() =>
-        useRuleSetsEdit(existingRuleSets, onChange, onRemoveRuleSetAt)
+        useRuleSetsEdit(existingRuleSets, onChange)
       );
 
       act(() => {
@@ -98,9 +94,8 @@ describe("useRuleSetsEdit", () => {
 
     test("adds rule set with RULE_ID_EDITING rule", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
       const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange, onRemoveRuleSetAt)
+        useRuleSetsEdit(sampleRuleSets, onChange)
       );
 
       act(() => {
@@ -115,9 +110,8 @@ describe("useRuleSetsEdit", () => {
   describe("updateRules", () => {
     test("updates rules in rule set", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
       const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange, onRemoveRuleSetAt)
+        useRuleSetsEdit(sampleRuleSets, onChange)
       );
 
       const updatedRules: StoredRule[] = [
@@ -138,9 +132,8 @@ describe("useRuleSetsEdit", () => {
 
     test("removes rule set when rules are empty", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
       const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange, onRemoveRuleSetAt)
+        useRuleSetsEdit(sampleRuleSets, onChange)
       );
 
       act(() => {
@@ -149,14 +142,13 @@ describe("useRuleSetsEdit", () => {
 
       expect(result.current.ruleSets).toHaveLength(1);
       expect(result.current.ruleSets[0].name).toBe("Allow Trusted");
-      expect(onRemoveRuleSetAt).toHaveBeenCalledWith(0);
+      expect(result.current.entries.map((e) => e.key)).toEqual([2]);
     });
 
     test("filters out RULE_ID_EDITING rules when calling onChange", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
       const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange, onRemoveRuleSetAt)
+        useRuleSetsEdit(sampleRuleSets, onChange)
       );
 
       const rulesWithEditing: StoredRule[] = [savedRule, editingRule];
@@ -175,9 +167,8 @@ describe("useRuleSetsEdit", () => {
   describe("removeRuleSet", () => {
     test("removes rule set at specified index", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
       const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange, onRemoveRuleSetAt)
+        useRuleSetsEdit(sampleRuleSets, onChange)
       );
 
       act(() => {
@@ -186,36 +177,33 @@ describe("useRuleSetsEdit", () => {
 
       expect(result.current.ruleSets).toHaveLength(1);
       expect(result.current.ruleSets[0].name).toBe("Allow Trusted");
-      expect(onRemoveRuleSetAt).toHaveBeenCalledWith(0);
+      expect(result.current.entries.map((e) => e.key)).toEqual([2]);
       expect(onChange).toHaveBeenCalled();
     });
 
     test("removes rule set with only RULE_ID_EDITING rules without calling onChange", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
-      const ruleSetsWithEditing: StoredRuleSets = [
-        { name: "New Rule Set", rules: [editingRule] },
-        sampleRuleSets[0],
-      ];
       const { result } = renderHook(() =>
-        useRuleSetsEdit(ruleSetsWithEditing, onChange, onRemoveRuleSetAt)
+        useRuleSetsEdit([sampleRuleSets[0]], onChange)
       );
 
       act(() => {
-        result.current.removeRuleSet(0);
+        result.current.addRuleSet();
+      });
+      act(() => {
+        result.current.removeRuleSet(1);
       });
 
       expect(result.current.ruleSets).toHaveLength(1);
-      expect(onRemoveRuleSetAt).toHaveBeenCalledWith(0);
+      expect(onChange).not.toHaveBeenCalled();
     });
   });
 
   describe("updateRuleSetTitle", () => {
     test("updates rule set name", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
       const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange, onRemoveRuleSetAt)
+        useRuleSetsEdit(sampleRuleSets, onChange)
       );
 
       act(() => {
@@ -228,9 +216,8 @@ describe("useRuleSetsEdit", () => {
 
     test("preserves rules when updating title", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
       const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange, onRemoveRuleSetAt)
+        useRuleSetsEdit(sampleRuleSets, onChange)
       );
 
       act(() => {
@@ -244,10 +231,9 @@ describe("useRuleSetsEdit", () => {
   describe("merge editing state", () => {
     test("merges editing rules when originalRuleSets changes", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
       const { result, rerender } = renderHook(
         ({ ruleSets }) =>
-          useRuleSetsEdit(ruleSets, onChange, onRemoveRuleSetAt),
+          useRuleSetsEdit(ruleSets, onChange),
         { initialProps: { ruleSets: sampleRuleSets } }
       );
 
@@ -275,10 +261,9 @@ describe("useRuleSetsEdit", () => {
 
     test("does not merge when ruleSets is empty (initial load)", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
       const { result, rerender } = renderHook(
         ({ ruleSets }) =>
-          useRuleSetsEdit(ruleSets, onChange, onRemoveRuleSetAt),
+          useRuleSetsEdit(ruleSets, onChange),
         { initialProps: { ruleSets: [] as StoredRuleSets } }
       );
 
@@ -291,12 +276,148 @@ describe("useRuleSetsEdit", () => {
     });
   })
 
+  describe("tracking rule sets across updates", () => {
+    const ruleSetA = { name: "A", rules: [savedRule] };
+    const ruleSetB = { name: "B", rules: [{ ...savedRule, id: 2 }] };
+    const imported = { name: "Imported", rules: [{ ...savedRule, id: 3 }] };
+
+    function render(initial: StoredRuleSets) {
+      const onChange = vi.fn();
+      const hook = renderHook(
+        ({ ruleSets }) => useRuleSetsEdit(ruleSets, onChange),
+        { initialProps: { ruleSets: initial } }
+      );
+      return { ...hook, onChange };
+    }
+
+    const names = (ruleSets: StoredRuleSets) => ruleSets.map((r) => r.name);
+
+    test("keeps a new rule set apart from rule sets imported while it is edited", () => {
+      const { result, rerender, onChange } = render([ruleSetA]);
+      act(() => {
+        result.current.addRuleSet();
+      });
+      const newKey = result.current.entries[1].key;
+
+      rerender({ ruleSets: [ruleSetA, imported] });
+
+      expect(names(result.current.ruleSets)).toEqual([
+        "A",
+        "My Rule Set 1",
+        "Imported",
+      ]);
+      expect(result.current.ruleSets[1].rules).toEqual([editingRule]);
+      expect(result.current.ruleSets[2]).toEqual(imported);
+      expect(result.current.entries[1].key).toBe(newKey);
+      expect(result.current.entries[2].key).not.toBe(newKey);
+
+      // Cancel the new rule set
+      act(() => {
+        result.current.updateRules([], 1);
+      });
+
+      expect(result.current.ruleSets).toEqual([ruleSetA, imported]);
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
+    test("keeps an unsaved rule set in place when a later one is saved", () => {
+      const { result, rerender, onChange } = render([ruleSetA]);
+      act(() => {
+        result.current.addRuleSet();
+      });
+      act(() => {
+        result.current.addRuleSet();
+      });
+      act(() => {
+        result.current.updateRules([{ ...savedRule, id: RULE_ID_UNSAVED }], 2);
+      });
+      expect(names(onChange.mock.lastCall![0])).toEqual(["A", "My Rule Set 2"]);
+
+      const saved = { name: "My Rule Set 2", rules: [{ ...savedRule, id: 5 }] };
+      rerender({ ruleSets: [ruleSetA, saved] });
+
+      expect(names(result.current.ruleSets)).toEqual([
+        "A",
+        "My Rule Set 1",
+        "My Rule Set 2",
+      ]);
+      expect(result.current.ruleSets[1].rules).toEqual([editingRule]);
+      expect(result.current.ruleSets[2]).toEqual(saved);
+    });
+
+    test("keeps each rule set's key when one before it is removed elsewhere", () => {
+      const { result, rerender } = render([ruleSetA, ruleSetB]);
+      act(() => {
+        result.current.addRuleSet();
+      });
+      const [, keyB, keyNew] = result.current.entries.map((e) => e.key);
+
+      rerender({ ruleSets: [ruleSetB] });
+
+      expect(names(result.current.ruleSets)).toEqual(["B", "My Rule Set 1"]);
+      expect(result.current.entries.map((e) => e.key)).toEqual([keyB, keyNew]);
+    });
+
+    test("moves an unsaved rule set to the end when the one before it is removed elsewhere", () => {
+      const { result, rerender } = render([ruleSetA, ruleSetB]);
+      act(() => {
+        result.current.addRuleSet();
+      });
+
+      rerender({ ruleSets: [ruleSetA] });
+
+      expect(names(result.current.ruleSets)).toEqual(["A", "My Rule Set 1"]);
+    });
+
+    test("keeps an unsaved rule set first when rule sets are stored after it", () => {
+      const { result, rerender } = render([]);
+      act(() => {
+        result.current.addRuleSet();
+      });
+
+      rerender({ ruleSets: [imported] });
+
+      expect(names(result.current.ruleSets)).toEqual([
+        "My Rule Set 1",
+        "Imported",
+      ]);
+    });
+
+    test("matches a rule set replaced by name, as an import does", () => {
+      const { result, rerender } = render([ruleSetA, ruleSetB]);
+      const keys = result.current.entries.map((e) => e.key);
+
+      const replacedB = { name: "B", rules: [{ ...savedRule, id: 9 }] };
+      rerender({ ruleSets: [ruleSetA, replacedB] });
+
+      expect(result.current.ruleSets).toEqual([ruleSetA, replacedB]);
+      expect(result.current.entries.map((e) => e.key)).toEqual(keys);
+    });
+
+    test("opens only a rule set that is alone when the list is first filled, or added", () => {
+      const single = render([]);
+      single.rerender({ ruleSets: [ruleSetA] });
+      expect(single.result.current.entries.map((e) => e.open)).toEqual([true]);
+
+      const several = render([ruleSetA, ruleSetB]);
+      act(() => {
+        several.result.current.addRuleSet();
+      });
+      several.rerender({ ruleSets: [ruleSetA, ruleSetB, imported] });
+      expect(several.result.current.entries.map((e) => e.open)).toEqual([
+        false,
+        false,
+        true,
+        false,
+      ]);
+    });
+  });
+
   describe("onChange filtering", () => {
     test("filters out rule sets with only RULE_ID_EDITING rules", () => {
       const onChange = vi.fn();
-      const onRemoveRuleSetAt = vi.fn();
       const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange, onRemoveRuleSetAt)
+        useRuleSetsEdit(sampleRuleSets, onChange)
       );
 
       // Add new rule set (contains only editing rule)
