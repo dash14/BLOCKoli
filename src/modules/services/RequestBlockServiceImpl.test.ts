@@ -618,6 +618,51 @@ describe("RequestBlockServiceImpl", () => {
     });
   });
 
+  describe("updateRuleSets when applying fails", () => {
+    const newRuleSets = (): StoredRuleSets => [
+      {
+        name: "a",
+        rules: [
+          {
+            id: RULE_ID_UNSAVED,
+            action: { type: RuleActionType.BLOCK },
+            condition: {},
+          },
+        ],
+      },
+    ];
+
+    it("keeps the next rule ID and the caller's rule sets unchanged", async () => {
+      vi.mocked(mockStore.loadState).mockResolvedValue("enable");
+      vi.mocked(mockDeclarativeNetRequest.updateDynamicRules).mockRejectedValue(
+        new Error("apply failed")
+      );
+      const ruleSets = newRuleSets();
+
+      await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
+        "apply failed"
+      );
+
+      expect(mockStore.saveNextRuleId).not.toHaveBeenCalled();
+      expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
+      expect(ruleSets).toEqual(newRuleSets());
+    });
+
+    it("saves the next rule ID before the rule sets", async () => {
+      vi.mocked(mockStore.loadNextRuleId).mockResolvedValue(100);
+
+      const saved = await createService().updateRuleSets(newRuleSets());
+
+      expect(saved[0].rules[0].id).toBe(100);
+      expect(mockStore.saveNextRuleId).toHaveBeenCalledWith(101);
+      expect(
+        vi.mocked(mockStore.saveNextRuleId).mock.invocationCallOrder[0]
+      ).toBeLessThan(
+        vi.mocked(mockStore.saveRuleSets).mock.invocationCallOrder[0]
+      );
+    });
+  });
+
   describe("rule count limits", () => {
     // One rule is reserved, so two of the three dynamic rules are left for rule sets.
     beforeEach(() => {
