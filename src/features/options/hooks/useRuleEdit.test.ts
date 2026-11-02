@@ -120,6 +120,25 @@ describe("useRuleEdit", () => {
         "newdomain.com",
       ]);
     });
+
+    test("validates the new rule when initialRule changes", async () => {
+      const { result, rerender } = renderHook(
+        ({ rule }) => useRuleEdit(rule, vi.fn(), vi.fn(), vi.fn()),
+        { initialProps: { rule: validRule } }
+      );
+
+      await waitFor(() => {
+        expect(result.current.isValid).toBe(true);
+      });
+      expect(result.current.isEditing).toBe(false);
+
+      rerender({ rule: invalidRule });
+
+      await waitFor(() => {
+        expect(result.current.isValid).toBe(false);
+      });
+      expect(result.current.isEditing).toBe(true);
+    });
   });
 
   describe("enterEditMode", () => {
@@ -357,8 +376,8 @@ describe("useRuleEdit", () => {
         );
       });
 
-      act(() => {
-        result.current.save();
+      await act(async () => {
+        await result.current.save();
       });
 
       expect(onChange).toHaveBeenCalledTimes(1);
@@ -523,6 +542,104 @@ describe("useRuleEdit", () => {
         (errors) => errors.length > 0
       );
       expect(hasErrors).toBe(false);
+    });
+
+    describe("results arriving out of order", () => {
+      const regexRule: Rule = {
+        action: { type: RuleActionType.BLOCK },
+        condition: { urlFilter: "a", isRegexFilter: true },
+      };
+
+      // Holds isRegexSupported until resolve() is called with the regex
+      function holdRegexChecks() {
+        const pending: { regex: string; resolve: () => void }[] = [];
+        mockIsRegexSupported.mockImplementation(
+          (regex: string) =>
+            new Promise((resolve) => {
+              pending.push({
+                regex,
+                resolve: () =>
+                  resolve({
+                    isSupported: regex === "a",
+                    reason: "syntaxError",
+                  }),
+              });
+            })
+        );
+        return async (regex: string) => {
+          await act(async () => {
+            pending
+              .filter((p) => p.regex === regex)
+              .forEach((p) => p.resolve());
+          });
+        };
+      }
+
+      test("keeps the result of the latest input", async () => {
+        const resolve = holdRegexChecks();
+        const { result } = renderHook(() =>
+          useRuleEdit(regexRule, vi.fn(), vi.fn(), vi.fn())
+        );
+
+        act(() => {
+          result.current.updateUrlFilter("b");
+        });
+        await resolve("b");
+        // The initial check finishes last but is older
+        await resolve("a");
+
+        expect(result.current.isValid).toBe(false);
+        expect(result.current.validationErrors.urlFilter).toEqual([
+          "syntaxError",
+        ]);
+        expect(result.current.isEditing).toBe(false);
+      });
+
+      test("ignores an earlier input whose check finishes later", async () => {
+        const resolve = holdRegexChecks();
+        const { result } = renderHook(() =>
+          useRuleEdit(regexRule, vi.fn(), vi.fn(), vi.fn())
+        );
+        await resolve("a");
+
+        act(() => {
+          result.current.updateUrlFilter("b");
+        });
+        act(() => {
+          result.current.updateUrlFilter("a");
+        });
+        await resolve("a");
+        await resolve("b");
+
+        expect(result.current.isValid).toBe(true);
+      });
+
+      test("save checks the rule again instead of using a stale isValid", async () => {
+        const resolve = holdRegexChecks();
+        const onChange = vi.fn();
+        const { result } = renderHook(() =>
+          useRuleEdit(regexRule, onChange, vi.fn(), vi.fn())
+        );
+        await resolve("a");
+        expect(result.current.isValid).toBe(true);
+
+        act(() => {
+          result.current.enterEditMode();
+        });
+        act(() => {
+          result.current.updateUrlFilter("b");
+        });
+        let saving!: Promise<void>;
+        act(() => {
+          saving = result.current.save();
+        });
+        await resolve("b");
+        await act(() => saving);
+
+        expect(onChange).not.toHaveBeenCalled();
+        expect(result.current.isEditing).toBe(true);
+        expect(result.current.isValid).toBe(false);
+      });
     });
   });
 

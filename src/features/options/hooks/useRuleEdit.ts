@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import cloneDeep from "lodash-es/cloneDeep";
 import { createRegexValidator } from "@/modules/chrome/regex";
 import {
@@ -34,19 +34,30 @@ export function useRuleEdit(
     resourceTypes: [],
   });
 
+  // Checks await Chrome and can finish out of order; only the latest counts
+  const latestValidation = useRef(0);
+
+  async function validateLatest(rule: Rule) {
+    const validation = ++latestValidation.current;
+    const result = await ruleValidator.validate(rule);
+    return validation === latestValidation.current ? result : undefined;
+  }
+
   useEffect(() => {
     setRuleObject(initialRule);
     // For incomplete data, enter edit mode.
-    ruleValidator.validate(rule).then(({ valid }) => {
-      if (!valid) {
+    validateLatest(initialRule).then((result) => {
+      if (!result) return;
+      if (!result.valid) {
         setIsEditing(true);
       }
-      setIsValid(valid);
+      setIsValid(result.valid);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialRule]);
 
-  function save() {
+  async function save() {
+    // isValid may still be for an earlier input
+    if (!(await validate(rule))) return;
     setIsEditing(false);
     onChange(rule);
   }
@@ -115,7 +126,8 @@ export function useRuleEdit(
   }
 
   async function validate(newRule: Rule) {
-    const result = await ruleValidator.validate(newRule);
+    const result = await validateLatest(newRule);
+    if (!result) return false;
     const errors: ValidationErrors = {
       requestDomains: [],
       initiatorDomains: [],
@@ -135,6 +147,7 @@ export function useRuleEdit(
     }
     setValidationErrors(errors);
     setIsValid(result.valid);
+    return result.valid;
   }
 
   function resetRuleObject() {
