@@ -63,7 +63,37 @@ export class RequestBlockServiceImpl
     this.i18n = i18n;
   }
 
-  public async start(): Promise<void> {
+  // Runs state changes one at a time: each reads stored state and Chrome's dynamic rules
+  // before writing them back, so overlapping calls could add the same rule ID twice.
+  private queue: Promise<unknown> = Promise.resolve();
+
+  private serialize<T>(task: () => Promise<T>): Promise<T> {
+    const result = this.queue.then(task);
+    this.queue = result.catch(() => undefined);
+    return result;
+  }
+
+  public start(): Promise<void> {
+    return this.serialize(() => this.startNow());
+  }
+
+  public enable(): Promise<void> {
+    return this.serialize(() => this.enableNow());
+  }
+
+  public disable(): Promise<void> {
+    return this.serialize(() => this.disableNow());
+  }
+
+  public updateRuleSets(ruleSets: StoredRuleSets): Promise<StoredRuleSets> {
+    return this.serialize(() => this.updateRuleSetsNow(ruleSets));
+  }
+
+  public import(object: unknown): Promise<[boolean, RuleSetsValidationError[]]> {
+    return this.serialize(() => this.importNow(object));
+  }
+
+  private async startNow(): Promise<void> {
     if (await this.isEnabled()) {
       await this.activate();
     } else {
@@ -71,7 +101,7 @@ export class RequestBlockServiceImpl
     }
   }
 
-  public async enable(): Promise<void> {
+  private async enableNow(): Promise<void> {
     const state = await this.store.loadState();
     if (state === "enable") return;
 
@@ -83,7 +113,7 @@ export class RequestBlockServiceImpl
     void this.emitter.emit("changeState", "enable");
   }
 
-  public async disable(): Promise<void> {
+  private async disableNow(): Promise<void> {
     const state = await this.store.loadState();
     if (state === "disable") return;
 
@@ -106,7 +136,7 @@ export class RequestBlockServiceImpl
     return ruleSets;
   }
 
-  public async updateRuleSets(
+  private async updateRuleSetsNow(
     ruleSets: StoredRuleSets
   ): Promise<StoredRuleSets> {
     log.debug("updateRuleSets");
@@ -290,7 +320,7 @@ export class RequestBlockServiceImpl
     return performExportCommand(stored);
   }
 
-  public async import(
+  private async importNow(
     object: unknown
   ): Promise<[boolean, RuleSetsValidationError[]]> {
     const storedRuleSets = await this.store.loadRuleSets();
@@ -302,7 +332,7 @@ export class RequestBlockServiceImpl
     );
 
     if (valid) {
-      await this.updateRuleSets(ruleSets);
+      await this.updateRuleSetsNow(ruleSets);
     }
 
     return [valid, errors];
