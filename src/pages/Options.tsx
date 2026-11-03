@@ -163,20 +163,24 @@ const Options: React.FC = () => {
           </HStack>
         ) : (
           <>
-            <HStack marginY={10}>
-              <Text fontSize={18 + titleFontAdjuster} marginRight={10}>
-                {i18n["EnableRules"]}
-              </Text>
-              <Switch.Root
-                checked={enabled}
-                onCheckedChange={(e) => changeState(e.checked)}
+            <Switch.Root
+              marginY={10}
+              gap={12}
+              checked={enabled}
+              onCheckedChange={(e) => changeState(e.checked)}
+            >
+              <Switch.HiddenInput />
+              <Switch.Label
+                fontSize={18 + titleFontAdjuster}
+                fontWeight="normal"
+                lineHeight="inherit"
               >
-                <Switch.HiddenInput aria-label={i18n["EnableRules"]} />
-                <Switch.Control>
-                  <Switch.Thumb />
-                </Switch.Control>
-              </Switch.Root>
-            </HStack>
+                {i18n["EnableRules"]}
+              </Switch.Label>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Root>
 
             <RuleSetsEdit
               ruleSets={ruleSets}

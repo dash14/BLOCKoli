@@ -163,6 +163,29 @@ describe("Main component", () => {
       expect(changeServiceState).toHaveBeenCalledWith(false);
     });
 
+    test("clicking the label text toggles the switch", async () => {
+      const getMatchedRule = vi.fn().mockResolvedValue([]);
+      const changeServiceState = vi.fn();
+
+      await renderWithChakra(
+        <Main
+          isServiceEnabled={false}
+          changeServiceState={changeServiceState}
+          ruleSets={sampleRuleSets}
+          getMatchedRule={getMatchedRule}
+          optionsUrl="chrome://extensions"
+        />
+      );
+
+      await expect
+        .element(page.getByRole("checkbox", { name: "Enable rules" }))
+        .toBeInTheDocument();
+      await page.getByText("Enable rules").click();
+
+      expect(changeServiceState).toHaveBeenCalledTimes(1);
+      expect(changeServiceState).toHaveBeenCalledWith(true);
+    });
+
     test("getMatchedRule is called on mount", async () => {
       const getMatchedRule = vi.fn().mockResolvedValue(sampleMatchedRules);
       const changeServiceState = vi.fn();

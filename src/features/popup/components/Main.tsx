@@ -43,18 +43,25 @@ export const Main: React.FC<Props> = ({
         <NoRules optionsUrl={optionsUrl} />
       ) : (
         <>
-          <HStack marginTop="20px" justifyContent="space-between">
-            <Text fontSize={18 + titleFontAdjuster}>{i18n["EnableRules"]}</Text>
-            <Switch.Root
-              checked={isServiceEnabled}
-              onCheckedChange={(e) => changeServiceState(e.checked)}
+          <Switch.Root
+            display="flex"
+            justifyContent="space-between"
+            marginTop="20px"
+            checked={isServiceEnabled}
+            onCheckedChange={(e) => changeServiceState(e.checked)}
+          >
+            <Switch.HiddenInput />
+            <Switch.Label
+              fontSize={18 + titleFontAdjuster}
+              fontWeight="normal"
+              lineHeight="inherit"
             >
-              <Switch.HiddenInput aria-label={i18n["EnableRules"]} />
-              <Switch.Control>
-                <Switch.Thumb />
-              </Switch.Control>
-            </Switch.Root>
-          </HStack>
+              {i18n["EnableRules"]}
+            </Switch.Label>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Root>
 
           <Box marginTop="10px">
             <ConfigureRulesLink

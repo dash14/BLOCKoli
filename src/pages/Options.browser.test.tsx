@@ -294,6 +294,26 @@ describe("Options page", () => {
     expect(changeState).toHaveBeenCalledWith(true);
   });
 
+  test("toggles enable state when the label text is clicked", async () => {
+    const changeState = vi.fn();
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ changeState, enabled: false }),
+    );
+
+    await renderWithChakra(
+      <div data-testid="container" style={{ width: 1024, height: 900 }}>
+        <Options />
+      </div>,
+    );
+
+    await expect
+      .element(page.getByRole("checkbox", { name: "Enable rules" }))
+      .toBeInTheDocument();
+    await page.getByText("Enable rules").click();
+
+    expect(changeState).toHaveBeenCalledWith(true);
+  });
+
   test("changes language when select is changed", async () => {
     const setLanguage = vi.fn();
     mockUseRequestBlockClient.mockReturnValue(
