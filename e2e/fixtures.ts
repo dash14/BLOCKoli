@@ -3,6 +3,7 @@ import {
   test as base,
   chromium,
   type BrowserContext,
+  type Locator,
   type Page,
   type Worker,
 } from "@playwright/test";
@@ -155,6 +156,30 @@ export async function saveRule(page: Page, action: "block" | "allow", urlFilter:
   await page.getByRole("textbox", { name: "URL Filter" }).fill(urlFilter);
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("button", { name: "Save" })).toBeHidden();
+}
+
+/**
+ * Imports a file from the options page, and returns the dialog that reports
+ * whether the import succeeded
+ */
+export async function importRules(
+  page: Page,
+  file: Parameters<Locator["setInputFiles"]>[0]
+) {
+  await page.getByRole("button", { name: "Import and Export Rules" }).click();
+  await page.getByLabel("Import rules").setInputFiles(file);
+  await page.getByRole("button", { name: "Import", exact: true }).click();
+  const result = page
+    .getByRole("alertdialog")
+    .filter({ hasText: /Import (succeeded|failed)/ });
+  await expect(result).toBeVisible();
+  return result;
+}
+
+/** Closes a dialog with its Close button, and waits until no dialog is left */
+export async function closeDialog(page: Page, dialog: Locator) {
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
 }
 
 /** Waits until Chrome blocks the URL, as it applies dynamic rules asynchronously */

@@ -1,5 +1,14 @@
 import { readFile } from "node:fs/promises";
-import { expect, expectBlocked, expectLoaded, saveRule, setRulesEnabled, test } from "./fixtures";
+import {
+  closeDialog,
+  expect,
+  expectBlocked,
+  expectLoaded,
+  importRules,
+  saveRule,
+  setRulesEnabled,
+  test,
+} from "./fixtures";
 import type { Page } from "@playwright/test";
 
 async function exportRules(page: Page) {
@@ -29,14 +38,9 @@ test("restores rule sets with several rules from an exported file", async ({
   // Import into a new profile, which has no rule sets yet
   const other = await launchBrowser();
   const otherPage = await other.openOptions();
-  await otherPage.getByRole("button", { name: "Import and Export Rules" }).click();
-  await otherPage.getByLabel("Import rules").setInputFiles(exportedPath);
-  await otherPage.getByRole("button", { name: "Import", exact: true }).click();
-  const succeeded = otherPage
-    .getByRole("alertdialog")
-    .filter({ hasText: "Import succeeded" });
-  await succeeded.getByRole("button", { name: "Close" }).click();
-  await expect(otherPage.getByRole("alertdialog")).toHaveCount(0);
+  const result = await importRules(otherPage, exportedPath);
+  await expect(result).toContainText("Import succeeded");
+  await closeDialog(otherPage, result);
 
   await expect(otherPage.getByText("My Rule Set 1")).toBeVisible();
   await expect(otherPage.getByText("My Rule Set 2")).toBeVisible();
