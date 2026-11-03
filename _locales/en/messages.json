@@ -37,6 +37,9 @@
   "AddARule": {
     "message": "Add a Rule"
   },
+  "RuleLimitReached": {
+    "message": "You can define up to {max} rules."
+  },
   "RemoveTheRuleSet": {
     "message": "Remove the Rule Set"
   },

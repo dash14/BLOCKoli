@@ -23,7 +23,7 @@ function StatefulRulesEdit({
   };
   return (
     <div data-testid={testId}>
-      <RulesEdit rules={rules} onChange={handleChange} />
+      <RulesEdit rules={rules} isAddAllowed onChange={handleChange} />
     </div>
   );
 }
@@ -69,7 +69,7 @@ describe("RulesEdit component", () => {
     test("複数ルールがリスト表示される", async () => {
       await renderWithChakra(
         <div data-testid="container">
-          <RulesEdit rules={twoRules} onChange={() => {}} />
+          <RulesEdit rules={twoRules} isAddAllowed onChange={() => {}} />
         </div>
       );
 
@@ -102,7 +102,7 @@ describe("RulesEdit component", () => {
     test("単一ルールの場合、削除ボタンが無効", async () => {
       await renderWithChakra(
         <div data-testid="container">
-          <RulesEdit rules={simpleRule} onChange={() => {}} />
+          <RulesEdit rules={simpleRule} isAddAllowed onChange={() => {}} />
         </div>
       );
 
@@ -191,7 +191,7 @@ describe("RulesEdit component", () => {
     test("既存ルールを編集してSaveするとonChangeが呼ばれる", async () => {
       const onChange = vi.fn();
       await renderWithChakra(
-        <RulesEdit rules={singleRule} onChange={onChange} />
+        <RulesEdit rules={singleRule} isAddAllowed onChange={onChange} />
       );
 
       // Editボタンをクリック
@@ -219,7 +219,7 @@ describe("RulesEdit component", () => {
     test("複数ルールの場合、ルールを削除できる", async () => {
       const onChange = vi.fn();
       await renderWithChakra(
-        <RulesEdit rules={twoRules} onChange={onChange} />
+        <RulesEdit rules={twoRules} isAddAllowed onChange={onChange} />
       );
 
       // 最初のルールのメニューボタンをクリック
@@ -282,7 +282,7 @@ describe("RulesEdit component", () => {
 
     test("既存ルール編集中にCancelで変更が破棄される", async () => {
       await renderWithChakra(
-        <RulesEdit rules={singleRule} onChange={() => {}} />
+        <RulesEdit rules={singleRule} isAddAllowed onChange={() => {}} />
       );
 
       // Editボタンをクリック
@@ -305,7 +305,7 @@ describe("RulesEdit component", () => {
     test("2番目のルールを編集できる", async () => {
       const onChange = vi.fn();
       await renderWithChakra(
-        <RulesEdit rules={twoRules} onChange={onChange} />
+        <RulesEdit rules={twoRules} isAddAllowed onChange={onChange} />
       );
 
       // 2番目のルールのEditボタンをクリック
@@ -333,6 +333,21 @@ describe("RulesEdit component", () => {
       expect(updatedRules[1].condition.initiatorDomains).toContain(
         "updated.com"
       );
+    });
+  });
+
+  describe("Rule limit", () => {
+    test("disables adding a rule and says why", async () => {
+      await renderWithChakra(
+        <RulesEdit rules={singleRule} isAddAllowed={false} onChange={() => {}} />
+      );
+
+      await expect
+        .element(page.getByRole("button", { name: "Add a Rule", exact: true }))
+        .toBeDisabled();
+      await expect
+        .element(page.getByText("You can define up to 500 rules."))
+        .toBeVisible();
     });
   });
 });

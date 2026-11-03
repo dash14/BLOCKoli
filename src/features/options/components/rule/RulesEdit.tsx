@@ -1,5 +1,5 @@
 import { createRef } from "react";
-import { Button, Icon } from "@chakra-ui/react";
+import { Button, HStack, Icon } from "@chakra-ui/react";
 import { css } from "@emotion/react";
 import { LuPlus } from "react-icons/lu";
 import { CSSTransition } from "react-transition-group";
@@ -9,16 +9,19 @@ import { useI18n } from "@/hooks/useI18n";
 import { RULE_ID_EDITING, StoredRule } from "@/modules/rules/stored";
 import { RuleContainer } from "./RuleContainer";
 import { RuleEdit } from "./RuleEdit";
+import { RuleLimitReached } from "./RuleLimitReached";
 
 type Props = {
   rules: StoredRule[];
+  isAddAllowed: boolean;
   onChange: (rules: StoredRule[]) => void;
 };
 
-export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
+export const RulesEdit: React.FC<Props> = ({ rules, isAddAllowed, onChange }) => {
   const i18n = useI18n();
   const { isAllowAdd, addRule, updateRule, removeRule, cancelEdit } =
     useRulesEdit(rules, onChange);
+  const savedCount = rules.filter((r) => r.id !== RULE_ID_EDITING).length;
 
   const boxRef = createRef<HTMLDivElement>();
 
@@ -63,8 +66,7 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
                 <RuleEdit
                   rule={rule}
                   isRemoveEnabled={
-                    rule.id !== RULE_ID_EDITING &&
-                    rules.filter((r) => r.id !== RULE_ID_EDITING).length > 1
+                    rule.id !== RULE_ID_EDITING && savedCount > 1
                   }
                   onChange={(rule) => updateRule(rule, ruleIndex)}
                   onCancel={() => cancelEdit(ruleIndex)}
@@ -85,10 +87,18 @@ export const RulesEdit: React.FC<Props> = ({ rules, onChange }) => {
       >
         <div ref={boxRef}>
           <RuleContainer>
-            <Button variant="outline" size="sm" onClick={addRule}>
-              <Icon as={LuPlus} />
-              {i18n["AddARule"]}
-            </Button>
+            <HStack gap={3}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isAddAllowed}
+                onClick={addRule}
+              >
+                <Icon as={LuPlus} />
+                {i18n["AddARule"]}
+              </Button>
+              {!isAddAllowed && <RuleLimitReached />}
+            </HStack>
           </RuleContainer>
         </div>
       </CSSTransition>

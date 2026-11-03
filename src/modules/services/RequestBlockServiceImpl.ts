@@ -11,6 +11,7 @@ import { RuleActionType } from "@/modules/core/rules";
 import { EventEmitter, ServiceBase } from "@/modules/core/service";
 import { convertToApiRule } from "@/modules/rules/convert";
 import { ExportedRuleSets } from "@/modules/rules/export";
+import { countRules, MAX_RULES } from "@/modules/rules/limits";
 import { MatchedRule, RulePointer } from "@/modules/rules/matched";
 import { getReservedRules } from "@/modules/rules/reserved";
 import { toRuleList, walkRules } from "@/modules/rules/rulesets";
@@ -173,7 +174,9 @@ export class RequestBlockServiceImpl
       return { revision: prevRevision, ruleSets: prevRuleSets };
     }
 
-    // Chrome would reject the whole update, so refuse to save even while disabled
+    checkRuleCount(ruleSets, prevRuleSets);
+    // Chrome would reject the whole update, so refuse to save even while disabled.
+    // Below MAX_RULES this only fails for rule sets stored before that limit existed.
     this.checkRuleLimits(ruleSets);
 
     const [assigned, nextRuleId] = await this.assignRuleId(ruleSets);
@@ -372,6 +375,14 @@ export class RequestBlockServiceImpl
     }
 
     return [valid, errors];
+  }
+}
+
+// Rule sets saved before the limit existed may exceed it; they can still be edited down
+function checkRuleCount(ruleSets: StoredRuleSets, prevRuleSets: StoredRuleSets) {
+  const count = countRules(ruleSets);
+  if (count > MAX_RULES && count > countRules(prevRuleSets)) {
+    throw new Error(`Too many rules: ${count}, but at most ${MAX_RULES} can be defined`);
   }
 }
 

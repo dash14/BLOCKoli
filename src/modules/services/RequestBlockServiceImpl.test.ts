@@ -16,6 +16,7 @@ import type { Rule as ApiRule } from "@/modules/chrome/api";
 import { RuleActionType } from "@/modules/core/rules";
 import { RequestMethod, ResourceType } from "@/modules/core/rules";
 import type { EventEmitter } from "@/modules/core/service";
+import { MAX_RULES } from "@/modules/rules/limits";
 import { getReservedRules } from "@/modules/rules/reserved";
 import type { StoredRuleSets } from "@/modules/rules/stored";
 import { RULE_ID_UNSAVED } from "@/modules/rules/stored";
@@ -961,6 +962,80 @@ describe("RequestBlockServiceImpl", () => {
       await createService().updateRuleSets(ruleSets);
 
       expect(mockStore.saveRuleSets).toHaveBeenCalledWith(ruleSets);
+    });
+
+    describe("the extension's own limit", () => {
+      beforeEach(() => {
+        vi.mocked(mockDeclarativeNetRequest.getRuleLimits).mockReturnValue({
+          maxDynamicRules: 30000,
+          maxRegexRules: 1000,
+        });
+      });
+
+      const rules = (count: number) =>
+        Array.from({ length: count }, (_, i) => rule(11 + i));
+
+      it("saves up to MAX_RULES rules", async () => {
+        const ruleSets = [
+          { id: "rs-a", name: "a", rules: rules(MAX_RULES - 1) },
+          { id: "rs-b", name: "b", rules: rules(1) },
+        ];
+
+        await createService().updateRuleSets(ruleSets);
+
+        expect(mockStore.saveRuleSets).toHaveBeenCalledWith(ruleSets);
+      });
+
+      it("refuses to save more than MAX_RULES rules in total", async () => {
+        const ruleSets = [
+          { name: "a", rules: rules(MAX_RULES) },
+          { name: "b", rules: [rule(RULE_ID_UNSAVED)] },
+        ];
+
+        await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
+          `Too many rules: ${MAX_RULES + 1}, but at most ${MAX_RULES} can be defined`
+        );
+        expect(mockStore.saveNextRuleId).not.toHaveBeenCalled();
+        expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
+      });
+
+      it("saves stored rules over the limit as long as none are added", async () => {
+        vi.mocked(mockStore.loadRuleSets).mockResolvedValue([
+          { id: "rs-a", name: "a", rules: rules(MAX_RULES + 2) },
+        ]);
+        const ruleSets = [{ id: "rs-a", name: "a", rules: rules(MAX_RULES + 1) }];
+
+        await createService().updateRuleSets(ruleSets);
+
+        expect(mockStore.saveRuleSets).toHaveBeenCalledWith(ruleSets);
+      });
+
+      it("refuses to add a rule to stored rules over the limit", async () => {
+        vi.mocked(mockStore.loadRuleSets).mockResolvedValue([
+          { id: "rs-a", name: "a", rules: rules(MAX_RULES + 1) },
+        ]);
+        const ruleSets = [
+          { id: "rs-a", name: "a", rules: [...rules(MAX_RULES + 1), rule(RULE_ID_UNSAVED)] },
+        ];
+
+        await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
+          `Too many rules: ${MAX_RULES + 2}, but at most ${MAX_RULES} can be defined`
+        );
+        expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
+      });
+
+      it("applies stored rules over the limit when enabled", async () => {
+        vi.mocked(mockStore.loadRuleSets).mockResolvedValue([
+          { id: "rs-a", name: "a", rules: rules(MAX_RULES + 1) },
+        ]);
+
+        await createService().enable();
+
+        expect(
+          vi.mocked(mockDeclarativeNetRequest.updateDynamicRules).mock.calls[0][0]
+            .addRules
+        ).toHaveLength(MAX_RULES + 2);
+      });
     });
 
     it("refuses to enable when stored rules are over the limit", async () => {

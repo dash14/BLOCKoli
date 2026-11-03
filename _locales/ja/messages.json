@@ -37,6 +37,9 @@
   "AddARule": {
     "message": "ルールを追加する"
   },
+  "RuleLimitReached": {
+    "message": "ルールは {max} 件まで定義できます。"
+  },
   "RemoveTheRuleSet": {
     "message": "ルールセットを削除する"
   },

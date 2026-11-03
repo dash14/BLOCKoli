@@ -2,6 +2,7 @@ import { useState } from "react";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { RuleActionType } from "@/modules/core/rules";
+import { MAX_RULES } from "@/modules/rules/limits";
 import { StoredRuleSets } from "@/modules/rules/stored";
 import { renderWithChakra } from "@/test/utils/render";
 import { RuleSetsEdit } from "./RuleSetsEdit";
@@ -405,6 +406,71 @@ describe("RuleSetsEdit component", () => {
       await expect(page.getByTestId("container")).toMatchScreenshot(
         "RuleSetsEdit-accordion-open"
       );
+    });
+  });
+
+  describe("Closed rule sets", () => {
+    test("renders the rules of a closed rule set only once it opens", async () => {
+      await renderWithChakra(
+        <StatefulRuleSetsEdit initialRuleSets={twoRuleSets} />
+      );
+
+      await expect.element(page.getByText("Block Ads")).toBeInTheDocument();
+      expect(
+        page.getByText("ads.example.com", { exact: true }).query()
+      ).toBeNull();
+
+      await page.getByText("Block Ads").click();
+
+      await expect
+        .element(page.getByText("ads.example.com", { exact: true }))
+        .toBeInTheDocument();
+    });
+  });
+
+  describe("Rule limit", () => {
+    // The large rule set stays closed, so its rules are not rendered
+    const ruleSetsWith = (count: number): StoredRuleSets => [
+      twoRuleSets[0],
+      {
+        id: "rs-large",
+        name: "Large",
+        rules: Array.from({ length: count - 1 }, (_, i) => ({
+          id: 100 + i,
+          action: { type: RuleActionType.BLOCK },
+          condition: { urlFilter: `/large/${i}` },
+        })),
+      },
+    ];
+
+    test("disables adding rules and rule sets once the limit is reached", async () => {
+      await renderWithChakra(
+        <StatefulRuleSetsEdit initialRuleSets={ruleSetsWith(MAX_RULES)} />
+      );
+      await page.getByText("Block Ads").click();
+
+      await expect
+        .element(page.getByRole("button", { name: "Add a Rule", exact: true }))
+        .toBeDisabled();
+      await expect
+        .element(page.getByRole("button", { name: /add a rule set/i }))
+        .toBeDisabled();
+      await expect
+        .element(page.getByText("You can define up to 500 rules.").first())
+        .toBeVisible();
+    });
+
+    test("counts a rule being added towards the limit", async () => {
+      await renderWithChakra(
+        <StatefulRuleSetsEdit initialRuleSets={ruleSetsWith(MAX_RULES - 1)} />
+      );
+      await page.getByText("Block Ads").click();
+      const addRuleSet = page.getByRole("button", { name: /add a rule set/i });
+      await expect.element(addRuleSet).toBeEnabled();
+
+      await page.getByRole("button", { name: "Add a Rule", exact: true }).click();
+
+      await expect.element(addRuleSet).toBeDisabled();
     });
   });
 
