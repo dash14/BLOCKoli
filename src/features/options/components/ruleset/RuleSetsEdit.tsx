@@ -64,11 +64,11 @@ export const RuleSetsEdit: React.FC<Props> = ({
       )}
 
       <SlideTransitionGroup style={listTransitionCss}>
-        {entries.map(({ key, ruleSet, open }, ruleSetIndex) => {
+        {entries.map(({ ruleSet, open }, ruleSetIndex) => {
           const nodeRef = createRef<HTMLDivElement>();
           return (
             <CSSTransition
-              key={key}
+              key={ruleSet.id}
               timeout={250}
               classNames="slide"
               nodeRef={nodeRef}
