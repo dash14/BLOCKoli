@@ -3,7 +3,6 @@ import cloneDeep from "lodash-es/cloneDeep";
 import { push, removeAt, replaceAt } from "@/modules/core/array";
 import {
   RULE_ID_EDITING,
-  RULE_ID_UNSAVED,
   StoredRule,
   StoredRuleSet,
   StoredRuleSets,
@@ -95,13 +94,6 @@ function isUnsaved(entry: RuleSetEntry): boolean {
   return entry.ruleSet.rules.every((rule) => rule.id === RULE_ID_EDITING);
 }
 
-// Unsaved, or its first rule is saved but the stored list has not caught up
-function isNotStoredYet(entry: RuleSetEntry): boolean {
-  return entry.ruleSet.rules.every(
-    (rule) => rule.id === RULE_ID_EDITING || rule.id === RULE_ID_UNSAVED
-  );
-}
-
 function filterAvailableRuleSets(entries: RuleSetEntry[]): StoredRuleSets {
   return entries
     .map(({ ruleSet }) => {
@@ -111,8 +103,8 @@ function filterAvailableRuleSets(entries: RuleSetEntry[]): StoredRuleSets {
     .filter((ruleSet) => ruleSet.rules.length > 0);
 }
 
-// Stored rule sets are matched by ID. One not stored yet keeps its place
-// after the stored rule set before it.
+// Stored rule sets are matched by ID. Unsaved ones are not in storage; each
+// keeps its place after the stored rule set before it.
 function mergeEntries(
   stored: StoredRuleSets,
   entries: RuleSetEntry[]
@@ -124,7 +116,7 @@ function mergeEntries(
   entries.forEach((entry) => {
     if (storedIds.has(entry.ruleSet.id)) {
       after = entry.ruleSet.id;
-    } else if (isNotStoredYet(entry)) {
+    } else if (isUnsaved(entry)) {
       pending.push({ entry, after });
     }
   });

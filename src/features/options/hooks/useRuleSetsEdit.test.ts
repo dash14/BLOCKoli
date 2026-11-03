@@ -405,32 +405,19 @@ describe("useRuleSetsEdit", () => {
       ]);
     });
 
-    test("keeps a rule set whose first rule is being saved when another update arrives first", () => {
-      const { result, rerender, onChange } = render([ruleSetA]);
+    test("drops a saved rule set that a newer stored list no longer has", () => {
+      const { result, rerender } = render([ruleSetA]);
       act(() => {
         result.current.addRuleSet();
       });
-      const { id } = result.current.ruleSets[1];
       act(() => {
         result.current.updateRules([{ ...savedRule, id: RULE_ID_UNSAVED }], 1);
       });
-      expect(onChange.mock.lastCall![0][1].id).toBe(id);
 
-      // A change made in another window, stored before this one
+      // Saved over by another window that did not have it
       rerender({ ruleSets: [ruleSetA, imported] });
 
-      expect(names(result.current.ruleSets)).toEqual([
-        "A",
-        "My Rule Set 1",
-        "Imported",
-      ]);
-      expect(result.current.entries[1].open).toBe(true);
-
-      const saved = { id, name: "Renamed", rules: [{ ...savedRule, id: 5 }] };
-      rerender({ ruleSets: [ruleSetA, saved, imported] });
-
-      expect(result.current.ruleSets).toEqual([ruleSetA, saved, imported]);
-      expect(result.current.entries[1].open).toBe(true);
+      expect(result.current.ruleSets).toEqual([ruleSetA, imported]);
     });
 
     test("does not move a rule being added to a rule set that took the same name elsewhere", () => {
