@@ -1,8 +1,8 @@
 import { createRef } from "react";
 import {
   Accordion,
-  Box,
   Button,
+  HStack,
   Heading,
   Icon,
   Text,
@@ -16,7 +16,9 @@ import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGro
 import { RulesEdit } from "@/features/options/components/rule/RulesEdit";
 import { useRuleSetsEdit } from "@/features/options/hooks/useRuleSetsEdit";
 import { useI18n } from "@/hooks/useI18n";
+import { countRules, MAX_RULES } from "@/modules/rules/limits";
 import { StoredRuleSets } from "@/modules/rules/stored";
+import { RuleLimitReached } from "../rule/RuleLimitReached";
 import { RuleSetMenu } from "./RuleSetMenu";
 
 type Props = {
@@ -48,6 +50,10 @@ export const RuleSetsEdit: React.FC<Props> = ({
     updateRuleSetTitle,
   } = useRuleSetsEdit(originalRuleSets, onChange);
 
+  // Counts the rules being added too, so their saves are not refused
+  const isAddAllowed =
+    countRules(entries.map(({ ruleSet }) => ruleSet)) < MAX_RULES;
+
   return (
     <>
       {entries.length > 0 ? (
@@ -77,6 +83,8 @@ export const RuleSetsEdit: React.FC<Props> = ({
                 <Accordion.Root
                   defaultValue={open ? ["0"] : []}
                   multiple
+                  // Rules of a closed rule set are rendered only once it opens
+                  lazyMount
                 >
                   <Accordion.Item value="0" borderWidth="1px">
                     <AccordionCustomTrigger>
@@ -98,6 +106,7 @@ export const RuleSetsEdit: React.FC<Props> = ({
                     <Accordion.ItemContent paddingX={6}>
                       <RulesEdit
                         rules={ruleSet.rules}
+                        isAddAllowed={isAddAllowed}
                         onChange={(rules) => updateRules(rules, ruleSetIndex)}
                       />
                     </Accordion.ItemContent>
@@ -108,12 +117,18 @@ export const RuleSetsEdit: React.FC<Props> = ({
           );
         })}
       </SlideTransitionGroup>
-      <Box marginTop={4}>
-        <Button variant="outline" size="sm" onClick={addRuleSet}>
+      <HStack marginTop={4} gap={3}>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!isAddAllowed}
+          onClick={addRuleSet}
+        >
           <Icon as={LuPlus} />
           {i18n["AddARuleSet"]}
         </Button>
-      </Box>
+        {!isAddAllowed && <RuleLimitReached />}
+      </HStack>
     </>
   );
 };

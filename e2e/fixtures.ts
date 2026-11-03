@@ -159,6 +159,16 @@ export async function saveRule(page: Page, action: "block" | "allow", urlFilter:
   await expect(page.getByRole("button", { name: "Save" })).toBeHidden();
 }
 
+/** An exported file holding the given rule sets */
+export function exportedFile(...ruleSets: { name: string; rules: object[] }[]) {
+  const content = { format: "BLOCKoli", version: 1, ruleSets };
+  return {
+    name: "rules.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(content)),
+  };
+}
+
 /**
  * Imports a file from the options page, and returns the dialog that reports
  * whether the import succeeded

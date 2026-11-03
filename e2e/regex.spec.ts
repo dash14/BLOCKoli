@@ -4,20 +4,11 @@ import {
   expect,
   expectBlocked,
   expectLoaded,
+  exportedFile,
   importRules,
   setRulesEnabled,
   test,
 } from "./fixtures";
-
-/** An exported file with one rule set holding the given rules */
-function exportedFile(rules: object[]) {
-  const content = { format: "BLOCKoli", version: 1, ruleSets: [{ name: "Imported", rules }] };
-  return {
-    name: "rules.json",
-    mimeType: "application/json",
-    buffer: Buffer.from(JSON.stringify(content)),
-  };
-}
 
 test("the rule editor accepts only a regular expression Chrome can run", async ({
   optionsPage: page,
@@ -51,11 +42,14 @@ test("an import with a regular expression Chrome cannot run adds nothing", async
 }) => {
   const result = await importRules(
     page,
-    exportedFile([
-      { action: { type: "block" }, condition: { urlFilter: "/plain" } },
-      // RE2 has no backreferences
-      { action: { type: "block" }, condition: { urlFilter: "/(a)\\1", isRegexFilter: true } },
-    ])
+    exportedFile({
+      name: "Imported",
+      rules: [
+        { action: { type: "block" }, condition: { urlFilter: "/plain" } },
+        // RE2 has no backreferences
+        { action: { type: "block" }, condition: { urlFilter: "/(a)\\1", isRegexFilter: true } },
+      ],
+    })
   );
   await expect(result).toContainText("Import failed");
   await expect(result).toContainText("syntaxError");
