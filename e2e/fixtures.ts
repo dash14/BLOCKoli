@@ -16,6 +16,8 @@ export type ExtensionBrowser = {
   serviceWorker: Worker;
   /** The options page, opened in a new tab */
   openOptions: () => Promise<Page>;
+  /** The popup, opened in a new tab */
+  openPopup: () => Promise<Page>;
 };
 
 type Fixtures = {
@@ -57,13 +59,15 @@ export const test = base.extend<Fixtures>({
         .toBeDefined();
       await installTab?.close();
 
-      const openOptions = async () => {
+      const openInFront = async (url: string) => {
         const page = await context.newPage();
-        await page.goto(optionsUrl);
+        await page.goto(url);
         await page.bringToFront();
         return page;
       };
-      return { context, extensionId, serviceWorker, openOptions };
+      const openOptions = () => openInFront(optionsUrl);
+      const openPopup = () => openInFront(`chrome-extension://${extensionId}/popup.html`);
+      return { context, extensionId, serviceWorker, openOptions, openPopup };
     });
     await Promise.allSettled(contexts.map((context) => context.close()));
   },
@@ -131,7 +135,7 @@ export async function stopServiceWorker({ context, extensionId }: ExtensionBrows
   }
 }
 
-/** Turns the rules on or off from the options page */
+/** Turns the rules on or off from the options page or the popup */
 export async function setRulesEnabled(page: Page, enabled: boolean) {
   const rulesSwitch = page.getByRole("checkbox", { name: "Enable rules" });
   await expect(rulesSwitch).toBeEnabled();
