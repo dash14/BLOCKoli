@@ -38,6 +38,15 @@ export async function validateRegexSupport(
 
   return {
     ruleField: "condition.urlFilter",
-    message: result.reason ?? "Not supported regex",
+    message:
+      (result.reason && unsupportedRegexMessages[result.reason]) ??
+      "must be a regular expression Chrome supports",
   };
 }
+
+// Chrome's reason codes, as messages the pages translate
+const unsupportedRegexMessages: Record<string, string> = {
+  syntaxError:
+    "must use only regular expression syntax Chrome supports (no backreferences or lookarounds)",
+  memoryLimitExceeded: "must be simple enough for Chrome to run",
+};

@@ -1205,7 +1205,7 @@ describe("getMatchedRules for rules no longer stored", () => {
           ruleSetField: "rules",
           ruleNumber: 0,
           ruleField: "condition.urlFilter",
-          message: "syntaxError",
+          message: "must use only regular expression syntax Chrome supports (no backreferences or lookarounds)",
         },
       ]);
       expect(mockDeclarativeNetRequest.isRegexSupported).toHaveBeenCalledWith({

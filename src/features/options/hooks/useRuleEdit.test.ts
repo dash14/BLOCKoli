@@ -590,7 +590,7 @@ describe("useRuleEdit", () => {
 
         expect(result.current.isValid).toBe(false);
         expect(result.current.validationErrors.urlFilter).toEqual([
-          "syntaxError",
+          "must use only regular expression syntax Chrome supports (no backreferences or lookarounds)",
         ]);
       });
 
@@ -612,7 +612,7 @@ describe("useRuleEdit", () => {
         await resolve("b");
 
         expect(result.current.validationErrors.urlFilter).toEqual([
-          "syntaxError",
+          "must use only regular expression syntax Chrome supports (no backreferences or lookarounds)",
         ]);
         expect(result.current.isEditing).toBe(true);
       });

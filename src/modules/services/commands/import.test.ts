@@ -355,7 +355,7 @@ describe("performImportCommand", () => {
     expect(valid).toBeFalsy();
     expect(errors).toStrictEqual([
       {
-        message: "syntaxError",
+        message: "must use only regular expression syntax Chrome supports (no backreferences or lookarounds)",
         ruleField: "condition.urlFilter",
         ruleNumber: 1,
         ruleSetField: "rules",
