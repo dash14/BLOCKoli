@@ -14,10 +14,9 @@ export type ExtensionBrowser = {
 type Fixtures = {
   /** Launches another browser, closed when the test ends */
   launchBrowser: () => Promise<ExtensionBrowser>;
-  /** The browser most tests need */
+  /** The first browser, which most tests use */
   extension: ExtensionBrowser;
   context: BrowserContext;
-  extensionId: string;
   optionsPage: Page;
   /** Origin of a local server that answers every path with 200 */
   serverOrigin: string;
@@ -48,7 +47,7 @@ export const test = base.extend<Fixtures>({
       };
       return { context, extensionId, openOptions };
     });
-    await Promise.all(contexts.map((context) => context.close()));
+    await Promise.allSettled(contexts.map((context) => context.close()));
   },
 
   extension: async ({ launchBrowser }, provide) => {
@@ -57,10 +56,6 @@ export const test = base.extend<Fixtures>({
 
   context: async ({ extension }, provide) => {
     await provide(extension.context);
-  },
-
-  extensionId: async ({ extension }, provide) => {
-    await provide(extension.extensionId);
   },
 
   optionsPage: async ({ extension }, provide) => {
@@ -94,12 +89,26 @@ export async function load(context: BrowserContext, url: string) {
   }
 }
 
-/** Turns the rules on from the options page */
-export async function enableRules(page: Page) {
-  const enableRules = page.getByRole("checkbox", { name: "Enable rules" });
-  // Chakra covers the switch's hidden input with its visible control
-  await enableRules.dispatchEvent("click");
-  await expect(enableRules).toBeChecked();
+/** Turns the rules on or off from the options page */
+export async function setRulesEnabled(page: Page, enabled: boolean) {
+  const rulesSwitch = page.getByRole("checkbox", { name: "Enable rules" });
+  await expect(rulesSwitch).toBeEnabled();
+  if ((await rulesSwitch.isChecked()) !== enabled) {
+    // Chakra covers the switch's hidden input with its visible control
+    await rulesSwitch.dispatchEvent("click");
+  }
+  await expect(rulesSwitch).toBeChecked({ checked: enabled });
+}
+
+/** Adds a rule to the rule set being edited, and saves it */
+export async function saveRule(page: Page, action: "block" | "allow", urlFilter: string) {
+  const actionRadio = page.getByRole("radio", { name: action });
+  // Chakra covers the radio's hidden input with its visible control
+  await actionRadio.dispatchEvent("click");
+  await expect(actionRadio).toBeChecked();
+  await page.getByRole("textbox", { name: "URL Filter" }).fill(urlFilter);
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByRole("button", { name: "Save" })).toBeHidden();
 }
 
 /** Waits until Chrome blocks the URL, as it applies dynamic rules asynchronously */

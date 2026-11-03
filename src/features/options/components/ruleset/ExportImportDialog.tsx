@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useId, useRef } from "react";
 import {
   Box,
   Button,
@@ -31,6 +31,7 @@ export const ExportImportDialog: React.FC<Props> = ({
 }) => {
   const { open, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const importHeadingId = useId();
 
   const openConfirmationDialogRef =
     useRef<ImportConfirmationDialogHandle>(null);
@@ -71,7 +72,7 @@ export const ExportImportDialog: React.FC<Props> = ({
             <Dialog.CloseTrigger />
 
             <Dialog.Body paddingTop={10} paddingX={10}>
-              <Heading as="h2" fontSize={16}>
+              <Heading as="h2" fontSize={16} id={importHeadingId}>
                 <Icon as={FaUpload} /> {i18n["ImportRules"]}
               </Heading>
               <Box margin={2} marginLeft={6}>
@@ -82,7 +83,7 @@ export const ExportImportDialog: React.FC<Props> = ({
                 </Box>
                 <FileInput
                   accept=".json"
-                  aria-label={i18n["ImportRules"]}
+                  aria-labelledby={importHeadingId}
                   height="auto"
                   border="none"
                   onSelectFile={onSelectImportFile}

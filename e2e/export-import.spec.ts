@@ -1,19 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { enableRules, expect, expectBlocked, expectLoaded, test } from "./fixtures";
+import { expect, expectBlocked, expectLoaded, saveRule, setRulesEnabled, test } from "./fixtures";
 import type { Page } from "@playwright/test";
-
-/** Adds a rule to the rule set being edited, and saves it */
-async function saveRule(page: Page, action: "block" | "allow", urlFilter: string) {
-  if (action === "allow") {
-    const allow = page.getByRole("radio", { name: "allow" });
-    // Chakra covers the radio's hidden input with its visible control
-    await allow.dispatchEvent("click");
-    await expect(allow).toBeChecked();
-  }
-  await page.getByRole("textbox", { name: "URL Filter" }).fill(urlFilter);
-  await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByRole("button", { name: "Save" })).toBeHidden();
-}
 
 async function exportRules(page: Page) {
   await page.getByRole("button", { name: "Import and Export Rules" }).click();
@@ -54,7 +41,7 @@ test("restores rule sets with several rules from an exported file", async ({
   await expect(otherPage.getByText("My Rule Set 1")).toBeVisible();
   await expect(otherPage.getByText("My Rule Set 2")).toBeVisible();
 
-  await enableRules(otherPage);
+  await setRulesEnabled(otherPage, true);
   await expectBlocked(other.context, `${serverOrigin}/first`);
   await expectBlocked(other.context, `${serverOrigin}/second`);
   await expectLoaded(other.context, `${serverOrigin}/first/allowed`);
