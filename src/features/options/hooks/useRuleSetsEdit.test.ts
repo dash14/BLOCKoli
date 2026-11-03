@@ -161,7 +161,7 @@ describe("useRuleSetsEdit", () => {
 
       expect(result.current.ruleSets).toHaveLength(1);
       expect(result.current.ruleSets[0].name).toBe("Allow Trusted");
-      expect(result.current.entries.map((e) => e.key)).toEqual([2]);
+      expect(result.current.ruleSets[0].id).toBe("rs-2");
       expect(onChange).toHaveBeenCalledWith([sampleRuleSets[1]]);
     });
 
@@ -213,7 +213,7 @@ describe("useRuleSetsEdit", () => {
 
       expect(result.current.ruleSets).toHaveLength(1);
       expect(result.current.ruleSets[0].name).toBe("Allow Trusted");
-      expect(result.current.entries.map((e) => e.key)).toEqual([2]);
+      expect(result.current.ruleSets[0].id).toBe("rs-2");
       expect(onChange).toHaveBeenCalled();
     });
 
@@ -284,8 +284,8 @@ describe("useRuleSetsEdit", () => {
 
       // Simulate external update (e.g., from storage)
       const updatedRuleSets: StoredRuleSets = [
-        { id: "rs-5", name: "Block Ads", rules: [savedRule] },
-        { id: "rs-6", name: "Allow Trusted", rules: [{ ...savedRule, id: 2 }] },
+        { id: "rs-1", name: "Block Ads", rules: [savedRule] },
+        { id: "rs-2", name: "Allow Trusted", rules: [{ ...savedRule, id: 2 }] },
       ];
 
       rerender({ ruleSets: updatedRuleSets });
@@ -339,7 +339,7 @@ describe("useRuleSetsEdit", () => {
       act(() => {
         result.current.addRuleSet();
       });
-      const newKey = result.current.entries[1].key;
+      const newId = result.current.ruleSets[1].id;
 
       rerender({ ruleSets: [ruleSetA, imported] });
 
@@ -350,8 +350,7 @@ describe("useRuleSetsEdit", () => {
       ]);
       expect(result.current.ruleSets[1].rules).toEqual([editingRule]);
       expect(result.current.ruleSets[2]).toEqual(imported);
-      expect(result.current.entries[1].key).toBe(newKey);
-      expect(result.current.entries[2].key).not.toBe(newKey);
+      expect(result.current.ruleSets[1].id).toBe(newId);
 
       // Cancel the new rule set
       act(() => {
@@ -376,8 +375,10 @@ describe("useRuleSetsEdit", () => {
       expect(names(onChange.mock.lastCall![0])).toEqual(["A", "My Rule Set 2"]);
 
       const saved = {
-        id: "rs-saved",
-        name: "My Rule Set 2", rules: [{ ...savedRule, id: 5 }] };
+        id: result.current.ruleSets[2].id,
+        name: "My Rule Set 2",
+        rules: [{ ...savedRule, id: 5 }],
+      };
       rerender({ ruleSets: [ruleSetA, saved] });
 
       expect(names(result.current.ruleSets)).toEqual([
@@ -389,28 +390,81 @@ describe("useRuleSetsEdit", () => {
       expect(result.current.ruleSets[2]).toEqual(saved);
     });
 
-    test("keeps each rule set's key when one before it is removed elsewhere", () => {
-      const { result, rerender } = render([ruleSetA, ruleSetB]);
+    test("keeps an unsaved rule set before the rule sets after it when the one before it is removed elsewhere", () => {
+      const { result, rerender } = render([ruleSetA]);
       act(() => {
         result.current.addRuleSet();
       });
-      const [, keyB, keyNew] = result.current.entries.map((e) => e.key);
+      rerender({ ruleSets: [ruleSetA, imported] });
 
-      rerender({ ruleSets: [ruleSetB] });
+      rerender({ ruleSets: [imported] });
 
-      expect(names(result.current.ruleSets)).toEqual(["B", "My Rule Set 1"]);
-      expect(result.current.entries.map((e) => e.key)).toEqual([keyB, keyNew]);
+      expect(names(result.current.ruleSets)).toEqual([
+        "My Rule Set 1",
+        "Imported",
+      ]);
     });
 
-    test("moves an unsaved rule set to the end when the one before it is removed elsewhere", () => {
-      const { result, rerender } = render([ruleSetA, ruleSetB]);
+    test("drops a saved rule set that a newer stored list no longer has", () => {
+      const { result, rerender } = render([ruleSetA]);
       act(() => {
         result.current.addRuleSet();
       });
+      act(() => {
+        result.current.updateRules([{ ...savedRule, id: RULE_ID_UNSAVED }], 1);
+      });
 
-      rerender({ ruleSets: [ruleSetA] });
+      // Saved over by another window that did not have it
+      rerender({ ruleSets: [ruleSetA, imported] });
 
-      expect(names(result.current.ruleSets)).toEqual(["A", "My Rule Set 1"]);
+      expect(result.current.ruleSets).toEqual([ruleSetA, imported]);
+    });
+
+    test("does not move a rule being added to a rule set that took the same name elsewhere", () => {
+      const first = {
+        id: "rs-first",
+        name: "My Rule Set 1",
+        rules: [savedRule],
+      };
+      const { result, rerender } = render([first]);
+      act(() => {
+        result.current.updateRules([savedRule, editingRule], 0);
+      });
+
+      // Removed and added again in another window
+      const second = {
+        id: "rs-second",
+        name: "My Rule Set 1",
+        rules: [{ ...savedRule, id: 2 }],
+      };
+      rerender({ ruleSets: [second] });
+
+      expect(result.current.ruleSets).toEqual([second]);
+    });
+
+    test("keeps a rule being added with its own rule set among those of the same name", () => {
+      const sameName = (id: string, ruleId: number) => ({
+        id,
+        name: "Same",
+        rules: [{ ...savedRule, id: ruleId }],
+      });
+      const { result, rerender } = render([
+        sameName("rs-x", 1),
+        sameName("rs-y", 2),
+      ]);
+      act(() => {
+        result.current.updateRules([{ ...savedRule, id: 2 }, editingRule], 1);
+      });
+
+      // Elsewhere, the first one is removed and the second one's rule replaced
+      rerender({ ruleSets: [sameName("rs-y", 8)] });
+
+      expect(result.current.ruleSets).toEqual([
+        {
+          ...sameName("rs-y", 8),
+          rules: [{ ...savedRule, id: 8 }, editingRule],
+        },
+      ]);
     });
 
     test("keeps an unsaved rule set first when rule sets are stored after it", () => {
@@ -427,9 +481,11 @@ describe("useRuleSetsEdit", () => {
       ]);
     });
 
-    test("matches a rule set replaced by name, as an import does", () => {
+    test("matches a rule set by ID when all its rules are replaced, as an import does", () => {
       const { result, rerender } = render([ruleSetA, ruleSetB]);
-      const keys = result.current.entries.map((e) => e.key);
+      act(() => {
+        result.current.updateRules([...ruleSetB.rules, editingRule], 1);
+      });
 
       const replacedB = {
         id: "rs-b",
@@ -438,8 +494,10 @@ describe("useRuleSetsEdit", () => {
       };
       rerender({ ruleSets: [ruleSetA, replacedB] });
 
-      expect(result.current.ruleSets).toEqual([ruleSetA, replacedB]);
-      expect(result.current.entries.map((e) => e.key)).toEqual(keys);
+      expect(result.current.ruleSets).toEqual([
+        ruleSetA,
+        { ...replacedB, rules: [...replacedB.rules, editingRule] },
+      ]);
     });
 
     test("opens only a rule set that is alone when the list is first filled, or added", () => {

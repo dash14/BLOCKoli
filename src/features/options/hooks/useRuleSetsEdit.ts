@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import cloneDeep from "lodash-es/cloneDeep";
 import { push, removeAt, replaceAt } from "@/modules/core/array";
 import {
@@ -10,8 +10,6 @@ import {
 import { newRuleSetTemplate } from "@/modules/rules/template";
 
 export type RuleSetEntry = {
-  // Stable across merges, for list rendering
-  key: number;
   ruleSet: StoredRuleSet;
   // Whether its accordion starts open when it is first rendered
   open: boolean;
@@ -21,16 +19,13 @@ export function useRuleSetsEdit(
   originalRuleSets: StoredRuleSets,
   onChange: (ruleSets: StoredRuleSets) => void
 ) {
-  const nextKey = useRef(1);
-  const newKey = () => nextKey.current++;
-
   const [entries, setEntries] = useState<RuleSetEntry[]>(() =>
-    mergeEntries(originalRuleSets, [], newKey)
+    mergeEntries(originalRuleSets, [])
   );
   const ruleSets = entries.map((entry) => entry.ruleSet);
 
   useEffect(() => {
-    const merged = mergeEntries(originalRuleSets, entries, newKey);
+    const merged = mergeEntries(originalRuleSets, entries);
     if (
       JSON.stringify(merged.map((entry) => entry.ruleSet)) !==
       JSON.stringify(ruleSets)
@@ -54,7 +49,7 @@ export function useRuleSetsEdit(
 
     newRuleSet.name = `${newRuleSet.name} ${maxNumber + 1}`;
 
-    setEntries(push(entries, { key: newKey(), ruleSet: newRuleSet, open: true }));
+    setEntries(push(entries, { ruleSet: newRuleSet, open: true }));
   }
 
   function replaceRuleSet(index: number, ruleSet: StoredRuleSet) {
@@ -108,61 +103,42 @@ function filterAvailableRuleSets(entries: RuleSetEntry[]): StoredRuleSets {
     .filter((ruleSet) => ruleSet.rules.length > 0);
 }
 
-// Stored rule sets are matched by their rules' IDs, then by name, not by their own IDs yet.
-// Unsaved entries are not in storage; each follows the saved entry it came after.
+// Stored rule sets are matched by ID. Unsaved ones are not in storage; each
+// keeps its place after the stored rule set before it.
 function mergeEntries(
   stored: StoredRuleSets,
-  entries: RuleSetEntry[],
-  newKey: () => number
+  entries: RuleSetEntry[]
 ): RuleSetEntry[] {
-  const unmatched: RuleSetEntry[] = [];
-  const unsaved: { entry: RuleSetEntry; after: number | null }[] = [];
-  let after: number | null = null;
+  const storedIds = new Set(stored.map((ruleSet) => ruleSet.id));
+  const previous = new Map(entries.map((entry) => [entry.ruleSet.id, entry]));
+  const pending: { entry: RuleSetEntry; after: string | null }[] = [];
+  let after: string | null = null;
   entries.forEach((entry) => {
-    if (isUnsaved(entry)) {
-      unsaved.push({ entry, after });
-    } else {
-      unmatched.push(entry);
-      after = entry.key;
+    if (storedIds.has(entry.ruleSet.id)) {
+      after = entry.ruleSet.id;
+    } else if (isUnsaved(entry)) {
+      pending.push({ entry, after });
     }
   });
-
-  const take = (matches: (entry: RuleSetEntry) => boolean) => {
-    const index = unmatched.findIndex(matches);
-    return index < 0 ? undefined : unmatched.splice(index, 1)[0];
-  };
-  const previous = stored.map((ruleSet) => {
-    const ids = new Set(ruleSet.rules.map((rule) => rule.id));
-    return take((entry) => entry.ruleSet.rules.some((rule) => ids.has(rule.id)));
-  });
-  stored.forEach((ruleSet, index) => {
-    previous[index] ??= take((entry) => entry.ruleSet.name === ruleSet.name);
-  });
-
-  const followers = (key: number | null) =>
-    unsaved.filter((u) => u.after === key).map((u) => u.entry);
+  const followers = (id: string | null) =>
+    pending.filter((p) => p.after === id).map((p) => p.entry);
 
   // Open the only rule set when the list is first filled
   const openNew = entries.length === 0 && stored.length === 1;
 
-  const merged = stored.flatMap((original, index) => {
+  const merged = stored.flatMap((original) => {
     const ruleSet = cloneDeep(original);
+    const entry = previous.get(original.id);
     // Keep the rules being added to this rule set
-    previous[index]?.ruleSet.rules.forEach((rule, ruleIndex) => {
+    entry?.ruleSet.rules.forEach((rule, ruleIndex) => {
       if (rule.id === RULE_ID_EDITING) {
         ruleSet.rules.splice(ruleIndex, 0, rule);
       }
     });
-    const entry = previous[index]
-      ? { ...previous[index], ruleSet }
-      : { key: newKey(), ruleSet, open: openNew };
-    return [entry, ...followers(entry.key)];
+    return [
+      { ruleSet, open: entry?.open ?? openNew },
+      ...followers(original.id),
+    ];
   });
-
-  // Unsaved entries whose preceding entry was removed elsewhere go last
-  const placed = new Set(merged.map((entry) => entry.key));
-  const orphans = unsaved
-    .filter((u) => u.after !== null && !placed.has(u.after))
-    .map((u) => u.entry);
-  return [...followers(null), ...merged, ...orphans];
+  return [...followers(null), ...merged];
 }
