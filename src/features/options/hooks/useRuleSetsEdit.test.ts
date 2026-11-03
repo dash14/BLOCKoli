@@ -26,10 +26,12 @@ const editingRule: StoredRule = {
 // Test data: sample rule sets
 const sampleRuleSets: StoredRuleSets = [
   {
+    id: "rs-1",
     name: "Block Ads",
     rules: [savedRule],
   },
   {
+    id: "rs-2",
     name: "Allow Trusted",
     rules: [{ ...savedRule, id: 2 }],
   },
@@ -73,11 +75,28 @@ describe("useRuleSetsEdit", () => {
       expect(result.current.ruleSets[0].rules[0].id).toBe(RULE_ID_EDITING);
     });
 
+    test("gives each new rule set its own ID", () => {
+      const original: StoredRuleSets = [];
+      const { result } = renderHook(() => useRuleSetsEdit(original, vi.fn()));
+
+      act(() => {
+        result.current.addRuleSet();
+      });
+      act(() => {
+        result.current.addRuleSet();
+      });
+
+      const [first, second] = result.current.ruleSets.map((r) => r.id);
+      expect(first).toMatch(/^[0-9a-f-]{36}$/);
+      expect(second).toMatch(/^[0-9a-f-]{36}$/);
+      expect(first).not.toBe(second);
+    });
+
     test("respects existing 'My Rule Set N' naming", () => {
       const onChange = vi.fn();
       const existingRuleSets: StoredRuleSets = [
-        { name: "My Rule Set 1", rules: [savedRule] },
-        { name: "My Rule Set 3", rules: [savedRule] },
+        { id: "rs-3", name: "My Rule Set 1", rules: [savedRule] },
+        { id: "rs-4", name: "My Rule Set 3", rules: [savedRule] },
       ];
       const { result } = renderHook(() =>
         useRuleSetsEdit(existingRuleSets, onChange)
@@ -265,8 +284,8 @@ describe("useRuleSetsEdit", () => {
 
       // Simulate external update (e.g., from storage)
       const updatedRuleSets: StoredRuleSets = [
-        { name: "Block Ads", rules: [savedRule] },
-        { name: "Allow Trusted", rules: [{ ...savedRule, id: 2 }] },
+        { id: "rs-5", name: "Block Ads", rules: [savedRule] },
+        { id: "rs-6", name: "Allow Trusted", rules: [{ ...savedRule, id: 2 }] },
       ];
 
       rerender({ ruleSets: updatedRuleSets });
@@ -294,9 +313,15 @@ describe("useRuleSetsEdit", () => {
   })
 
   describe("tracking rule sets across updates", () => {
-    const ruleSetA = { name: "A", rules: [savedRule] };
-    const ruleSetB = { name: "B", rules: [{ ...savedRule, id: 2 }] };
-    const imported = { name: "Imported", rules: [{ ...savedRule, id: 3 }] };
+    const ruleSetA = { id: "rs-a", name: "A", rules: [savedRule] };
+    const ruleSetB = {
+      id: "rs-b",
+      name: "B",
+      rules: [{ ...savedRule, id: 2 }],
+    };
+    const imported = {
+      id: "rs-imported",
+      name: "Imported", rules: [{ ...savedRule, id: 3 }] };
 
     function render(initial: StoredRuleSets) {
       const onChange = vi.fn();
@@ -350,7 +375,9 @@ describe("useRuleSetsEdit", () => {
       });
       expect(names(onChange.mock.lastCall![0])).toEqual(["A", "My Rule Set 2"]);
 
-      const saved = { name: "My Rule Set 2", rules: [{ ...savedRule, id: 5 }] };
+      const saved = {
+        id: "rs-saved",
+        name: "My Rule Set 2", rules: [{ ...savedRule, id: 5 }] };
       rerender({ ruleSets: [ruleSetA, saved] });
 
       expect(names(result.current.ruleSets)).toEqual([
@@ -404,7 +431,11 @@ describe("useRuleSetsEdit", () => {
       const { result, rerender } = render([ruleSetA, ruleSetB]);
       const keys = result.current.entries.map((e) => e.key);
 
-      const replacedB = { name: "B", rules: [{ ...savedRule, id: 9 }] };
+      const replacedB = {
+        id: "rs-b",
+        name: "B",
+        rules: [{ ...savedRule, id: 9 }],
+      };
       rerender({ ruleSets: [ruleSetA, replacedB] });
 
       expect(result.current.ruleSets).toEqual([ruleSetA, replacedB]);

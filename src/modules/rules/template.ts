@@ -9,7 +9,8 @@ export const newRuleTemplate: StoredRule = {
   condition: {},
 };
 
-export const newRuleSetTemplate: StoredRuleSet = {
+// Each new rule set gets its own ID when it is created
+export const newRuleSetTemplate: Omit<StoredRuleSet, "id"> = {
   name: "My Rule Set",
   rules: [newRuleTemplate],
 };

@@ -118,6 +118,7 @@ describe("ServiceConfigurationStoreImpl", () => {
     it("saves rule sets", async () => {
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-1",
           name: "Test Set",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -143,6 +144,7 @@ describe("ServiceConfigurationStoreImpl", () => {
     it("returns stored rule sets when available", async () => {
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-2",
           name: "Test Set",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },

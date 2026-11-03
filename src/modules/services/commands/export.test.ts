@@ -12,6 +12,7 @@ describe("performExportCommand", () => {
   it("should  be cleanup", () => {
     const storedRuleSets: StoredRuleSets = [
       {
+        id: "rs-1",
         name: "ruleset #1",
         rules: [
           {
@@ -37,6 +38,7 @@ describe("performExportCommand", () => {
         ],
       },
       {
+        id: "rs-2",
         name: "ruleset #2",
         rules: [
           {
@@ -97,6 +99,7 @@ describe("performExportCommand", () => {
     };
     const actual = performExportCommand([
       {
+        id: "rs-3",
         name: "ruleset",
         rules: [{ id: 1, action: { type: RuleActionType.BLOCK }, condition }],
       },

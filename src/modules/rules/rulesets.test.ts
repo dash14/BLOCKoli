@@ -14,7 +14,9 @@ describe("rulesets", () => {
     });
 
     it("returns empty array for ruleSet with no rules", () => {
-      const ruleSets: StoredRuleSets = [{ name: "Empty Set", rules: [] }];
+      const ruleSets: StoredRuleSets = [
+        { id: "rs-1", name: "Empty Set", rules: [] },
+      ];
       const result = toRuleList(ruleSets);
 
       expect(result).toEqual([]);
@@ -23,6 +25,7 @@ describe("rulesets", () => {
     it("returns rules from single ruleSet", () => {
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-2",
           name: "Set 1",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -41,12 +44,14 @@ describe("rulesets", () => {
     it("returns rules from multiple ruleSets", () => {
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-3",
           name: "Set 1",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
           ],
         },
         {
+          id: "rs-4",
           name: "Set 2",
           rules: [
             { id: 2, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -66,6 +71,7 @@ describe("rulesets", () => {
     it("excludes rules with RULE_ID_UNSAVED", () => {
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-5",
           name: "Set 1",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -89,6 +95,7 @@ describe("rulesets", () => {
     it("excludes rules with RULE_ID_EDITING", () => {
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-6",
           name: "Set 1",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -122,6 +129,7 @@ describe("rulesets", () => {
       const walker = vi.fn();
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-7",
           name: "Set 1",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -142,7 +150,7 @@ describe("rulesets", () => {
         action: { type: RuleActionType.BLOCK },
         condition: {},
       };
-      const ruleSet = { name: "Test Set", rules: [rule] };
+      const ruleSet = { id: "rs-8", name: "Test Set", rules: [rule] };
       const ruleSets: StoredRuleSets = [ruleSet];
 
       walkRules(ruleSets, walker);
@@ -157,6 +165,7 @@ describe("rulesets", () => {
       });
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-9",
           name: "Set 1",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -175,6 +184,7 @@ describe("rulesets", () => {
       const walker = vi.fn();
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-10",
           name: "Set 1",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
@@ -199,6 +209,7 @@ describe("rulesets", () => {
       const walker = vi.fn();
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-11",
           name: "Set 1",
           rules: [
             {
@@ -224,12 +235,14 @@ describe("rulesets", () => {
       });
       const ruleSets: StoredRuleSets = [
         {
+          id: "rs-12",
           name: "Set A",
           rules: [
             { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
           ],
         },
         {
+          id: "rs-8",
           name: "Set B",
           rules: [
             { id: 2, action: { type: RuleActionType.BLOCK }, condition: {} },

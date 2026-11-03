@@ -18,7 +18,9 @@ import {
   RULE_ID_UNSAVED,
   StoredRule,
   StoredRuleSets,
+  UnidentifiedRuleSet,
   VersionedRuleSets,
+  assignRuleSetIds,
 } from "@/modules/rules/stored";
 import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
 import { validateRegexSupport } from "@/modules/rules/validation/edit";
@@ -87,20 +89,14 @@ export class RequestBlockServiceImpl
   }
 
   public updateRuleSets(
-    ruleSets: StoredRuleSets
+    ruleSets: UnidentifiedRuleSet[]
   ): Promise<VersionedRuleSets> {
     return this.serialize(() => this.updateRuleSetsNow(ruleSets));
   }
 
   // Queued so the rule sets and their revision are read together
   public getRuleSets(): Promise<VersionedRuleSets> {
-    return this.serialize(async () => {
-      const [revision, ruleSets] = await Promise.all([
-        this.store.loadRuleSetsRevision(),
-        this.store.loadRuleSets(),
-      ]);
-      return { revision, ruleSets };
-    });
+    return this.serialize(() => this.loadIdentifiedRuleSets());
   }
 
   public import(object: unknown): Promise<[boolean, RuleSetsValidationError[]]> {
@@ -108,6 +104,12 @@ export class RequestBlockServiceImpl
   }
 
   private async startNow(): Promise<void> {
+    try {
+      await this.loadIdentifiedRuleSets();
+    } catch (error) {
+      // Rules still apply without rule set IDs; getRuleSets tries again
+      log.error("Failed to give IDs to the stored rule sets", error);
+    }
     if (await this.isEnabled()) {
       await this.activate();
     } else {
@@ -143,11 +145,25 @@ export class RequestBlockServiceImpl
     return (await this.store.loadState()) === "enable";
   }
 
+  // Rule sets stored without IDs, as older versions did, get them saved here
+  private async loadIdentifiedRuleSets(): Promise<VersionedRuleSets> {
+    const [ruleSets, revision] = await Promise.all([
+      this.store.loadRuleSets(),
+      this.store.loadRuleSetsRevision(),
+    ]);
+    const assigned = assignRuleSetIds(ruleSets);
+    if (isEqual(assigned, ruleSets)) {
+      return { revision, ruleSets };
+    }
+    return this.saveRuleSets(assigned, revision);
+  }
+
   private async updateRuleSetsNow(
-    ruleSets: StoredRuleSets
+    unidentified: UnidentifiedRuleSet[]
   ): Promise<VersionedRuleSets> {
     log.debug("updateRuleSets");
 
+    const ruleSets = assignRuleSetIds(unidentified);
     const [prevRuleSets, prevRevision] = await Promise.all([
       this.store.loadRuleSets(),
       this.store.loadRuleSetsRevision(),
@@ -168,10 +184,17 @@ export class RequestBlockServiceImpl
 
     // Save the next ID first: if saving the rule sets fails, an ID is skipped rather than reused
     await this.store.saveNextRuleId(nextRuleId);
-    // Same for the revision, so stored rule sets never change under a revision already sent
-    const saved = { revision: prevRevision + 1, ruleSets: assigned };
+    return this.saveRuleSets(assigned, prevRevision);
+  }
+
+  private async saveRuleSets(
+    ruleSets: StoredRuleSets,
+    prevRevision: number
+  ): Promise<VersionedRuleSets> {
+    // Revision first, so rule sets never change under a revision already sent
+    const saved = { revision: prevRevision + 1, ruleSets };
     await this.store.saveRuleSetsRevision(saved.revision);
-    await this.store.saveRuleSets(assigned);
+    await this.store.saveRuleSets(ruleSets);
 
     void this.emitter.emit("updateRuleSets", saved);
 

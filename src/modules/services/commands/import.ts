@@ -3,8 +3,8 @@ import { RuleSets } from "@/modules/core/rules";
 import { ExportedRuleSets } from "@/modules/rules/export";
 import {
   RULE_ID_UNSAVED,
-  StoredRuleSet,
   StoredRuleSets,
+  UnidentifiedRuleSet,
 } from "@/modules/rules/stored";
 import {
   RuleSetsValidationError,
@@ -16,7 +16,7 @@ export async function performImportCommand(
   object: unknown,
   storedRuleSets: StoredRuleSets,
   regexValidator: RegexValidator
-): Promise<[boolean, RuleSetsValidationError[], StoredRuleSets]> {
+): Promise<[boolean, RuleSetsValidationError[], UnidentifiedRuleSet[]]> {
   // validate meta data in JSON
   const [valid, errors, data] = validateImportObject(object);
   if (!valid) {
@@ -44,20 +44,21 @@ export async function performImportCommand(
     if (indexes) indexes.push(index);
     else storedIndexes.set(name, [index]);
   });
+  const ruleSets: UnidentifiedRuleSet[] = [...storedRuleSets];
   for (const ruleSet of result.evaluated) {
-    const newRuleSet: StoredRuleSet = {
-      name: ruleSet.name,
-      rules: ruleSet.rules.map((r) => ({ ...r, id: RULE_ID_UNSAVED })),
-    };
+    const rules = ruleSet.rules.map((r) => ({ ...r, id: RULE_ID_UNSAVED }));
     const existsIndex = storedIndexes.get(ruleSet.name)?.shift();
     if (existsIndex !== undefined) {
-      storedRuleSets[existsIndex] = newRuleSet;
+      // A replaced rule set keeps its ID; an ID in the file is never used
+      const { id } = storedRuleSets[existsIndex];
+      ruleSets[existsIndex] = { id, name: ruleSet.name, rules };
     } else {
-      storedRuleSets.push(newRuleSet);
+      // The service gives it an ID when saving
+      ruleSets.push({ name: ruleSet.name, rules });
     }
   }
 
-  return [true, [], storedRuleSets];
+  return [true, [], ruleSets];
 }
 
 async function validateRegexFilters(
