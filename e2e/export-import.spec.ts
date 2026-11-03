@@ -16,8 +16,7 @@ async function exportRules(page: Page) {
   const downloading = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const download = await downloading;
-  await page.getByRole("button", { name: "Close" }).click();
-  await expect(page.getByRole("alertdialog")).toHaveCount(0);
+  await closeDialog(page, page.getByRole("alertdialog"));
   return download.path();
 }
 

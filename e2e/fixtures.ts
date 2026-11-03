@@ -136,23 +136,24 @@ export async function stopServiceWorker({ context, extensionId }: ExtensionBrows
   }
 }
 
+/** Checks or unchecks a Chakra checkbox, switch or radio */
+export async function setChecked(control: Locator, checked: boolean) {
+  await expect(control).toBeEnabled();
+  if ((await control.isChecked()) !== checked) {
+    // Chakra covers the hidden input with its visible control
+    await control.dispatchEvent("click");
+  }
+  await expect(control).toBeChecked({ checked });
+}
+
 /** Turns the rules on or off from the options page or the popup */
 export async function setRulesEnabled(page: Page, enabled: boolean) {
-  const rulesSwitch = page.getByRole("checkbox", { name: "Enable rules" });
-  await expect(rulesSwitch).toBeEnabled();
-  if ((await rulesSwitch.isChecked()) !== enabled) {
-    // Chakra covers the switch's hidden input with its visible control
-    await rulesSwitch.dispatchEvent("click");
-  }
-  await expect(rulesSwitch).toBeChecked({ checked: enabled });
+  await setChecked(page.getByRole("checkbox", { name: "Enable rules" }), enabled);
 }
 
 /** Adds a rule to the rule set being edited, and saves it */
 export async function saveRule(page: Page, action: "block" | "allow", urlFilter: string) {
-  const actionRadio = page.getByRole("radio", { name: action });
-  // Chakra covers the radio's hidden input with its visible control
-  await actionRadio.dispatchEvent("click");
-  await expect(actionRadio).toBeChecked();
+  await setChecked(page.getByRole("radio", { name: action }), true);
   await page.getByRole("textbox", { name: "URL Filter" }).fill(urlFilter);
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("button", { name: "Save" })).toBeHidden();

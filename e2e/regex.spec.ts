@@ -1,5 +1,6 @@
 import {
   closeDialog,
+  setChecked,
   expect,
   expectBlocked,
   expectLoaded,
@@ -23,10 +24,7 @@ test("the rule editor accepts only a regular expression Chrome can run", async (
   serverOrigin,
 }) => {
   await page.getByRole("button", { name: "Add a Rule Set" }).click();
-  const useRegex = page.getByRole("checkbox", { name: "Use regex" });
-  // Chakra covers the checkbox's hidden input with its visible control
-  await useRegex.dispatchEvent("click");
-  await expect(useRegex).toBeChecked();
+  await setChecked(page.getByRole("checkbox", { name: "Use regex" }), true);
 
   // RE2 has no backreferences
   const urlFilter = page.getByRole("textbox", { name: "URL Filter" });
@@ -36,7 +34,10 @@ test("the rule editor accepts only a regular expression Chrome can run", async (
   await expect(page.getByRole("button", { name: "Save" })).toBeDisabled();
 
   await urlFilter.fill("/regex/[0-9]+$");
+  // Chrome checks the pattern asynchronously
+  await expect(page.getByText("syntaxError")).toBeHidden();
   await expect(urlFilter).not.toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByRole("button", { name: "Save" })).toBeEnabled();
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("button", { name: "Save" })).toBeHidden();
 
@@ -59,5 +60,7 @@ test("an import with a regular expression Chrome cannot run adds nothing", async
   await expect(result).toContainText("Import failed");
   await expect(result).toContainText("syntaxError");
   await closeDialog(page, result);
+  // Read the rule sets from storage again, rather than what the page holds
+  await page.reload();
   await expect(page.getByText("There are no rule sets available.")).toBeVisible();
 });
