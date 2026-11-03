@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Box, HStack, IconButton, Switch, Text } from "@chakra-ui/react";
+import { Box, HStack, IconButton, Text } from "@chakra-ui/react";
 import { LuRefreshCw } from "react-icons/lu";
+import { EnableRulesSwitch } from "@/components/parts/EnableRulesSwitch";
 import { MatchedRulesTable } from "@/features/popup/components/MatchedRulesTable";
 import { useI18n } from "@/hooks/useI18n";
 import { RuleSets } from "@/modules/core/rules";
@@ -43,25 +44,14 @@ export const Main: React.FC<Props> = ({
         <NoRules optionsUrl={optionsUrl} />
       ) : (
         <>
-          <Switch.Root
+          <EnableRulesSwitch
             display="flex"
             justifyContent="space-between"
             marginTop="20px"
             checked={isServiceEnabled}
-            onCheckedChange={(e) => changeServiceState(e.checked)}
-          >
-            <Switch.HiddenInput />
-            <Switch.Label
-              fontSize={18 + titleFontAdjuster}
-              fontWeight="normal"
-              lineHeight="inherit"
-            >
-              {i18n["EnableRules"]}
-            </Switch.Label>
-            <Switch.Control>
-              <Switch.Thumb />
-            </Switch.Control>
-          </Switch.Root>
+            onChange={changeServiceState}
+            fontSize={18 + titleFontAdjuster}
+          />
 
           <Box marginTop="10px">
             <ConfigureRulesLink

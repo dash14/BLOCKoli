@@ -3,7 +3,6 @@ import {
   Button,
   Container,
   Box,
-  Switch,
   Heading,
   HStack,
   Text,
@@ -14,6 +13,7 @@ import { css, Global } from "@emotion/react";
 import { Brand } from "@/components/brand/Brand";
 import { BrandIcon } from "@/components/brand/BrandIcon";
 import { Copyright } from "@/components/brand/Copyright";
+import { EnableRulesSwitch } from "@/components/parts/EnableRulesSwitch";
 import { ExternalLink } from "@/components/parts/ExternalLink";
 import { ExportImportDialog } from "@/features/options/components/ruleset/ExportImportDialog";
 import {
@@ -163,24 +163,14 @@ const Options: React.FC = () => {
           </HStack>
         ) : (
           <>
-            <Switch.Root
-              marginY={10}
-              gap={12}
-              checked={enabled}
-              onCheckedChange={(e) => changeState(e.checked)}
-            >
-              <Switch.HiddenInput />
-              <Switch.Label
+            <Box marginY={10}>
+              <EnableRulesSwitch
+                gap={12}
+                checked={enabled}
+                onChange={changeState}
                 fontSize={18 + titleFontAdjuster}
-                fontWeight="normal"
-                lineHeight="inherit"
-              >
-                {i18n["EnableRules"]}
-              </Switch.Label>
-              <Switch.Control>
-                <Switch.Thumb />
-              </Switch.Control>
-            </Switch.Root>
+              />
+            </Box>
 
             <RuleSetsEdit
               ruleSets={ruleSets}

@@ -311,6 +311,7 @@ describe("Options page", () => {
       .toBeInTheDocument();
     await page.getByText("Enable rules").click();
 
+    expect(changeState).toHaveBeenCalledTimes(1);
     expect(changeState).toHaveBeenCalledWith(true);
   });
 
