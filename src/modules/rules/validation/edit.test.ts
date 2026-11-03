@@ -7,7 +7,13 @@ import {
 import type { RegexValidator } from "@/modules/core/regex";
 import { RuleActionType } from "@/modules/core/rules";
 import type { Rule } from "@/modules/core/rules";
-import { RuleValidator, validateRegexSupport } from "./edit";
+import {
+  REGEX_TOO_COMPLEX_MESSAGE,
+  RuleValidator,
+  UNSUPPORTED_REGEX_MESSAGE,
+  UNSUPPORTED_REGEX_SYNTAX_MESSAGE,
+  validateRegexSupport,
+} from "./edit";
 
 describe("RuleValidator", () => {
   const createMockRegexValidator = (
@@ -187,7 +193,7 @@ describe("RuleValidator", () => {
         if (!result.valid) {
           expect(result.errors).toContainEqual({
             ruleField: "condition.urlFilter",
-            message: "must use only regular expression syntax Chrome supports (no backreferences or lookarounds)",
+            message: UNSUPPORTED_REGEX_SYNTAX_MESSAGE,
           });
         }
       });
@@ -211,7 +217,7 @@ describe("RuleValidator", () => {
         if (!result.valid) {
           expect(result.errors).toContainEqual({
             ruleField: "condition.urlFilter",
-            message: "must be a regular expression Chrome supports",
+            message: UNSUPPORTED_REGEX_MESSAGE,
           });
         }
       });
@@ -237,7 +243,7 @@ describe("RuleValidator", () => {
         if (!result.valid) {
           expect(result.errors).toContainEqual({
             ruleField: "condition.urlFilter",
-            message: "must be simple enough for Chrome to run",
+            message: REGEX_TOO_COMPLEX_MESSAGE,
           });
         }
       });
@@ -304,6 +310,8 @@ describe("validateRegexSupport messages", () => {
     ["memoryLimitExceeded", "正規表現が複雑すぎて Chrome で使えません"],
     // A reason added by a later Chrome
     ["somethingNew", "Chrome で使えない正規表現です"],
+    ["toString", "Chrome で使えない正規表現です"],
+    ["", "Chrome で使えない正規表現です"],
     [undefined, "Chrome で使えない正規表現です"],
   ])("translates the message for %s", async (reason, translated) => {
     const message = await messageFor(reason);

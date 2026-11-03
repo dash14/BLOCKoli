@@ -1,3 +1,4 @@
+import type { UnsupportedRegexReason } from "@/modules/chrome/api";
 import { RegexValidator } from "@/modules/core/regex";
 import { Rule } from "@/modules/core/rules";
 import {
@@ -39,14 +40,23 @@ export async function validateRegexSupport(
   return {
     ruleField: "condition.urlFilter",
     message:
-      (result.reason && unsupportedRegexMessages[result.reason]) ??
-      "must be a regular expression Chrome supports",
+      unsupportedRegexMessages.get(result.reason ?? "") ??
+      UNSUPPORTED_REGEX_MESSAGE,
   };
 }
 
+export const UNSUPPORTED_REGEX_SYNTAX_MESSAGE =
+  "must use only regular expression syntax Chrome supports (no backreferences or lookarounds)";
+export const REGEX_TOO_COMPLEX_MESSAGE = "must be simple enough for Chrome to run";
+export const UNSUPPORTED_REGEX_MESSAGE =
+  "must be a regular expression Chrome supports";
+
 // Chrome's reason codes, as messages the pages translate
-const unsupportedRegexMessages: Record<string, string> = {
-  syntaxError:
-    "must use only regular expression syntax Chrome supports (no backreferences or lookarounds)",
-  memoryLimitExceeded: "must be simple enough for Chrome to run",
+const reasonMessages: Record<`${UnsupportedRegexReason}`, string> = {
+  syntaxError: UNSUPPORTED_REGEX_SYNTAX_MESSAGE,
+  memoryLimitExceeded: REGEX_TOO_COMPLEX_MESSAGE,
 };
+// A Map, so a code such as "toString" never reaches Object.prototype
+const unsupportedRegexMessages = new Map<string, string>(
+  Object.entries(reasonMessages)
+);
