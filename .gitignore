@@ -13,6 +13,8 @@ dist-ssr
 *.local
 /.vitest
 /coverage
+/test-results
+/playwright-report
 .pnpm-store
 
 # Editor directories and files
