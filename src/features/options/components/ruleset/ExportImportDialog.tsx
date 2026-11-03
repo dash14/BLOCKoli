@@ -82,6 +82,7 @@ export const ExportImportDialog: React.FC<Props> = ({
                 </Box>
                 <FileInput
                   accept=".json"
+                  aria-label={i18n["ImportRules"]}
                   height="auto"
                   border="none"
                   onSelectFile={onSelectImportFile}
