@@ -1,4 +1,4 @@
-// Far below Chrome's limit: the options page renders every rule and slows down past a few hundred
+// Far below Chrome's limit, as the options page slows down with a few hundred rules open at once
 export const MAX_RULES = 500;
 
 export function countRules(ruleSets: readonly { rules: readonly unknown[] }[]) {

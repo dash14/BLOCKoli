@@ -50,7 +50,7 @@ export const RuleSetsEdit: React.FC<Props> = ({
     updateRuleSetTitle,
   } = useRuleSetsEdit(originalRuleSets, onChange);
 
-  // Counts the rules being added too, so their saves are not refused
+  // Includes new rules not saved yet, so adding stops at the limit
   const isAddAllowed =
     countRules(entries.map(({ ruleSet }) => ruleSet)) < MAX_RULES;
 

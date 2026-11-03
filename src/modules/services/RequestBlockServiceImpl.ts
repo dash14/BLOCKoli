@@ -175,7 +175,8 @@ export class RequestBlockServiceImpl
     }
 
     checkRuleCount(ruleSets, prevRuleSets);
-    // Chrome would reject the whole update, so refuse to save even while disabled
+    // Chrome would reject the whole update, so refuse to save even while disabled.
+    // Below MAX_RULES this only fails for rule sets stored before that limit existed.
     this.checkRuleLimits(ruleSets);
 
     const [assigned, nextRuleId] = await this.assignRuleId(ruleSets);
