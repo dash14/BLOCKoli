@@ -42,10 +42,10 @@ test("restores rule sets with several rules from an exported file", async ({
   await expect(otherPage.getByText("My Rule Set 2")).toBeVisible();
 
   await setRulesEnabled(otherPage, true);
-  await expectBlocked(other.context, `${serverOrigin}/first`);
-  await expectBlocked(other.context, `${serverOrigin}/second`);
-  await expectLoaded(other.context, `${serverOrigin}/first/allowed`);
-  await expectLoaded(other.context, `${serverOrigin}/other`);
+  await expectBlocked(otherPage, `${serverOrigin}/first`);
+  await expectBlocked(otherPage, `${serverOrigin}/second`);
+  await expectLoaded(otherPage, `${serverOrigin}/first/allowed`);
+  await expectLoaded(otherPage, `${serverOrigin}/other`);
 
   // Exporting again gives the same rules back
   const reexportedPath = await exportRules(otherPage);

@@ -16,7 +16,6 @@ type Fixtures = {
   launchBrowser: () => Promise<ExtensionBrowser>;
   /** The first browser, which most tests use */
   extension: ExtensionBrowser;
-  context: BrowserContext;
   optionsPage: Page;
   /** Origin of a local server that answers every path with 200 */
   serverOrigin: string;
@@ -40,9 +39,21 @@ export const test = base.extend<Fixtures>({
       const [worker] = context.serviceWorkers();
       const serviceWorker = worker ?? (await context.waitForEvent("serviceworker"));
       const extensionId = new URL(serviceWorker.url()).host;
+      const optionsUrl = `chrome-extension://${extensionId}/options.html`;
+
+      // The extension opens the options page on install. Close it so that it
+      // cannot come to the front later, where a background tab never gets
+      // stable for clicks.
+      let installTab: Page | undefined;
+      await expect
+        .poll(() => (installTab = context.pages().find((p) => p.url() === optionsUrl)))
+        .toBeDefined();
+      await installTab?.close();
+
       const openOptions = async () => {
         const page = await context.newPage();
-        await page.goto(`chrome-extension://${extensionId}/options.html`);
+        await page.goto(optionsUrl);
+        await page.bringToFront();
         return page;
       };
       return { context, extensionId, openOptions };
@@ -52,10 +63,6 @@ export const test = base.extend<Fixtures>({
 
   extension: async ({ launchBrowser }, provide) => {
     await provide(await launchBrowser());
-  },
-
-  context: async ({ extension }, provide) => {
-    await provide(extension.context);
   },
 
   optionsPage: async ({ extension }, provide) => {
@@ -79,13 +86,17 @@ export const test = base.extend<Fixtures>({
 
 export const expect = test.expect;
 
-// A new tab per load, as a blocked load still moves its tab to Chrome's error page
-export async function load(context: BrowserContext, url: string) {
-  const page = await context.newPage();
+/**
+ * Loads the URL in a new tab, as a blocked load still moves its tab to
+ * Chrome's error page, then brings `page` back to the front
+ */
+export async function load(page: Page, url: string) {
+  const tab = await page.context().newPage();
   try {
-    return await page.goto(url);
+    return await tab.goto(url);
   } finally {
-    await page.close();
+    await tab.close();
+    await page.bringToFront();
   }
 }
 
@@ -112,12 +123,12 @@ export async function saveRule(page: Page, action: "block" | "allow", urlFilter:
 }
 
 /** Waits until Chrome blocks the URL, as it applies dynamic rules asynchronously */
-export async function expectBlocked(context: BrowserContext, url: string) {
+export async function expectBlocked(page: Page, url: string) {
   await expect(async () => {
-    await expect(load(context, url)).rejects.toThrow("net::ERR_BLOCKED_BY_CLIENT");
+    await expect(load(page, url)).rejects.toThrow("net::ERR_BLOCKED_BY_CLIENT");
   }).toPass();
 }
 
-export async function expectLoaded(context: BrowserContext, url: string) {
-  expect((await load(context, url))?.ok()).toBe(true);
+export async function expectLoaded(page: Page, url: string) {
+  expect((await load(page, url))?.ok()).toBe(true);
 }

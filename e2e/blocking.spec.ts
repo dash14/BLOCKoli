@@ -1,7 +1,6 @@
 import { expect, expectBlocked, expectLoaded, saveRule, setRulesEnabled, test } from "./fixtures";
 
 test("blocks requests that match a saved rule only while rules are enabled", async ({
-  context,
   optionsPage: page,
   serverOrigin,
 }) => {
@@ -9,11 +8,11 @@ test("blocks requests that match a saved rule only while rules are enabled", asy
   await saveRule(page, "block", "/blocked");
 
   await setRulesEnabled(page, true);
-  await expectBlocked(context, `${serverOrigin}/blocked`);
-  await expectLoaded(context, `${serverOrigin}/allowed`);
+  await expectBlocked(page, `${serverOrigin}/blocked`);
+  await expectLoaded(page, `${serverOrigin}/allowed`);
 
   await setRulesEnabled(page, false);
   await expect(async () => {
-    await expectLoaded(context, `${serverOrigin}/blocked`);
+    await expectLoaded(page, `${serverOrigin}/blocked`);
   }).toPass();
 });
