@@ -205,6 +205,12 @@
   "load_failed": {
     "message": "設定を読み込めませんでした。この画面を閉じて、もう一度開いてください。"
   },
+  "opened_in_another_tab": {
+    "message": "オプションは別のタブで開かれていて、そちらで編集できます。"
+  },
+  "edit_here": {
+    "message": "このタブで編集する"
+  },
 
   "ImportAndExportRules": {
     "message": "ルールのインポートとエクスポート"

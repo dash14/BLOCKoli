@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test, vi } from "vitest";
+import { beforeAll, describe, expect, onTestFinished, test, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { RuleActionType } from "@/modules/core/rules";
 import { StoredRuleSets } from "@/modules/rules/stored";
@@ -134,6 +134,47 @@ describe("Options page", () => {
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "Options-load-failed",
     );
+  });
+
+  test("lets only the newest page edit, until this one takes over again", async () => {
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ ruleSets: sampleRuleSets }),
+    );
+    const other = new BroadcastChannel("options-editing-tab");
+    const received: unknown[] = [];
+    other.onmessage = (event: MessageEvent) => received.push(event.data);
+    onTestFinished(() => other.close());
+
+    await renderWithChakra(
+      <div data-testid="container" style={{ width: 1024, height: 900 }}>
+        <Options />
+      </div>,
+    );
+    await expect.element(page.getByText("Block Ads")).toBeInTheDocument();
+
+    // Another options page opens
+    other.postMessage("editing");
+
+    await expect
+      .element(page.getByRole("status"))
+      .toHaveTextContent(
+        "The options are open in another tab, where they can be edited."
+      );
+    await expect.element(page.getByText("Block Ads")).not.toBeInTheDocument();
+    await expect.element(page.getByRole("checkbox")).not.toBeInTheDocument();
+    await expect.element(page.getByRole("combobox")).toBeInTheDocument();
+
+    // VRT screenshot
+    await userEvent.unhover(page.getByRole("document"));
+    await expect(page.getByTestId("container")).toMatchScreenshot(
+      "Options-opened-in-another-tab",
+    );
+
+    received.length = 0;
+    await page.getByRole("button", { name: "Edit in this tab" }).click();
+
+    await expect.element(page.getByText("Block Ads")).toBeInTheDocument();
+    await expect.poll(() => received).toEqual(["editing"]);
   });
 
   test("renders with rule sets", async () => {

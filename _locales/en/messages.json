@@ -205,6 +205,12 @@
   "load_failed": {
     "message": "Could not load the settings. Close this page and open it again."
   },
+  "opened_in_another_tab": {
+    "message": "The options are open in another tab, where they can be edited."
+  },
+  "edit_here": {
+    "message": "Edit in this tab"
+  },
 
   "ImportAndExportRules": {
     "message": "Import and Export Rules"
