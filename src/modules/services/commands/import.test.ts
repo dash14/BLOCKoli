@@ -7,6 +7,7 @@ import {
 } from "@/modules/core/rules";
 import { ExportedRuleSets } from "@/modules/rules/export";
 import { RULE_ID_UNSAVED, StoredRuleSets } from "@/modules/rules/stored";
+import { UNSUPPORTED_REGEX_SYNTAX_MESSAGE } from "@/modules/rules/validation/edit";
 import { performImportCommand } from "./import";
 
 describe("performImportCommand", () => {
@@ -355,7 +356,7 @@ describe("performImportCommand", () => {
     expect(valid).toBeFalsy();
     expect(errors).toStrictEqual([
       {
-        message: "syntaxError",
+        message: UNSUPPORTED_REGEX_SYNTAX_MESSAGE,
         ruleField: "condition.urlFilter",
         ruleNumber: 1,
         ruleSetField: "rules",

@@ -9,6 +9,10 @@ import {
   test,
 } from "./fixtures";
 
+// What the page shows for Chrome's syntaxError
+const unsupportedSyntax =
+  "must use only regular expression syntax Chrome supports (no backreferences or lookarounds)";
+
 test("the rule editor accepts only a regular expression Chrome can run", async ({
   optionsPage: page,
   serverOrigin,
@@ -20,12 +24,12 @@ test("the rule editor accepts only a regular expression Chrome can run", async (
   const urlFilter = page.getByRole("textbox", { name: "URL Filter" });
   await urlFilter.fill("/(a)\\1");
   await expect(urlFilter).toHaveAttribute("aria-invalid", "true");
-  await expect(page.getByText("syntaxError")).toBeVisible();
+  await expect(page.getByText(unsupportedSyntax)).toBeVisible();
   await expect(page.getByRole("button", { name: "Save" })).toBeDisabled();
 
   await urlFilter.fill("/regex/[0-9]+$");
   // Chrome checks the pattern asynchronously
-  await expect(page.getByText("syntaxError")).toBeHidden();
+  await expect(page.getByText(unsupportedSyntax)).toBeHidden();
   await expect(urlFilter).not.toHaveAttribute("aria-invalid", "true");
   await expect(page.getByRole("button", { name: "Save" })).toBeEnabled();
   await page.getByRole("button", { name: "Save" }).click();
@@ -49,6 +53,6 @@ test("an import with a regular expression Chrome cannot run adds nothing", async
         { action: { type: "block" }, condition: { urlFilter: "/(a)\\1", isRegexFilter: true } },
       ],
     }),
-    "syntaxError"
+    unsupportedSyntax
   );
 });

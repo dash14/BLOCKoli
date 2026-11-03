@@ -1,8 +1,19 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  getLocalizedValidationErrorText,
+  updateI18nLanguage,
+  useI18n,
+} from "@/hooks/useI18n";
 import type { RegexValidator } from "@/modules/core/regex";
 import { RuleActionType } from "@/modules/core/rules";
 import type { Rule } from "@/modules/core/rules";
-import { RuleValidator } from "./edit";
+import {
+  REGEX_TOO_COMPLEX_MESSAGE,
+  RuleValidator,
+  UNSUPPORTED_REGEX_MESSAGE,
+  UNSUPPORTED_REGEX_SYNTAX_MESSAGE,
+  validateRegexSupport,
+} from "./edit";
 
 describe("RuleValidator", () => {
   const createMockRegexValidator = (
@@ -182,12 +193,12 @@ describe("RuleValidator", () => {
         if (!result.valid) {
           expect(result.errors).toContainEqual({
             ruleField: "condition.urlFilter",
-            message: "syntaxError",
+            message: UNSUPPORTED_REGEX_SYNTAX_MESSAGE,
           });
         }
       });
 
-      it("returns default error message when reason is undefined", async () => {
+      it("returns a general message when Chrome gives no reason", async () => {
         const mockValidator = createMockRegexValidator(false, undefined);
         const validator = new RuleValidator(mockValidator);
 
@@ -206,12 +217,12 @@ describe("RuleValidator", () => {
         if (!result.valid) {
           expect(result.errors).toContainEqual({
             ruleField: "condition.urlFilter",
-            message: "Not supported regex",
+            message: UNSUPPORTED_REGEX_MESSAGE,
           });
         }
       });
 
-      it("returns memoryLimitExceeded reason", async () => {
+      it("explains memoryLimitExceeded", async () => {
         const mockValidator = createMockRegexValidator(
           false,
           "memoryLimitExceeded"
@@ -232,7 +243,7 @@ describe("RuleValidator", () => {
         if (!result.valid) {
           expect(result.errors).toContainEqual({
             ruleField: "condition.urlFilter",
-            message: "memoryLimitExceeded",
+            message: REGEX_TOO_COMPLEX_MESSAGE,
           });
         }
       });
@@ -276,5 +287,36 @@ describe("RuleValidator", () => {
         expect(mockValidator).not.toHaveBeenCalled();
       });
     });
+  });
+});
+
+describe("validateRegexSupport messages", () => {
+  const regexRule: Rule = {
+    action: { type: RuleActionType.BLOCK },
+    condition: { urlFilter: "a", isRegexFilter: true },
+  };
+  const messageFor = async (reason?: string) =>
+    (await validateRegexSupport(
+      regexRule,
+      vi.fn().mockResolvedValue({ isSupported: false, reason })
+    ))!.message!;
+
+  afterEach(() => {
+    updateI18nLanguage(null);
+  });
+
+  it.each([
+    ["syntaxError", "Chrome が対応していない構文が含まれています（後方参照や先読みなどは使えません）"],
+    ["memoryLimitExceeded", "正規表現が複雑すぎて Chrome で使えません"],
+    // A reason added by a later Chrome
+    ["somethingNew", "Chrome で使えない正規表現です"],
+    ["toString", "Chrome で使えない正規表現です"],
+    ["", "Chrome で使えない正規表現です"],
+    [undefined, "Chrome で使えない正規表現です"],
+  ])("translates the message for %s", async (reason, translated) => {
+    const message = await messageFor(reason);
+
+    updateI18nLanguage("ja");
+    expect(getLocalizedValidationErrorText(message, useI18n())).toBe(translated);
   });
 });

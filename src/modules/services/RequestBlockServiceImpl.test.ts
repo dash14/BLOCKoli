@@ -20,6 +20,7 @@ import { MAX_RULES } from "@/modules/rules/limits";
 import { getReservedRules } from "@/modules/rules/reserved";
 import type { StoredRuleSets } from "@/modules/rules/stored";
 import { RULE_ID_UNSAVED } from "@/modules/rules/stored";
+import { UNSUPPORTED_REGEX_SYNTAX_MESSAGE } from "@/modules/rules/validation/edit";
 import type * as RequestBlock from "@/modules/services/RequestBlockService";
 import type { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import logging from "@/modules/utils/logging";
@@ -1205,7 +1206,7 @@ describe("getMatchedRules for rules no longer stored", () => {
           ruleSetField: "rules",
           ruleNumber: 0,
           ruleField: "condition.urlFilter",
-          message: "syntaxError",
+          message: UNSUPPORTED_REGEX_SYNTAX_MESSAGE,
         },
       ]);
       expect(mockDeclarativeNetRequest.isRegexSupported).toHaveBeenCalledWith({

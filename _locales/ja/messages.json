@@ -321,6 +321,18 @@
     "message": "必須プロパティの 'type' が含まれていません",
     "description": "error message by validation with schema"
   },
+  "must_use_only_regular_expression_syntax_chrome_supports_no_backreferences_or_lookarounds": {
+    "message": "Chrome が対応していない構文が含まれています（後方参照や先読みなどは使えません）",
+    "description": "error message for a regular expression Chrome rejects"
+  },
+  "must_be_simple_enough_for_chrome_to_run": {
+    "message": "正規表現が複雑すぎて Chrome で使えません",
+    "description": "error message for a regular expression Chrome rejects"
+  },
+  "must_be_a_regular_expression_chrome_supports": {
+    "message": "Chrome で使えない正規表現です",
+    "description": "error message for a regular expression Chrome rejects"
+  },
   "must_not_be_an_invalid_regular_expression": {
     "message": "無効な正規表現が指定されています",
     "description": "error message by validation with schema"

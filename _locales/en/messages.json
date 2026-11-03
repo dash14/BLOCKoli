@@ -321,6 +321,18 @@
     "message": "must have required property 'type'",
     "description": "error message by validation with schema"
   },
+  "must_use_only_regular_expression_syntax_chrome_supports_no_backreferences_or_lookarounds": {
+    "message": "must use only regular expression syntax Chrome supports (no backreferences or lookarounds)",
+    "description": "error message for a regular expression Chrome rejects"
+  },
+  "must_be_simple_enough_for_chrome_to_run": {
+    "message": "must be simple enough for Chrome to run",
+    "description": "error message for a regular expression Chrome rejects"
+  },
+  "must_be_a_regular_expression_chrome_supports": {
+    "message": "must be a regular expression Chrome supports",
+    "description": "error message for a regular expression Chrome rejects"
+  },
   "must_not_be_an_invalid_regular_expression": {
     "message": "must not be an invalid regular expression",
     "description": "error message by validation with schema"

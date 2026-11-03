@@ -18,6 +18,7 @@ vi.mock("@/modules/chrome/regex", () => ({
   createRegexValidator: () => mockIsRegexSupported,
 }));
 
+import { UNSUPPORTED_REGEX_SYNTAX_MESSAGE } from "@/modules/rules/validation/edit";
 import { useRuleEdit } from "./useRuleEdit";
 
 beforeEach(() => {
@@ -590,7 +591,7 @@ describe("useRuleEdit", () => {
 
         expect(result.current.isValid).toBe(false);
         expect(result.current.validationErrors.urlFilter).toEqual([
-          "syntaxError",
+          UNSUPPORTED_REGEX_SYNTAX_MESSAGE,
         ]);
       });
 
@@ -612,7 +613,7 @@ describe("useRuleEdit", () => {
         await resolve("b");
 
         expect(result.current.validationErrors.urlFilter).toEqual([
-          "syntaxError",
+          UNSUPPORTED_REGEX_SYNTAX_MESSAGE,
         ]);
         expect(result.current.isEditing).toBe(true);
       });
