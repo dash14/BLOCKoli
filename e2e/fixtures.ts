@@ -3,6 +3,7 @@ import {
   test as base,
   chromium,
   type BrowserContext,
+  type Locator,
   type Page,
   type Worker,
 } from "@playwright/test";
@@ -135,26 +136,51 @@ export async function stopServiceWorker({ context, extensionId }: ExtensionBrows
   }
 }
 
+/** Checks or unchecks a Chakra checkbox, switch or radio */
+export async function setChecked(control: Locator, checked: boolean) {
+  await expect(control).toBeEnabled();
+  if ((await control.isChecked()) !== checked) {
+    // Chakra covers the hidden input with its visible control
+    await control.dispatchEvent("click");
+  }
+  await expect(control).toBeChecked({ checked });
+}
+
 /** Turns the rules on or off from the options page or the popup */
 export async function setRulesEnabled(page: Page, enabled: boolean) {
-  const rulesSwitch = page.getByRole("checkbox", { name: "Enable rules" });
-  await expect(rulesSwitch).toBeEnabled();
-  if ((await rulesSwitch.isChecked()) !== enabled) {
-    // Chakra covers the switch's hidden input with its visible control
-    await rulesSwitch.dispatchEvent("click");
-  }
-  await expect(rulesSwitch).toBeChecked({ checked: enabled });
+  await setChecked(page.getByRole("checkbox", { name: "Enable rules" }), enabled);
 }
 
 /** Adds a rule to the rule set being edited, and saves it */
 export async function saveRule(page: Page, action: "block" | "allow", urlFilter: string) {
-  const actionRadio = page.getByRole("radio", { name: action });
-  // Chakra covers the radio's hidden input with its visible control
-  await actionRadio.dispatchEvent("click");
-  await expect(actionRadio).toBeChecked();
+  await setChecked(page.getByRole("radio", { name: action }), true);
   await page.getByRole("textbox", { name: "URL Filter" }).fill(urlFilter);
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("button", { name: "Save" })).toBeHidden();
+}
+
+/**
+ * Imports a file from the options page, and returns the dialog that reports
+ * whether the import succeeded
+ */
+export async function importRules(
+  page: Page,
+  file: Parameters<Locator["setInputFiles"]>[0]
+) {
+  await page.getByRole("button", { name: "Import and Export Rules" }).click();
+  await page.getByLabel("Import rules").setInputFiles(file);
+  await page.getByRole("button", { name: "Import", exact: true }).click();
+  const result = page
+    .getByRole("alertdialog")
+    .filter({ hasText: /Import (succeeded|failed)/ });
+  await expect(result).toBeVisible();
+  return result;
+}
+
+/** Closes a dialog with its Close button, and waits until no dialog is left */
+export async function closeDialog(page: Page, dialog: Locator) {
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
 }
 
 /** Waits until Chrome blocks the URL, as it applies dynamic rules asynchronously */
