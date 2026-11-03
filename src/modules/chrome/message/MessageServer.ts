@@ -99,7 +99,7 @@ export class MessageServer<T extends ServiceBase>
         sendResponse({
           type: "response",
           success: false,
-          error: String(error),
+          error: errorMessage(error),
         });
         return false;
       }
@@ -117,7 +117,7 @@ export class MessageServer<T extends ServiceBase>
             sendResponse({
               type: "response",
               success: false,
-              error: String(error),
+              error: errorMessage(error),
             });
           });
         return true; // async
@@ -132,4 +132,9 @@ export class MessageServer<T extends ServiceBase>
       return false;
     };
   }
+}
+
+// The page shows the message, so it carries no "Error: " prefix
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

@@ -169,7 +169,7 @@ describe("MessageProxyFactory", () => {
       const factory = new MessageProxyFactory();
       const proxy = factory.create<TestService>("testService");
 
-      await expect(proxy.getData()).rejects.toBe("Test error message");
+      await expect(proxy.getData()).rejects.toThrow(new Error("Test error message"));
     });
   });
 

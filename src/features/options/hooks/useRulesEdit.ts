@@ -24,7 +24,8 @@ export function useRulesEdit(
   }
 
   function updateRule(rule: Rule, index: number) {
-    const updated = rule as StoredRule;
+    // A copy, as the rule is the editor's state and is kept if the save is rejected
+    const updated = { ...rule } as StoredRule;
     if (updated.id === RULE_ID_EDITING) {
       updated.id = RULE_ID_UNSAVED;
     }

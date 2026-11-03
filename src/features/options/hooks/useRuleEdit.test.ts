@@ -429,6 +429,31 @@ describe("useRuleEdit", () => {
       await waitFor(() => expect(result.current.isValid).toBe(true));
     });
 
+    test("closes the editor while the save runs, and opens it again once it is rejected", async () => {
+      let resolve: (saved: boolean) => void = () => {};
+      const onChange = vi.fn(
+        () => new Promise<boolean>((r) => (resolve = r))
+      );
+      const { result } = renderHook(() =>
+        useRuleEdit(validRule, onChange, vi.fn(), vi.fn())
+      );
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      act(() => result.current.enterEditMode());
+
+      let saving: Promise<void> = Promise.resolve();
+      act(() => {
+        saving = result.current.save();
+      });
+      await waitFor(() => expect(onChange).toHaveBeenCalledTimes(1));
+      expect(result.current.isEditing).toBe(false);
+
+      await act(async () => {
+        resolve(false);
+        await saving;
+      });
+      expect(result.current.isEditing).toBe(true);
+    });
+
     test("cancel goes back to the stored rule", async () => {
       const { result, onCancel } = await renderRejected();
 

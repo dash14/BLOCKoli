@@ -145,6 +145,20 @@ describe("useRulesEdit", () => {
       expect(newRules[1].id).toBe(RULE_ID_UNSAVED);
     });
 
+    test("leaves the rule it was given unchanged", () => {
+      const onChange = vi.fn();
+      const { result } = renderHook(() =>
+        useRulesEdit([savedRule, editingRule], onChange)
+      );
+      const updatedRule: StoredRule = { ...editingRule, condition: { urlFilter: "ads" } };
+
+      act(() => {
+        result.current.updateRule(updatedRule, 1);
+      });
+
+      expect(updatedRule.id).toBe(RULE_ID_EDITING);
+    });
+
     test("preserves existing rule ID when not RULE_ID_EDITING", () => {
       const onChange = vi.fn();
       const rules: StoredRule[] = [savedRule];

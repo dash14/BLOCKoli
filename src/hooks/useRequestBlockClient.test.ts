@@ -140,7 +140,7 @@ describe("useRequestBlockClient", () => {
     expect(result.current.enabled).toBe(false);
     expect(logError).toHaveBeenCalledWith(
       "failed to load the initial state",
-      "storage error"
+      new Error("storage error")
     );
   });
 
@@ -385,13 +385,29 @@ describe("useRequestBlockClient", () => {
         first = result.current.updateRuleSets(named("first"));
         second = result.current.updateRuleSets(named("second"));
       });
-      const secondFailed = expect(second).rejects.toBe("save failed");
+      const secondFailed = expect(second).rejects.toThrow(new Error("save failed"));
       await saves.succeed(0, versioned(1, "first"));
       await first;
       await saves.fail(1);
       await secondFailed;
 
       expect(result.current.ruleSets).toStrictEqual(named("first"));
+    });
+
+    it("fails the same rule sets sent again when the save still running fails", async () => {
+      const { result } = await render();
+      const saves = holdSaves();
+
+      let first!: Promise<void>, again!: Promise<void>;
+      act(() => {
+        first = result.current.updateRuleSets(named("failed"));
+        again = result.current.updateRuleSets(named("failed"));
+      });
+      const firstFailed = expect(first).rejects.toThrow(new Error("save failed"));
+      const againFailed = expect(again).rejects.toThrow(new Error("save failed"));
+      await saves.fail(0);
+      await firstFailed;
+      await againFailed;
     });
 
     it("keeps the state when the only save fails", async () => {
@@ -402,7 +418,7 @@ describe("useRequestBlockClient", () => {
       act(() => {
         save = result.current.updateRuleSets(named("failed"));
       });
-      const failed = expect(save).rejects.toBe("save failed");
+      const failed = expect(save).rejects.toThrow(new Error("save failed"));
       await saves.fail(0);
       await failed;
 

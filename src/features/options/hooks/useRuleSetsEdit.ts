@@ -42,16 +42,22 @@ export function useRuleSetsEdit(
     storedRuleSets.current = originalRuleSets;
   }, [originalRuleSets]);
 
-  async function save(
-    newEntries: RuleSetEntry[],
-    ruleSetId: string
-  ): Promise<boolean> {
+  async function save(newEntries: RuleSetEntry[]): Promise<boolean> {
+    const before = entries;
     setEntries(newEntries);
     const saved = await onChange(filterAvailableRuleSets(newEntries)); // filter editing
     if (saved !== false) return true;
-    setEntries((current) =>
-      mergeEntries(storedRuleSets.current, reopenNewRules(current, ruleSetId))
-    );
+    setEntries((current) => {
+      // A rejected removal brings the rule set back as it was shown
+      const ids = new Set(current.map((entry) => entry.ruleSet.id));
+      const removed = before.filter(
+        (entry) => !ids.has(entry.ruleSet.id) && !isUnsaved(entry)
+      );
+      return mergeEntries(
+        storedRuleSets.current,
+        reopenNewRules([...current, ...removed])
+      );
+    });
     return false;
   }
 
@@ -74,7 +80,7 @@ export function useRuleSetsEdit(
 
   function replaceRuleSet(index: number, ruleSet: StoredRuleSet) {
     const newEntries = replaceAt(entries, index, { ...entries[index], ruleSet });
-    return save(newEntries, ruleSet.id);
+    return save(newEntries);
   }
 
   function updateRules(rules: StoredRule[], ruleSetIndex: number) {
@@ -96,7 +102,7 @@ export function useRuleSetsEdit(
       setEntries(newEntries);
       return;
     }
-    return save(newEntries, entry.ruleSet.id);
+    return save(newEntries);
   }
 
   function updateRuleSetTitle(title: string, index: number) {
@@ -118,13 +124,9 @@ function isUnsaved(entry: RuleSetEntry): boolean {
   return entry.ruleSet.rules.every((rule) => rule.id === RULE_ID_EDITING);
 }
 
-// The new rule of a rejected save goes back to being edited
-function reopenNewRules(
-  entries: RuleSetEntry[],
-  ruleSetId: string
-): RuleSetEntry[] {
+// New rules whose save was rejected go back to being edited
+function reopenNewRules(entries: RuleSetEntry[]): RuleSetEntry[] {
   return entries.map((entry) => {
-    if (entry.ruleSet.id !== ruleSetId) return entry;
     const rules = entry.ruleSet.rules.map((rule) =>
       rule.id === RULE_ID_UNSAVED ? { ...rule, id: RULE_ID_EDITING } : rule
     );

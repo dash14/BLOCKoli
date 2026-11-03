@@ -74,9 +74,11 @@ test("tells why a rule was not saved when the rules filled up while it was edite
   await page.getByRole("button", { name: "Save" }).click();
   const refused = page.getByRole("alertdialog");
   await expect(refused).toContainText("Save failed");
-  await expect(refused).toContainText(
-    `Too many rules: ${maxRules + 1}, but at most ${maxRules} can be defined`
-  );
+  await expect(
+    refused.getByText(`Too many rules: ${maxRules + 1}, but at most ${maxRules} can be defined`, {
+      exact: true,
+    })
+  ).toBeVisible();
   await closeDialog(page, refused);
   await expect(requestDomains).toHaveValue("typed.example");
   await expect(page.getByRole("button", { name: "Save" })).toBeEnabled();

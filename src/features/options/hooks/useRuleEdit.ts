@@ -67,7 +67,7 @@ export function useRuleEdit(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialRule]);
 
-  // Only the render right after a rejected save keeps it
+  // Cleared after every commit; save() also sets the rule in case the revert rendered first
   useEffect(() => {
     rejectedRule.current = undefined;
   });
@@ -85,13 +85,13 @@ export function useRuleEdit(
     if (validatedRule.current !== rule || !isValid) {
       if (!(await validate(rule))) return;
     }
+    setIsEditing(false);
     if ((await latestOnChange.current(rule)) === false) {
       rejectedRule.current = rule;
       setRuleObject(rule);
       validate(rule);
-      return;
+      setIsEditing(true);
     }
-    setIsEditing(false);
   }
 
   function cancel() {

@@ -46,6 +46,10 @@ class TestService extends ServiceBase<TestEvents> {
   async throwAsyncError(): Promise<void> {
     throw new Error("Async test error");
   }
+
+  throwString(): void {
+    throw "Thrown text";
+  }
 }
 
 describe("MessageServer", () => {
@@ -339,7 +343,7 @@ describe("MessageServer", () => {
       expect(sendResponse).toHaveBeenCalledWith({
         type: "response",
         success: false,
-        error: expect.stringContaining("Test error"),
+        error: "Test error",
       });
     });
 
@@ -364,7 +368,27 @@ describe("MessageServer", () => {
       expect(sendResponse).toHaveBeenCalledWith({
         type: "response",
         success: false,
-        error: expect.stringContaining("Async test error"),
+        error: "Async test error",
+      });
+    });
+
+    it("sends a thrown value that is not an Error as text", () => {
+      const sendResponse = vi.fn();
+      messageListeners[0](
+        {
+          type: "request",
+          service: "testService",
+          method: "throwString",
+          args: [],
+        },
+        {} as chrome.runtime.MessageSender,
+        sendResponse
+      );
+
+      expect(sendResponse).toHaveBeenCalledWith({
+        type: "response",
+        success: false,
+        error: "Thrown text",
       });
     });
   });
