@@ -1,5 +1,11 @@
 import { createServer } from "node:http";
-import { test as base, chromium, type BrowserContext, type Page } from "@playwright/test";
+import {
+  test as base,
+  chromium,
+  type BrowserContext,
+  type Page,
+  type Worker,
+} from "@playwright/test";
 import { extensionPath } from "./paths";
 import type { AddressInfo } from "node:net";
 
@@ -7,6 +13,7 @@ import type { AddressInfo } from "node:net";
 export type ExtensionBrowser = {
   context: BrowserContext;
   extensionId: string;
+  serviceWorker: Worker;
   /** The options page, opened in a new tab */
   openOptions: () => Promise<Page>;
 };
@@ -56,7 +63,7 @@ export const test = base.extend<Fixtures>({
         await page.bringToFront();
         return page;
       };
-      return { context, extensionId, openOptions };
+      return { context, extensionId, serviceWorker, openOptions };
     });
     await Promise.allSettled(contexts.map((context) => context.close()));
   },
@@ -100,6 +107,30 @@ export async function load(page: Page, url: string) {
   }
 }
 
+/**
+ * Stops the extension's service worker. Chrome starts a new one on the next
+ * event, such as a message from a page.
+ */
+export async function stopServiceWorker({ context, extensionId }: ExtensionBrowser) {
+  const session = await context.browser()!.newBrowserCDPSession();
+  try {
+    const { targetInfos } = await session.send("Target.getTargets");
+    const workers = targetInfos.filter(
+      (target) =>
+        target.type === "service_worker" &&
+        target.url.startsWith(`chrome-extension://${extensionId}/`)
+    );
+    if (workers.length === 0) {
+      throw new Error(`No service worker found for ${extensionId}`);
+    }
+    for (const worker of workers) {
+      await session.send("Target.closeTarget", { targetId: worker.targetId });
+    }
+  } finally {
+    await session.detach();
+  }
+}
+
 /** Turns the rules on or off from the options page */
 export async function setRulesEnabled(page: Page, enabled: boolean) {
   const rulesSwitch = page.getByRole("checkbox", { name: "Enable rules" });
@@ -129,6 +160,9 @@ export async function expectBlocked(page: Page, url: string) {
   }).toPass();
 }
 
+/** Waits until the URL loads, as Chrome removes dynamic rules asynchronously */
 export async function expectLoaded(page: Page, url: string) {
-  expect((await load(page, url))?.ok()).toBe(true);
+  await expect(async () => {
+    expect((await load(page, url))?.ok()).toBe(true);
+  }).toPass();
 }
