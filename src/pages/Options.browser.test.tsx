@@ -1,5 +1,6 @@
-import { beforeAll, describe, expect, test, vi } from "vitest";
+import { beforeAll, describe, expect, onTestFinished, test, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
+import { EDITING_LOCK_NAME } from "@/hooks/useEditingTab";
 import { RuleActionType } from "@/modules/core/rules";
 import { StoredRuleSets } from "@/modules/rules/stored";
 import { renderWithChakra } from "@/test/utils/render";
@@ -134,6 +135,47 @@ describe("Options page", () => {
     await expect(page.getByTestId("container")).toMatchScreenshot(
       "Options-load-failed",
     );
+  });
+
+  test("shows a notice while another page edits, until this one takes over again", async () => {
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ ruleSets: sampleRuleSets }),
+    );
+    await renderWithChakra(
+      <div data-testid="container" style={{ width: 1024, height: 900 }}>
+        <Options />
+      </div>,
+    );
+    await expect.element(page.getByText("Block Ads")).toBeInTheDocument();
+
+    // Another options page opens
+    let closeOther = () => {};
+    const other = navigator.locks
+      .request(EDITING_LOCK_NAME, { steal: true }, () =>
+        new Promise<void>((resolve) => (closeOther = resolve))
+      )
+      .catch(() => "taken back");
+    onTestFinished(() => closeOther());
+
+    await expect
+      .element(page.getByRole("status"))
+      .toHaveTextContent(
+        "The options are open in another tab, where they can be edited."
+      );
+    await expect.element(page.getByText("Block Ads")).not.toBeInTheDocument();
+    await expect.element(page.getByRole("checkbox")).not.toBeInTheDocument();
+    await expect.element(page.getByRole("combobox")).toBeInTheDocument();
+
+    // VRT screenshot
+    await userEvent.unhover(page.getByRole("document"));
+    await expect(page.getByTestId("container")).toMatchScreenshot(
+      "Options-opened-in-another-tab",
+    );
+
+    await page.getByRole("button", { name: "Edit in this tab" }).click();
+
+    await expect.element(page.getByText("Block Ads")).toBeInTheDocument();
+    expect(await other).toBe("taken back");
   });
 
   test("renders with rule sets", async () => {
