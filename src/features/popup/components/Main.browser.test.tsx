@@ -83,7 +83,7 @@ describe("Main component", () => {
 
       // Check Enable Rules switch
       await expect.element(page.getByText(/enable rules/i)).toBeInTheDocument();
-      await expect.element(page.getByRole("checkbox")).toBeInTheDocument();
+      await expect.element(page.getByRole("checkbox", { name: /enable rules/i })).toBeInTheDocument();
 
       // Check Configure Rules link
       await expect

@@ -172,7 +172,7 @@ describe("Options page", () => {
     );
 
     // Verify switch is unchecked
-    await expect.element(page.getByRole("checkbox")).not.toBeChecked();
+    await expect.element(page.getByRole("checkbox", { name: /enable rules/i })).not.toBeChecked();
 
     // VRT screenshot
     await userEvent.unhover(page.getByRole("document"));

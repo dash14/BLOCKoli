@@ -161,7 +161,7 @@ const Options: React.FC = () => {
                 checked={enabled}
                 onCheckedChange={(e) => changeState(e.checked)}
               >
-                <Switch.HiddenInput />
+                <Switch.HiddenInput aria-label={i18n["EnableRules"]} />
                 <Switch.Control>
                   <Switch.Thumb />
                 </Switch.Control>

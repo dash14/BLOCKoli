@@ -1,5 +1,5 @@
 name: 'Lint, Build & Test'
-description: 'Run lint, build, and unit and browser tests with coverage'
+description: 'Run lint, build, unit and browser tests with coverage, and E2E tests'
 
 runs:
   using: 'composite'
@@ -56,4 +56,17 @@ runs:
       with:
         name: vrt-diff-images
         path: .vitest/attachments/
+        retention-days: 1
+
+    - name: Run E2E tests
+      id: e2e-tests
+      run: pnpm docker:test:e2e
+      shell: bash
+
+    - name: Upload E2E traces
+      if: failure() && steps.e2e-tests.outcome == 'failure'
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: e2e-traces
+        path: test-results/
         retention-days: 1

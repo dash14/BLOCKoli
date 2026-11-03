@@ -49,7 +49,7 @@ export const Main: React.FC<Props> = ({
               checked={isServiceEnabled}
               onCheckedChange={(e) => changeServiceState(e.checked)}
             >
-              <Switch.HiddenInput />
+              <Switch.HiddenInput aria-label={i18n["EnableRules"]} />
               <Switch.Control>
                 <Switch.Thumb />
               </Switch.Control>
