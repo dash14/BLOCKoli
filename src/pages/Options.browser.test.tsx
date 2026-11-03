@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, onTestFinished, test, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
+import { EDITING_LOCK_NAME } from "@/hooks/useEditingTab";
 import { RuleActionType } from "@/modules/core/rules";
 import { StoredRuleSets } from "@/modules/rules/stored";
 import { renderWithChakra } from "@/test/utils/render";
@@ -136,15 +137,10 @@ describe("Options page", () => {
     );
   });
 
-  test("lets only the newest page edit, until this one takes over again", async () => {
+  test("shows a notice while another page edits, until this one takes over again", async () => {
     mockUseRequestBlockClient.mockReturnValue(
       createMockReturnValue({ ruleSets: sampleRuleSets }),
     );
-    const other = new BroadcastChannel("options-editing-tab");
-    const received: unknown[] = [];
-    other.onmessage = (event: MessageEvent) => received.push(event.data);
-    onTestFinished(() => other.close());
-
     await renderWithChakra(
       <div data-testid="container" style={{ width: 1024, height: 900 }}>
         <Options />
@@ -153,7 +149,13 @@ describe("Options page", () => {
     await expect.element(page.getByText("Block Ads")).toBeInTheDocument();
 
     // Another options page opens
-    other.postMessage("editing");
+    let closeOther = () => {};
+    const other = navigator.locks
+      .request(EDITING_LOCK_NAME, { steal: true }, () =>
+        new Promise<void>((resolve) => (closeOther = resolve))
+      )
+      .catch(() => "taken back");
+    onTestFinished(() => closeOther());
 
     await expect
       .element(page.getByRole("status"))
@@ -170,11 +172,10 @@ describe("Options page", () => {
       "Options-opened-in-another-tab",
     );
 
-    received.length = 0;
     await page.getByRole("button", { name: "Edit in this tab" }).click();
 
     await expect.element(page.getByText("Block Ads")).toBeInTheDocument();
-    await expect.poll(() => received).toEqual(["editing"]);
+    expect(await other).toBe("taken back");
   });
 
   test("renders with rule sets", async () => {
