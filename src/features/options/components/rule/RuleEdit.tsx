@@ -23,7 +23,7 @@ import { IsRegexFilter } from "./controls/IsRegexFilter";
 type Props = {
   rule: Rule;
   isRemoveEnabled: boolean;
-  onChange: (rule: Rule) => void;
+  onChange: (rule: Rule) => void | Promise<boolean>;
   onCancel: () => void;
   onRemove: () => void;
 };

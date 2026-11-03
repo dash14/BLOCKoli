@@ -4,13 +4,13 @@ import { page, userEvent } from "vitest/browser";
 import { useI18n } from "@/hooks/useI18n";
 import { renderWithChakra } from "@/test/utils/render";
 import {
-  ImportFailedDialog,
-  ImportFailedDialogHandle,
-} from "./ImportFailedDialog";
+  FailedDialog,
+  FailedDialogHandle,
+} from "./FailedDialog";
 
 function TestWrapper() {
   const i18n = useI18n();
-  const ref = useRef<ImportFailedDialogHandle>(null);
+  const ref = useRef<FailedDialogHandle>(null);
   return (
     <>
       <button
@@ -33,14 +33,14 @@ function TestWrapper() {
       >
         Open
       </button>
-      <ImportFailedDialog ref={ref} i18n={i18n} />
+      <FailedDialog ref={ref} title="Import failed" i18n={i18n} />
     </>
   );
 }
 
 function TestWrapperWithNoRuleSetNumber() {
   const i18n = useI18n();
-  const ref = useRef<ImportFailedDialogHandle>(null);
+  const ref = useRef<FailedDialogHandle>(null);
   return (
     <>
       <button
@@ -52,14 +52,14 @@ function TestWrapperWithNoRuleSetNumber() {
       >
         Open
       </button>
-      <ImportFailedDialog ref={ref} i18n={i18n} />
+      <FailedDialog ref={ref} title="Import failed" i18n={i18n} />
     </>
   );
 }
 
 function TestWrapperWithNoRuleField() {
   const i18n = useI18n();
-  const ref = useRef<ImportFailedDialogHandle>(null);
+  const ref = useRef<FailedDialogHandle>(null);
   return (
     <>
       <button
@@ -76,12 +76,12 @@ function TestWrapperWithNoRuleField() {
       >
         Open
       </button>
-      <ImportFailedDialog ref={ref} i18n={i18n} />
+      <FailedDialog ref={ref} title="Import failed" i18n={i18n} />
     </>
   );
 }
 
-describe("ImportFailedDialog component", () => {
+describe("FailedDialog component", () => {
   test("points at the rule when the error names no rule field", async () => {
     await renderWithChakra(<TestWrapperWithNoRuleField />);
     await page.getByRole("button", { name: "Open" }).click();
@@ -95,7 +95,7 @@ describe("ImportFailedDialog component", () => {
     await page.getByRole("button", { name: "Open" }).click();
     await expect.element(page.getByRole("alertdialog")).toBeInTheDocument();
     await expect(page.getByRole("alertdialog")).toMatchScreenshot(
-      "ImportFailedDialog-open"
+      "FailedDialog-open"
     );
   });
 

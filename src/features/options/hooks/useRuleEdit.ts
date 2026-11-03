@@ -18,7 +18,8 @@ type ValidationErrors = Required<{
 
 export function useRuleEdit(
   initialRule: Rule,
-  onChange: (rule: Rule) => void,
+  // Resolves to false when the save was rejected
+  onChange: (rule: Rule) => void | Promise<boolean>,
   onCancel: () => void,
   onRemove: () => void
 ) {
@@ -51,16 +52,25 @@ export function useRuleEdit(
     latestOnChange.current = onChange;
   }, [onChange]);
 
+  // What a rejected save sent, kept in the editor when the page goes back to the stored rule
+  const rejectedRule = useRef<Rule>(undefined);
+
   useEffect(() => {
-    setRuleObject(initialRule);
+    const next = rejectedRule.current ?? initialRule;
+    setRuleObject(next);
     // For incomplete data, enter edit mode.
-    validate(initialRule).then((valid) => {
+    validate(next).then((valid) => {
       if (valid === false) {
         setIsEditing(true);
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialRule]);
+
+  // Only the render right after a rejected save keeps it
+  useEffect(() => {
+    rejectedRule.current = undefined;
+  });
 
   // Unmounting drops a running check, so a pending save() skips onChange
   useEffect(
@@ -75,8 +85,13 @@ export function useRuleEdit(
     if (validatedRule.current !== rule || !isValid) {
       if (!(await validate(rule))) return;
     }
+    if ((await latestOnChange.current(rule)) === false) {
+      rejectedRule.current = rule;
+      setRuleObject(rule);
+      validate(rule);
+      return;
+    }
     setIsEditing(false);
-    latestOnChange.current(rule);
   }
 
   function cancel() {

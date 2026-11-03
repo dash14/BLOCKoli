@@ -116,6 +116,15 @@ describe("useRulesEdit", () => {
       expect(newRules[1].condition.requestDomains).toContain("updated.com");
     });
 
+    test("returns what onChange resolves to, so a rejected save can be told apart", async () => {
+      const onChange = vi.fn().mockResolvedValue(false);
+      const { result } = renderHook(() => useRulesEdit([savedRule], onChange));
+
+      await expect(result.current.updateRule(savedRule, 0)).resolves.toBe(
+        false
+      );
+    });
+
     test("changes RULE_ID_EDITING to RULE_ID_UNSAVED when updating", () => {
       const onChange = vi.fn();
       const rules: StoredRule[] = [savedRule, editingRule];

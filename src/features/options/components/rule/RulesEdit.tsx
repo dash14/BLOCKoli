@@ -14,7 +14,7 @@ import { RuleLimitReached } from "./RuleLimitReached";
 type Props = {
   rules: StoredRule[];
   isAddAllowed: boolean;
-  onChange: (rules: StoredRule[]) => void;
+  onChange: (rules: StoredRule[]) => void | Promise<boolean>;
 };
 
 export const RulesEdit: React.FC<Props> = ({ rules, isAddAllowed, onChange }) => {

@@ -11,7 +11,7 @@ import { newRuleTemplate } from "@/modules/rules/template";
 
 export function useRulesEdit(
   rules: StoredRule[],
-  onChange: (rules: StoredRule[]) => void
+  onChange: (rules: StoredRule[]) => void | Promise<boolean>
 ) {
   const [isAllowAdd, setIsAllowAdd] = useState(true);
 
@@ -29,7 +29,7 @@ export function useRulesEdit(
       updated.id = RULE_ID_UNSAVED;
     }
     const newRules = replaceAt(rules, index, updated);
-    onChange(newRules);
+    return onChange(newRules);
   }
 
   function removeRule(index: number) {

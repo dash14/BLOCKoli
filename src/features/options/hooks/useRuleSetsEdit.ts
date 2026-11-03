@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import cloneDeep from "lodash-es/cloneDeep";
 import { push, removeAt, replaceAt } from "@/modules/core/array";
 import {
   RULE_ID_EDITING,
+  RULE_ID_UNSAVED,
   StoredRule,
   StoredRuleSet,
   StoredRuleSets,
@@ -17,7 +18,7 @@ export type RuleSetEntry = {
 
 export function useRuleSetsEdit(
   originalRuleSets: StoredRuleSets,
-  onChange: (ruleSets: StoredRuleSets) => void
+  onChange: (ruleSets: StoredRuleSets) => void | Promise<boolean>
 ) {
   const [entries, setEntries] = useState<RuleSetEntry[]>(() =>
     mergeEntries(originalRuleSets, [])
@@ -34,6 +35,25 @@ export function useRuleSetsEdit(
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [originalRuleSets]);
+
+  // A failed save leaves the stored rule sets as they were
+  const storedRuleSets = useRef(originalRuleSets);
+  useEffect(() => {
+    storedRuleSets.current = originalRuleSets;
+  }, [originalRuleSets]);
+
+  async function save(
+    newEntries: RuleSetEntry[],
+    ruleSetId: string
+  ): Promise<boolean> {
+    setEntries(newEntries);
+    const saved = await onChange(filterAvailableRuleSets(newEntries)); // filter editing
+    if (saved !== false) return true;
+    setEntries((current) =>
+      mergeEntries(storedRuleSets.current, reopenNewRules(current, ruleSetId))
+    );
+    return false;
+  }
 
   function addRuleSet() {
     const newRuleSet = {
@@ -54,29 +74,33 @@ export function useRuleSetsEdit(
 
   function replaceRuleSet(index: number, ruleSet: StoredRuleSet) {
     const newEntries = replaceAt(entries, index, { ...entries[index], ruleSet });
-    setEntries(newEntries);
-    onChange(filterAvailableRuleSets(newEntries)); // filter editing
+    return save(newEntries, ruleSet.id);
   }
 
   function updateRules(rules: StoredRule[], ruleSetIndex: number) {
     if (rules.length === 0) {
       // A canceled first rule, or a saved set's last rule (not offered on the page)
-      removeRuleSet(ruleSetIndex);
+      return removeRuleSet(ruleSetIndex);
     } else {
-      replaceRuleSet(ruleSetIndex, { ...entries[ruleSetIndex].ruleSet, rules });
+      return replaceRuleSet(ruleSetIndex, {
+        ...entries[ruleSetIndex].ruleSet,
+        rules,
+      });
     }
   }
 
   function removeRuleSet(ruleSetIndex: number) {
+    const entry = entries[ruleSetIndex];
     const newEntries = removeAt(entries, ruleSetIndex);
-    setEntries(newEntries);
-    if (!isUnsaved(entries[ruleSetIndex])) {
-      onChange(filterAvailableRuleSets(newEntries)); // filter editing
+    if (isUnsaved(entry)) {
+      setEntries(newEntries);
+      return;
     }
+    return save(newEntries, entry.ruleSet.id);
   }
 
   function updateRuleSetTitle(title: string, index: number) {
-    replaceRuleSet(index, { ...entries[index].ruleSet, name: title });
+    return replaceRuleSet(index, { ...entries[index].ruleSet, name: title });
   }
 
   return {
@@ -92,6 +116,20 @@ export function useRuleSetsEdit(
 // A rule set added on this page whose first rule has not been saved yet
 function isUnsaved(entry: RuleSetEntry): boolean {
   return entry.ruleSet.rules.every((rule) => rule.id === RULE_ID_EDITING);
+}
+
+// The new rule of a rejected save goes back to being edited
+function reopenNewRules(
+  entries: RuleSetEntry[],
+  ruleSetId: string
+): RuleSetEntry[] {
+  return entries.map((entry) => {
+    if (entry.ruleSet.id !== ruleSetId) return entry;
+    const rules = entry.ruleSet.rules.map((rule) =>
+      rule.id === RULE_ID_UNSAVED ? { ...rule, id: RULE_ID_EDITING } : rule
+    );
+    return { ...entry, ruleSet: { ...entry.ruleSet, rules } };
+  });
 }
 
 function filterAvailableRuleSets(entries: RuleSetEntry[]): StoredRuleSets {
