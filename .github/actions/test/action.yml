@@ -60,6 +60,8 @@ runs:
 
     - name: Run E2E tests
       id: e2e-tests
+      # Still runs when the unit or browser tests fail
+      if: ${{ !cancelled() && steps.browser-tests.outcome != 'skipped' }}
       run: pnpm docker:test:e2e
       shell: bash
 

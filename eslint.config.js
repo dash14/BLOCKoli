@@ -69,9 +69,5 @@ export default tseslint.config(
   {
     files: ["e2e/**/*.ts", "playwright.config.ts"],
     languageOptions: { globals: globals.node },
-    rules: {
-      // Playwright reads fixture dependencies from the destructured first argument
-      "no-empty-pattern": "off",
-    },
   }
 );

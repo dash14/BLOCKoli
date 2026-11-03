@@ -22,7 +22,7 @@ test("blocks requests that match a saved rule only while rules are enabled", asy
   await expect(page.getByRole("button", { name: "Save" })).toBeHidden();
 
   const enableRules = page.getByRole("checkbox", { name: "Enable rules" });
-  // The visible switch control covers its hidden input
+  // Chakra covers the switch's hidden input with its visible control
   await enableRules.check({ force: true });
   await expect(enableRules).toBeChecked();
 

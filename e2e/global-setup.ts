@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { extensionPath } from "./fixtures";
+import { extensionPath } from "./paths";
 
 export default function globalSetup() {
   if (!existsSync(`${extensionPath}/manifest.json`)) {

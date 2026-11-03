@@ -1,9 +1,7 @@
 import { createServer } from "node:http";
-import path from "node:path";
 import { test as base, chromium, type BrowserContext, type Page } from "@playwright/test";
+import { extensionPath } from "./paths";
 import type { AddressInfo } from "node:net";
-
-export const extensionPath = path.resolve(import.meta.dirname, "../dist");
 
 type Fixtures = {
   context: BrowserContext;
@@ -14,10 +12,11 @@ type Fixtures = {
 };
 
 export const test = base.extend<Fixtures>({
-  context: async ({ locale }, provide) => {
+  context: async ({ headless, locale }, provide) => {
     const context = await chromium.launchPersistentContext("", {
       // The new headless mode of full Chromium, which can load extensions
       channel: "chromium",
+      headless,
       locale,
       args: [
         `--disable-extensions-except=${extensionPath}`,
@@ -40,6 +39,7 @@ export const test = base.extend<Fixtures>({
     await provide(page);
   },
 
+  // eslint-disable-next-line no-empty-pattern -- Playwright requires a destructured first argument
   serverOrigin: async ({}, provide) => {
     const server = createServer((_req, res) => {
       res.writeHead(200, { "Content-Type": "text/plain" });
