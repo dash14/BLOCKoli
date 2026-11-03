@@ -187,6 +187,21 @@ export async function importRules(
   return result;
 }
 
+/** Imports a file that must fail with the reason, and checks the stored rule sets are still empty */
+export async function expectImportFailed(
+  page: Page,
+  file: Parameters<Locator["setInputFiles"]>[0],
+  reason: string
+) {
+  const result = await importRules(page, file);
+  await expect(result).toContainText("Import failed");
+  await expect(result).toContainText(reason);
+  await closeDialog(page, result);
+  // Read the rule sets from storage again, rather than what the page holds
+  await page.reload();
+  await expect(page.getByText("There are no rule sets available.")).toBeVisible();
+}
+
 /** Closes a dialog with its Close button, and waits until no dialog is left */
 export async function closeDialog(page: Page, dialog: Locator) {
   await dialog.getByRole("button", { name: "Close" }).click();

@@ -1,11 +1,10 @@
 import {
-  closeDialog,
   setChecked,
   expect,
   expectBlocked,
+  expectImportFailed,
   expectLoaded,
   exportedFile,
-  importRules,
   setRulesEnabled,
   test,
 } from "./fixtures";
@@ -40,7 +39,7 @@ test("the rule editor accepts only a regular expression Chrome can run", async (
 test("an import with a regular expression Chrome cannot run adds nothing", async ({
   optionsPage: page,
 }) => {
-  const result = await importRules(
+  await expectImportFailed(
     page,
     exportedFile({
       name: "Imported",
@@ -49,12 +48,7 @@ test("an import with a regular expression Chrome cannot run adds nothing", async
         // RE2 has no backreferences
         { action: { type: "block" }, condition: { urlFilter: "/(a)\\1", isRegexFilter: true } },
       ],
-    })
+    }),
+    "syntaxError"
   );
-  await expect(result).toContainText("Import failed");
-  await expect(result).toContainText("syntaxError");
-  await closeDialog(page, result);
-  // Read the rule sets from storage again, rather than what the page holds
-  await page.reload();
-  await expect(page.getByText("There are no rule sets available.")).toBeVisible();
 });
