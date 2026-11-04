@@ -11,7 +11,7 @@ import { newRuleTemplate } from "@/modules/rules/template";
 
 export function useRulesEdit(
   rules: StoredRule[],
-  onChange: (rules: StoredRule[]) => void
+  onChange: (rules: StoredRule[]) => void | Promise<boolean>
 ) {
   const [isAllowAdd, setIsAllowAdd] = useState(true);
 
@@ -24,12 +24,13 @@ export function useRulesEdit(
   }
 
   function updateRule(rule: Rule, index: number) {
-    const updated = rule as StoredRule;
+    // A copy, as the rule is the editor's state and is kept if the save is rejected
+    const updated = { ...rule } as StoredRule;
     if (updated.id === RULE_ID_EDITING) {
       updated.id = RULE_ID_UNSAVED;
     }
     const newRules = replaceAt(rules, index, updated);
-    onChange(newRules);
+    return onChange(newRules);
   }
 
   function removeRule(index: number) {

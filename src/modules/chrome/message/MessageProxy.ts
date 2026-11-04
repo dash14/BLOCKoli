@@ -138,7 +138,7 @@ export class MessageProxyFactory {
           if (response.success) {
             return response.result;
           } else {
-            throw response.error;
+            throw new Error(response.error);
           }
         };
       },

@@ -519,6 +519,151 @@ describe("useRuleSetsEdit", () => {
     });
   });
 
+  describe("rejected save", () => {
+    const typedRule: StoredRule = {
+      id: RULE_ID_UNSAVED,
+      action: { type: RuleActionType.BLOCK },
+      condition: { requestDomains: ["typed.com"] },
+    };
+
+    test("resolves to true when onChange returns nothing", async () => {
+      const { result } = renderHook(() =>
+        useRuleSetsEdit(sampleRuleSets, vi.fn())
+      );
+
+      let saved: boolean | void = undefined;
+      await act(async () => {
+        saved = await result.current.updateRuleSetTitle("Renamed", 0);
+      });
+
+      expect(saved).toBe(true);
+      expect(result.current.ruleSets[0].name).toBe("Renamed");
+    });
+
+    test("goes back to the stored rule sets", async () => {
+      const onChange = vi.fn().mockResolvedValue(false);
+      const { result } = renderHook(() =>
+        useRuleSetsEdit(sampleRuleSets, onChange)
+      );
+
+      let saved: boolean | void = undefined;
+      await act(async () => {
+        saved = await result.current.updateRules(
+          [{ ...savedRule, condition: { requestDomains: ["typed.com"] } }],
+          0
+        );
+      });
+      expect(saved).toBe(false);
+      expect(result.current.ruleSets).toEqual(sampleRuleSets);
+
+      await act(async () => {
+        await result.current.removeRuleSet(1);
+      });
+      expect(result.current.ruleSets).toEqual(sampleRuleSets);
+
+      await act(async () => {
+        await result.current.updateRuleSetTitle("Renamed", 0);
+      });
+      expect(result.current.ruleSets).toEqual(sampleRuleSets);
+    });
+
+    test("keeps a rejected new rule being edited", async () => {
+      const onChange = vi.fn().mockResolvedValue(false);
+      const { result } = renderHook(() =>
+        useRuleSetsEdit(sampleRuleSets, onChange)
+      );
+
+      await act(async () => {
+        await result.current.updateRules([savedRule, typedRule], 0);
+      });
+
+      expect(result.current.ruleSets[0].rules).toEqual([
+        savedRule,
+        { ...typedRule, id: RULE_ID_EDITING },
+      ]);
+      expect(result.current.ruleSets[1]).toEqual(sampleRuleSets[1]);
+    });
+
+    test("keeps a new rule set whose first rule was rejected", async () => {
+      const onChange = vi.fn().mockResolvedValue(false);
+      const { result } = renderHook(() =>
+        useRuleSetsEdit(sampleRuleSets, onChange)
+      );
+      act(() => result.current.addRuleSet());
+
+      await act(async () => {
+        await result.current.updateRules([typedRule], 2);
+      });
+
+      expect(result.current.ruleSets).toHaveLength(3);
+      expect(result.current.ruleSets[2].rules).toEqual([
+        { ...typedRule, id: RULE_ID_EDITING },
+      ]);
+    });
+
+    test("brings back a rule set whose removal was rejected as it was shown", async () => {
+      const onChange = vi.fn().mockResolvedValue(false);
+      const { result } = renderHook(() =>
+        useRuleSetsEdit(sampleRuleSets, onChange)
+      );
+      await act(async () => {
+        await result.current.updateRules([savedRule, editingRule], 0);
+      });
+      onChange.mockClear();
+
+      await act(async () => {
+        await result.current.removeRuleSet(0);
+      });
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(result.current.entries[0].ruleSet.rules).toEqual([
+        savedRule,
+        editingRule,
+      ]);
+    });
+
+    test("does not bring back a new rule set dropped while a rejected save ran", async () => {
+      let resolve: (saved: boolean) => void = () => {};
+      const onChange = vi.fn(
+        () => new Promise<boolean>((r) => (resolve = r))
+      );
+      const { result } = renderHook(() =>
+        useRuleSetsEdit(sampleRuleSets, onChange)
+      );
+      act(() => result.current.addRuleSet());
+
+      let saving: Promise<boolean | void> = Promise.resolve();
+      act(() => {
+        saving = result.current.updateRuleSetTitle("Renamed", 0);
+      });
+      act(() => {
+        result.current.removeRuleSet(2);
+      });
+      await act(async () => {
+        resolve(false);
+        await saving;
+      });
+
+      expect(result.current.ruleSets).toEqual(sampleRuleSets);
+    });
+
+    test("goes back to the newest stored rule sets", async () => {
+      const onChange = vi.fn().mockResolvedValue(false);
+      const { result, rerender } = renderHook(
+        ({ original }) => useRuleSetsEdit(original, onChange),
+        { initialProps: { original: sampleRuleSets } }
+      );
+      const newer: StoredRuleSets = [sampleRuleSets[0]];
+      rerender({ original: newer });
+
+      await act(async () => {
+        await result.current.updateRuleSetTitle("Renamed", 0);
+      });
+
+      expect(result.current.ruleSets).toEqual(newer);
+    });
+  });
+
   describe("onChange filtering", () => {
     test("filters out rule sets with only RULE_ID_EDITING rules", () => {
       const onChange = vi.fn();

@@ -251,6 +251,9 @@
   "import_failed": {
     "message": "インポートが失敗しました"
   },
+  "save_failed": {
+    "message": "保存できませんでした"
+  },
   "json_parse_error": {
     "message": "JSONパースエラー"
   },

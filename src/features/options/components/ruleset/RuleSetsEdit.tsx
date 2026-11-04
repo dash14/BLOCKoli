@@ -24,7 +24,8 @@ import { RuleSetMenu } from "./RuleSetMenu";
 type Props = {
   ruleSets: StoredRuleSets;
   titleFontAdjuster: number;
-  onChange: (ruleSets: StoredRuleSets) => void;
+  // Resolves to false when the save was rejected
+  onChange: (ruleSets: StoredRuleSets) => void | Promise<boolean>;
 };
 
 const listTransitionCss = css(`

@@ -246,6 +246,60 @@ describe("Options page", () => {
     );
   });
 
+  test("closes the rule editor once the save succeeds", async () => {
+    const updateRuleSets = vi.fn().mockResolvedValue(undefined);
+    mockUseRequestBlockClient.mockReturnValue(
+      createMockReturnValue({ updateRuleSets })
+    );
+
+    await renderWithChakra(<Options />);
+
+    await page.getByRole("button", { name: /add a rule set/i }).click();
+    await page
+      .getByRole("textbox", { name: "Request Domains" })
+      .fill("typed.example.com");
+    await page.getByRole("button", { name: "Save" }).click();
+
+    await expect
+      .element(page.getByRole("button", { name: "Save" }))
+      .not.toBeInTheDocument();
+    expect(updateRuleSets).toHaveBeenCalledTimes(1);
+    expect(page.getByRole("alertdialog").query()).toBeNull();
+  });
+
+  for (const [rejection, shown] of [
+    [new Error("Too many rules: 501, but at most 500 can be defined"), "Too many rules: 501, but at most 500 can be defined"],
+    ["Rejected", "Rejected"],
+  ] as const) {
+    test(`shows why a save was rejected and keeps the rule being edited (${shown})`, async () => {
+      const updateRuleSets = vi.fn().mockRejectedValue(rejection);
+      mockUseRequestBlockClient.mockReturnValue(
+        createMockReturnValue({ updateRuleSets })
+      );
+
+      await renderWithChakra(<Options />);
+
+      await page.getByRole("button", { name: /add a rule set/i }).click();
+      const requestDomains = page.getByRole("textbox", {
+        name: "Request Domains",
+      });
+      await requestDomains.fill("typed.example.com");
+      await page.getByRole("button", { name: "Save" }).click();
+
+      const dialog = page.getByRole("alertdialog");
+      await expect.element(dialog.getByText("Save failed")).toBeVisible();
+      await expect.element(dialog.getByText(shown)).toBeVisible();
+      expect(updateRuleSets).toHaveBeenCalledTimes(1);
+
+      await dialog.getByRole("button", { name: "Close" }).click();
+      await expect.element(dialog).not.toBeInTheDocument();
+      await expect.element(requestDomains).toHaveValue("typed.example.com");
+      await expect
+        .element(page.getByRole("button", { name: "Save" }))
+        .toBeEnabled();
+    });
+  }
+
   test("renders with accordion opened", async () => {
     mockUseRequestBlockClient.mockReturnValue(
       createMockReturnValue({ ruleSets: sampleRuleSets }),

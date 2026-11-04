@@ -17,9 +17,9 @@ import { Copyright } from "@/components/brand/Copyright";
 import { ExternalLink } from "@/components/parts/ExternalLink";
 import { ExportImportDialog } from "@/features/options/components/ruleset/ExportImportDialog";
 import {
-  ImportFailedDialog,
-  ImportFailedDialogHandle,
-} from "@/features/options/components/ruleset/ImportFailedDialog";
+  FailedDialog,
+  FailedDialogHandle,
+} from "@/features/options/components/ruleset/FailedDialog";
 import {
   ImportSucceededDialog,
   ImportSucceededDialogHandle,
@@ -28,6 +28,7 @@ import { RuleSetsEdit } from "@/features/options/components/ruleset/RuleSetsEdit
 import { useEditingTab } from "@/hooks/useEditingTab";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
 import { useTitleFontAdjuster } from "@/hooks/useTitleFontAdjuster";
+import { StoredRuleSets } from "@/modules/rules/stored";
 import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
 import { download } from "@/modules/utils/download";
 import { useI18n } from "../hooks/useI18n";
@@ -54,7 +55,20 @@ const Options: React.FC = () => {
   const { editing, editHere } = useEditingTab();
 
   const importSuccessDialog = useRef<ImportSucceededDialogHandle>(null);
-  const importFailedDialog = useRef<ImportFailedDialogHandle>(null);
+  const importFailedDialog = useRef<FailedDialogHandle>(null);
+  const saveFailedDialog = useRef<FailedDialogHandle>(null);
+
+  async function onRuleSetsChange(changed: StoredRuleSets): Promise<boolean> {
+    try {
+      await updateRuleSets(changed);
+      return true;
+    } catch (e) {
+      await saveFailedDialog.current?.open([
+        { message: e instanceof Error ? e.message : String(e) },
+      ]);
+      return false;
+    }
+  }
 
   async function onExport() {
     const exported = await performExport();
@@ -181,7 +195,7 @@ const Options: React.FC = () => {
             <RuleSetsEdit
               ruleSets={ruleSets}
               titleFontAdjuster={titleFontAdjuster}
-              onChange={updateRuleSets}
+              onChange={onRuleSetsChange}
             />
 
             <Box as="hr" marginY={6} marginX={0} />
@@ -224,7 +238,16 @@ const Options: React.FC = () => {
 
       {/* dialog */}
       <ImportSucceededDialog ref={importSuccessDialog} i18n={i18n} />
-      <ImportFailedDialog ref={importFailedDialog} i18n={i18n} />
+      <FailedDialog
+        ref={importFailedDialog}
+        title={i18n["import_failed"]}
+        i18n={i18n}
+      />
+      <FailedDialog
+        ref={saveFailedDialog}
+        title={i18n["save_failed"]}
+        i18n={i18n}
+      />
 
       <Container as="footer" textAlign="center" marginBottom={4}>
         <Copyright />

@@ -389,6 +389,90 @@ describe("useRuleEdit", () => {
     });
   });
 
+  describe("rejected save", () => {
+    async function renderRejected() {
+      const onCancel = vi.fn();
+      const { result, rerender } = renderHook(
+        ({ initialRule, onChange }) =>
+          useRuleEdit(initialRule, onChange, onCancel, vi.fn()),
+        {
+          initialProps: {
+            initialRule: validRule,
+            onChange: vi.fn() as (rule: Rule) => void | Promise<boolean>,
+          },
+        }
+      );
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains(["typed.com"]));
+
+      // The page goes back to the stored rule, a new object, before the save resolves
+      const onChange = vi.fn(async () => {
+        rerender({ initialRule: structuredClone(validRule), onChange });
+        return false;
+      });
+      rerender({ initialRule: validRule, onChange });
+      await act(async () => {
+        await result.current.save();
+      });
+      return { result, rerender, onChange, onCancel };
+    }
+
+    test("keeps editing what was typed", async () => {
+      const { result, onChange } = await renderRejected();
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(result.current.isEditing).toBe(true);
+      expect(result.current.rule.condition.requestDomains).toEqual([
+        "typed.com",
+      ]);
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+    });
+
+    test("closes the editor while the save runs, and opens it again once it is rejected", async () => {
+      let resolve: (saved: boolean) => void = () => {};
+      const onChange = vi.fn(
+        () => new Promise<boolean>((r) => (resolve = r))
+      );
+      const { result } = renderHook(() =>
+        useRuleEdit(validRule, onChange, vi.fn(), vi.fn())
+      );
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      act(() => result.current.enterEditMode());
+
+      let saving: Promise<void> = Promise.resolve();
+      act(() => {
+        saving = result.current.save();
+      });
+      await waitFor(() => expect(onChange).toHaveBeenCalledTimes(1));
+      expect(result.current.isEditing).toBe(false);
+
+      await act(async () => {
+        resolve(false);
+        await saving;
+      });
+      expect(result.current.isEditing).toBe(true);
+    });
+
+    test("cancel goes back to the stored rule", async () => {
+      const { result, onCancel } = await renderRejected();
+
+      act(() => result.current.cancel());
+
+      expect(onCancel).toHaveBeenCalledTimes(1);
+      expect(result.current.isEditing).toBe(false);
+      expect(result.current.rule).toEqual(validRule);
+    });
+
+    test("a later change of initialRule replaces what was typed", async () => {
+      const { result, rerender } = await renderRejected();
+
+      rerender({ initialRule: fullRule, onChange: vi.fn() });
+
+      await waitFor(() => expect(result.current.rule).toEqual(fullRule));
+    });
+  });
+
   describe("cancel", () => {
     test("resets to initial rule and calls onCancel", async () => {
       const onChange = vi.fn();

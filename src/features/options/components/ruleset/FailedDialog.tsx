@@ -15,16 +15,17 @@ import {
 } from "@/hooks/useI18n";
 import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
 
-export type ImportFailedDialogHandle = {
+export type FailedDialogHandle = {
   open: (errors: RuleSetsValidationError[]) => Promise<void>;
 };
 
 type Props = {
+  title: string;
   i18n: I18nMessageMap;
-  ref?: React.Ref<ImportFailedDialogHandle>;
+  ref?: React.Ref<FailedDialogHandle>;
 };
 
-export const ImportFailedDialog: React.FC<Props> = ({ i18n, ref }) => {
+export const FailedDialog: React.FC<Props> = ({ title, i18n, ref }) => {
   const { open, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [errors, setErrors] = useState<RuleSetsValidationError[]>([]);
@@ -83,7 +84,7 @@ export const ImportFailedDialog: React.FC<Props> = ({ i18n, ref }) => {
               color="red.500"
               marginRight={2}
             />
-            {i18n["import_failed"]}
+            {title}
           </Dialog.Header>
 
           <Dialog.Body>

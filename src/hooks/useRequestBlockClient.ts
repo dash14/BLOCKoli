@@ -26,6 +26,8 @@ export function useRequestBlockClient() {
   const pendingSaves = useRef(0);
   const held = useRef<VersionedRuleSets | undefined>(undefined);
   const latestRequest = useRef<StoredRuleSets>([]);
+  // The save of latestRequest, so sending the same rule sets again waits on its result
+  const latestSave = useRef<Promise<void>>(Promise.resolve());
 
   // Compare with the latest state, not the one this render's callbacks closed over.
   const latestRuleSets = useRef<StoredRuleSets>([]);
@@ -103,9 +105,18 @@ export function useRequestBlockClient() {
     // Compare with what was last sent while saves wait, so an edit back is still sent
     const current =
       pendingSaves.current > 0 ? latestRequest.current : latestRuleSets.current;
-    if (isEqual(updatedRuleSets, current)) return;
+    if (isEqual(updatedRuleSets, current)) {
+      if (pendingSaves.current > 0) await latestSave.current;
+      return;
+    }
 
     latestRequest.current = updatedRuleSets;
+    const save = send(updatedRuleSets);
+    latestSave.current = save;
+    await save;
+  };
+
+  const send = async (updatedRuleSets: StoredRuleSets) => {
     pendingSaves.current++;
     try {
       // New rules come back with the IDs the service assigned

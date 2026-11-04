@@ -116,6 +116,15 @@ describe("useRulesEdit", () => {
       expect(newRules[1].condition.requestDomains).toContain("updated.com");
     });
 
+    test("returns what onChange resolves to, so a rejected save can be told apart", async () => {
+      const onChange = vi.fn().mockResolvedValue(false);
+      const { result } = renderHook(() => useRulesEdit([savedRule], onChange));
+
+      await expect(result.current.updateRule(savedRule, 0)).resolves.toBe(
+        false
+      );
+    });
+
     test("changes RULE_ID_EDITING to RULE_ID_UNSAVED when updating", () => {
       const onChange = vi.fn();
       const rules: StoredRule[] = [savedRule, editingRule];
@@ -134,6 +143,20 @@ describe("useRulesEdit", () => {
       expect(onChange).toHaveBeenCalledTimes(1);
       const newRules = onChange.mock.calls[0][0] as StoredRule[];
       expect(newRules[1].id).toBe(RULE_ID_UNSAVED);
+    });
+
+    test("leaves the rule it was given unchanged", () => {
+      const onChange = vi.fn();
+      const { result } = renderHook(() =>
+        useRulesEdit([savedRule, editingRule], onChange)
+      );
+      const updatedRule: StoredRule = { ...editingRule, condition: { urlFilter: "ads" } };
+
+      act(() => {
+        result.current.updateRule(updatedRule, 1);
+      });
+
+      expect(updatedRule.id).toBe(RULE_ID_EDITING);
     });
 
     test("preserves existing rule ID when not RULE_ID_EDITING", () => {
