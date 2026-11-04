@@ -19,7 +19,7 @@ export type RuleEntry = {
   // Stays the same from when the rule is added until it is removed
   key: string;
   rule: Rule;
-  // None while the rule is added on this page and not saved yet
+  // Undefined until the rule is saved
   id?: number;
 };
 
@@ -34,7 +34,7 @@ export type RuleSetEntry = {
 type NewRule = { key: string; ruleSetId: string };
 type NewRuleSet = { id: string; name: string };
 
-// What is shown is the stored rule sets with what this page has not saved yet on top.
+// Shows the stored rule sets with what this page has not saved yet on top
 export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
   // Rule sets added on this page whose first rule is not saved yet
   const [newRuleSets, setNewRuleSets] = useState<NewRuleSet[]>([]);
@@ -111,7 +111,7 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
   async function saveNewRule(ruleSetId: string, key: string, rule: Rule) {
     const newRule = { ...rule, id: RULE_ID_UNSAVED };
     const { name } = entries.find((entry) => entry.id === ruleSetId)!;
-    // A rule set not stored yet, or no longer, is stored with the rule
+    // A rule set that is new, or was removed meanwhile, is stored with this rule
     const saved = await save((current) =>
       current.some((ruleSet) => ruleSet.id === ruleSetId)
         ? current.map((ruleSet) =>
@@ -192,7 +192,10 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
     await save((current) =>
       current.map((ruleSet) => (ruleSet.id === id ? { ...ruleSet, name } : ruleSet))
     );
-    setSavingNames((current) => omit(current, id));
+    // A later rename that is still saving keeps its name shown
+    setSavingNames((current) =>
+      current[id] === name ? omit(current, id) : current
+    );
   }
 
   return {

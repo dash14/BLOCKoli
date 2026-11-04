@@ -418,6 +418,29 @@ describe("useRuleSetsEdit", () => {
       expect(stored()).toBe(sampleRuleSets);
     });
 
+    test("keeps showing a later name while it is still saving", async () => {
+      const { result, save } = setup(sampleRuleSets);
+      const finishes: (() => void)[] = [];
+      save.mockImplementation(async (change) => {
+        await new Promise<void>((resolve) => finishes.push(resolve));
+        return change(sampleRuleSets);
+      });
+
+      let first!: Promise<void>;
+      act(() => {
+        first = result.current.renameRuleSet("rs-2", "First");
+      });
+      act(() => {
+        void result.current.renameRuleSet("rs-2", "Second");
+      });
+      await act(async () => {
+        finishes[0]();
+        await first;
+      });
+
+      expect(names(result.current.entries)).toEqual(["Block Ads", "Second"]);
+    });
+
     test("goes back to the stored name when the save is rejected", async () => {
       const { result, rejectNext } = setup(sampleRuleSets);
 

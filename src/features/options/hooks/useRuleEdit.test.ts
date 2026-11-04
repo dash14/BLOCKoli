@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, onTestFinished, test, vi } from "vitest";
 import {
   RequestMethod,
   ResourceType,
@@ -18,7 +18,10 @@ vi.mock("@/modules/chrome/regex", () => ({
   createRegexValidator: () => mockIsRegexSupported,
 }));
 
-import { UNSUPPORTED_REGEX_SYNTAX_MESSAGE } from "@/modules/rules/validation/edit";
+import {
+  RuleValidator,
+  UNSUPPORTED_REGEX_SYNTAX_MESSAGE,
+} from "@/modules/rules/validation/edit";
 import { useRuleEdit } from "./useRuleEdit";
 
 beforeEach(() => {
@@ -476,7 +479,54 @@ describe("useRuleEdit", () => {
     });
   });
 
+  describe("given rule", () => {
+    test("keeps the draft's errors when the same rule comes back as a new object", async () => {
+      const { result, rerender } = renderHook(
+        ({ initialRule }) => useRuleEdit(initialRule, vi.fn(), vi.fn(), vi.fn()),
+        { initialProps: { initialRule: validRule } }
+      );
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains([]));
+      await waitFor(() => expect(result.current.isValid).toBe(false));
+
+      const validate = vi.spyOn(RuleValidator.prototype, "validate");
+      onTestFinished(() => validate.mockRestore());
+      rerender({ initialRule: structuredClone(validRule) });
+
+      expect(validate).not.toHaveBeenCalled();
+      expect(result.current.isValid).toBe(false);
+      expect(result.current.isEditing).toBe(true);
+    });
+  });
+
   describe("successful save", () => {
+    test("keeps what was typed after editing again while the save waited", async () => {
+      let resolve: (saved: boolean) => void = () => {};
+      const onChange = vi.fn(() => new Promise<boolean>((r) => (resolve = r)));
+      const { result } = renderHook(() =>
+        useRuleEdit(validRule, onChange, vi.fn(), vi.fn())
+      );
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains(["first.com"]));
+
+      let saving: Promise<void> = Promise.resolve();
+      act(() => {
+        saving = result.current.save();
+      });
+      await waitFor(() => expect(onChange).toHaveBeenCalledTimes(1));
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains(["again.com"]));
+
+      await act(async () => {
+        resolve(true);
+        await saving;
+      });
+      expect(result.current.isEditing).toBe(true);
+      expect(result.current.rule.condition.requestDomains).toEqual(["again.com"]);
+    });
+
     test("drops what was typed and shows the given rule", async () => {
       const { result, rerender } = renderHook(
         ({ initialRule }) =>

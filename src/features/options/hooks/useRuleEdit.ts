@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import cloneDeep from "lodash-es/cloneDeep";
+import isEqual from "lodash-es/isEqual";
 import { createRegexValidator } from "@/modules/chrome/regex";
 import {
   RequestMethod,
@@ -17,12 +18,19 @@ type ValidationErrors = Required<{
 }>;
 
 export function useRuleEdit(
-  initialRule: Rule,
+  givenRule: Rule,
   // Resolves to false when the save was rejected
   onChange: (rule: Rule) => void | Promise<boolean>,
   onCancel: () => void,
   onRemove: () => void
 ) {
+  // Every save brings all stored rules back as new objects; only a changed rule counts
+  const latestGivenRule = useRef(givenRule);
+  if (!isEqual(latestGivenRule.current, givenRule)) {
+    latestGivenRule.current = givenRule;
+  }
+  const initialRule = latestGivenRule.current;
+
   const [isEditing, setIsEditing] = useState(false);
   // Edits not saved yet; until the first one, the given rule is shown
   const [draft, setDraft] = useState<Rule | undefined>(undefined);
@@ -72,7 +80,8 @@ export function useRuleEdit(
       // The draft is kept, so the rule can be fixed and saved again
       setIsEditing(true);
     } else {
-      setDraft(undefined);
+      // Unless editing started again while the save waited
+      setDraft((current) => (current === rule ? undefined : current));
     }
   }
 

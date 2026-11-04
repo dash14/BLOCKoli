@@ -21,13 +21,13 @@ export function useRequestBlockClient() {
 
   // Responses and broadcasts arrive by separate channels, so the revision decides which is newer.
   const appliedRevision = useRef(-1);
-  // Changes wait for the save before them, so each applies to what that save stored.
+  // Each change waits for the save before it and applies to what that save stored
   const queue = useRef<Promise<unknown>>(Promise.resolve());
-  // Broadcasts during a save are held until its response, so a rule it adds is not shown twice.
+  // Broadcasts are held during a save, so a rule it adds is not shown twice before the response
   const saving = useRef(false);
   const held = useRef<VersionedRuleSets | undefined>(undefined);
 
-  // Changes apply to the latest state, not the one this render's callbacks closed over.
+  // Changes apply to the latest state, not the one this render's callbacks closed over
   const latestRuleSets = useRef<StoredRuleSets>([]);
 
   const receiveRuleSets = useCallback((received: VersionedRuleSets) => {

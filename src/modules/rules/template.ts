@@ -7,5 +7,5 @@ export const newRuleTemplate: Rule = {
   condition: {},
 };
 
-// Numbered from 1 for each rule set added
+// New rule sets get this name and the next free number
 export const newRuleSetName = "My Rule Set";
