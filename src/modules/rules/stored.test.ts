@@ -1,19 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { RuleActionType } from "@/modules/core/rules";
-import { RULE_ID_EDITING, RULE_ID_UNSAVED, assignRuleSetIds } from "./stored";
+import { RULE_ID_UNSAVED, assignRuleSetIds } from "./stored";
 import type { StoredRule, StoredRules, StoredRuleSet, StoredRuleSets } from "./stored";
 
 describe("stored", () => {
-  describe("RULE_ID_EDITING", () => {
-    it("equals -1", () => {
-      expect(RULE_ID_EDITING).toBe(-1);
-    });
-
-    it("is a number", () => {
-      expect(typeof RULE_ID_EDITING).toBe("number");
-    });
-  });
-
   describe("RULE_ID_UNSAVED", () => {
     it("equals 0", () => {
       expect(RULE_ID_UNSAVED).toBe(0);
@@ -34,16 +24,6 @@ describe("stored", () => {
 
       expect(rule.id).toBe(1);
       expect(rule.action.type).toBe("block");
-    });
-
-    it("can have editing id", () => {
-      const rule: StoredRule = {
-        id: RULE_ID_EDITING,
-        action: { type: RuleActionType.BLOCK },
-        condition: {},
-      };
-
-      expect(rule.id).toBe(-1);
     });
 
     it("can have unsaved id", () => {

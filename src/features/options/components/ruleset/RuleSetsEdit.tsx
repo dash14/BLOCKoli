@@ -14,7 +14,10 @@ import { EditableTitle } from "@/components/forms/EditableTitle";
 import { AccordionCustomTrigger } from "@/components/parts/AccordionCustomTrigger";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
 import { RulesEdit } from "@/features/options/components/rule/RulesEdit";
-import { useRuleSetsEdit } from "@/features/options/hooks/useRuleSetsEdit";
+import {
+  SaveRuleSets,
+  useRuleSetsEdit,
+} from "@/features/options/hooks/useRuleSetsEdit";
 import { useI18n } from "@/hooks/useI18n";
 import { countRules, MAX_RULES } from "@/modules/rules/limits";
 import { StoredRuleSets } from "@/modules/rules/stored";
@@ -24,8 +27,7 @@ import { RuleSetMenu } from "./RuleSetMenu";
 type Props = {
   ruleSets: StoredRuleSets;
   titleFontAdjuster: number;
-  // Resolves to false when the save was rejected
-  onChange: (ruleSets: StoredRuleSets) => void | Promise<boolean>;
+  save: SaveRuleSets;
 };
 
 const listTransitionCss = css(`
@@ -37,23 +39,26 @@ const listTransitionCss = css(`
 `);
 
 export const RuleSetsEdit: React.FC<Props> = ({
-  ruleSets: originalRuleSets,
+  ruleSets,
   titleFontAdjuster,
-  onChange,
+  save,
 }) => {
   const i18n = useI18n();
 
   const {
     entries,
     addRuleSet,
-    updateRules,
+    addRule,
+    saveNewRule,
+    updateRule,
+    removeRule,
+    cancelNewRule,
     removeRuleSet,
-    updateRuleSetTitle,
-  } = useRuleSetsEdit(originalRuleSets, onChange);
+    renameRuleSet,
+  } = useRuleSetsEdit(ruleSets, save);
 
   // Includes new rules not saved yet, so adding stops at the limit
-  const isAddAllowed =
-    countRules(entries.map(({ ruleSet }) => ruleSet)) < MAX_RULES;
+  const isAddAllowed = countRules(entries) < MAX_RULES;
 
   return (
     <>
@@ -71,11 +76,11 @@ export const RuleSetsEdit: React.FC<Props> = ({
       )}
 
       <SlideTransitionGroup style={listTransitionCss}>
-        {entries.map(({ ruleSet, open }, ruleSetIndex) => {
+        {entries.map(({ id, name, rules, open }) => {
           const nodeRef = createRef<HTMLDivElement>();
           return (
             <CSSTransition
-              key={ruleSet.id}
+              key={id}
               timeout={250}
               classNames="slide"
               nodeRef={nodeRef}
@@ -91,24 +96,24 @@ export const RuleSetsEdit: React.FC<Props> = ({
                     <AccordionCustomTrigger>
                       <EditableTitle
                         // Remount to show a name changed in another window
-                        key={ruleSet.name}
-                        defaultValue={ruleSet.name}
+                        key={name}
+                        defaultValue={name}
                         cursor="pointer"
                         flex="1"
-                        onChange={(title) =>
-                          updateRuleSetTitle(title, ruleSetIndex)
-                        }
+                        onChange={(title) => renameRuleSet(id, title)}
                       />
-                      <RuleSetMenu
-                        onRemove={() => removeRuleSet(ruleSetIndex)}
-                      />
+                      <RuleSetMenu onRemove={() => removeRuleSet(id)} />
                       <Accordion.ItemIndicator />
                     </AccordionCustomTrigger>
                     <Accordion.ItemContent paddingX={6}>
                       <RulesEdit
-                        rules={ruleSet.rules}
+                        rules={rules}
                         isAddAllowed={isAddAllowed}
-                        onChange={(rules) => updateRules(rules, ruleSetIndex)}
+                        onAdd={() => addRule(id)}
+                        onSaveNew={(key, rule) => saveNewRule(id, key, rule)}
+                        onUpdate={(ruleId, rule) => updateRule(id, ruleId, rule)}
+                        onCancelNew={(key) => cancelNewRule(id, key)}
+                        onRemove={(ruleId) => removeRule(id, ruleId)}
                       />
                     </Accordion.ItemContent>
                   </Accordion.Item>

@@ -182,7 +182,7 @@ describe("useRequestBlockClient", () => {
     );
   });
 
-  it("updateRuleSets calls service when ruleSets changed", async () => {
+  it("updateRuleSets sends the change applied to the stored rule sets", async () => {
     const { result } = renderHook(() => useRequestBlockClient());
 
     await waitFor(() => {
@@ -190,11 +190,13 @@ describe("useRequestBlockClient", () => {
     });
 
     const newRuleSets = [{ id: "rs-new", name: "New Set", rules: [] }];
+    const change = vi.fn(() => newRuleSets);
 
     await act(async () => {
-      await result.current.updateRuleSets(newRuleSets);
+      await result.current.updateRuleSets(change);
     });
 
+    expect(change).toHaveBeenCalledWith([]);
     expect(mockSendMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "request",
@@ -204,7 +206,7 @@ describe("useRequestBlockClient", () => {
     );
   });
 
-  it("updateRuleSets does not call service when ruleSets unchanged", async () => {
+  it("updateRuleSets does not call service when the change leaves them as they are", async () => {
     const { result } = renderHook(() => useRequestBlockClient());
 
     await waitFor(() => {
@@ -213,10 +215,12 @@ describe("useRequestBlockClient", () => {
 
     mockSendMessage.mockClear();
 
+    let saved: StoredRuleSets | undefined;
     await act(async () => {
-      await result.current.updateRuleSets([]);
+      saved = await result.current.updateRuleSets(() => []);
     });
 
+    expect(saved).toStrictEqual([]);
     expect(mockSendMessage).not.toHaveBeenCalledWith(
       expect.objectContaining({
         method: "updateRuleSets",
@@ -224,7 +228,7 @@ describe("useRequestBlockClient", () => {
     );
   });
 
-  it("updateRuleSets keeps the rule sets returned by the service", async () => {
+  it("updateRuleSets keeps and resolves to the rule sets returned by the service", async () => {
     const { result } = renderHook(() => useRequestBlockClient());
 
     await waitFor(() => {
@@ -234,28 +238,30 @@ describe("useRequestBlockClient", () => {
     const unsaved: StoredRuleSets = [
       { id: "rs-1", name: "Set", rules: [{ id: 0, ...rule }] },
     ];
-    const saved: StoredRuleSets = [
-      { id: "rs-2", name: "Set", rules: [{ id: 5, ...rule }] },
+    const stored: StoredRuleSets = [
+      { id: "rs-1", name: "Set", rules: [{ id: 5, ...rule }] },
     ];
     mockSendMessage.mockImplementation(async (request) => {
       if (request.method === "updateRuleSets") {
         return {
           type: "response",
           success: true,
-          result: { revision: 1, ruleSets: saved },
+          result: { revision: 1, ruleSets: stored },
         };
       }
       return { type: "response", success: true, result: null };
     });
 
+    let saved: StoredRuleSets | undefined;
     await act(async () => {
-      await result.current.updateRuleSets(unsaved);
+      saved = await result.current.updateRuleSets(() => unsaved);
     });
 
-    expect(result.current.ruleSets).toStrictEqual(saved);
+    expect(saved).toStrictEqual(stored);
+    expect(result.current.ruleSets).toStrictEqual(stored);
   });
 
-  it("updateRuleSets compares with the latest state, not a stale render's", async () => {
+  it("updateRuleSets applies a change to the latest state, not a stale render's", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let capturedListener: any;
     mockAddListener.mockImplementation((listener) => {
@@ -270,6 +276,7 @@ describe("useRequestBlockClient", () => {
 
     // Captured while the state is still []
     const updateRuleSets = result.current.updateRuleSets;
+    const fromAnotherPage = [{ id: "rs-1", name: "From another page", rules: [] }];
 
     act(() => {
       capturedListener(
@@ -277,27 +284,26 @@ describe("useRequestBlockClient", () => {
           type: "broadcast",
           service: "RequestBlock",
           event: "updateRuleSets",
-          message: {
-            revision: 1,
-            ruleSets: [{ name: "From another page", rules: [] }],
-          },
+          message: { revision: 1, ruleSets: fromAnotherPage },
         },
         {},
         vi.fn()
       );
     });
 
+    const change = vi.fn(() => []);
     await act(async () => {
-      await updateRuleSets([]);
+      await updateRuleSets(change);
     });
 
+    expect(change).toHaveBeenCalledWith(fromAnotherPage);
     expect(mockSendMessage).toHaveBeenCalledWith(
       expect.objectContaining({ method: "updateRuleSets", args: [[]] })
     );
     expect(result.current.ruleSets).toStrictEqual([]);
   });
 
-  describe("ordering by revision", () => {
+  describe("one save at a time", () => {
     const named = (name: string): StoredRuleSets => [
       { id: "rs-3", name, rules: [{ id: 1, ...rule }] },
     ];
@@ -316,6 +322,9 @@ describe("useRequestBlockClient", () => {
           : defaultImpl(request)
       );
       return {
+        get count() {
+          return answers.length;
+        },
         succeed: (index: number, result: unknown) =>
           act(async () => answers[index]({ type: "response", success: true, result })),
         fail: (index: number) =>
@@ -340,83 +349,73 @@ describe("useRequestBlockClient", () => {
       return { result: hook.result, broadcast };
     };
 
-    it("holds earlier results while a later save waits, then applies the newest", async () => {
-      const { result, broadcast } = await render();
+    it("starts a change once the save before it is done, on what that save stored", async () => {
+      const { result } = await render();
       const saves = holdSaves();
 
-      let first!: Promise<void>, second!: Promise<void>;
-      act(() => {
-        first = result.current.updateRuleSets(named("first"));
-        second = result.current.updateRuleSets(named("second"));
+      const second = vi.fn(() => named("second"));
+      let firstSave!: Promise<StoredRuleSets>, secondSave!: Promise<StoredRuleSets>;
+      await act(async () => {
+        firstSave = result.current.updateRuleSets(() => named("first"));
+        secondSave = result.current.updateRuleSets(second);
       });
+      expect(saves.count).toBe(1);
+      expect(second).not.toHaveBeenCalled();
+
       await saves.succeed(0, versioned(1, "first"));
-      broadcast(versioned(1, "first"));
-      await first;
-      expect(result.current.ruleSets).toStrictEqual([]);
+      await firstSave;
+      expect(second).toHaveBeenCalledWith(named("first"));
+      expect(result.current.ruleSets).toStrictEqual(named("first"));
 
       await saves.succeed(1, versioned(2, "second"));
-      await second;
+      await secondSave;
       expect(result.current.ruleSets).toStrictEqual(named("second"));
     });
 
-    it("keeps a newer broadcast that arrived before the page's own response", async () => {
+    it("holds broadcasts during a save, then applies the newest after its response", async () => {
       const { result, broadcast } = await render();
       const saves = holdSaves();
 
-      let save!: Promise<void>;
-      act(() => {
-        save = result.current.updateRuleSets(named("mine"));
+      let save!: Promise<StoredRuleSets>;
+      await act(async () => {
+        save = result.current.updateRuleSets(() => named("mine"));
       });
-      broadcast(versioned(2, "another page, saved after mine"));
+      broadcast(versioned(1, "mine"));
+      broadcast(versioned(3, "imported after mine"));
+      broadcast(versioned(2, "older"));
+      expect(result.current.ruleSets).toStrictEqual([]);
+
       await saves.succeed(0, versioned(1, "mine"));
-      await save;
-
-      expect(result.current.ruleSets).toStrictEqual(
-        named("another page, saved after mine")
-      );
+      expect(await save).toStrictEqual(named("mine"));
+      expect(result.current.ruleSets).toStrictEqual(named("imported after mine"));
     });
 
-    it("shows what an earlier save stored when the latest one fails", async () => {
-      const { result } = await render();
+    it("rejects a change whose save fails, and applies the next one to the state before it", async () => {
+      const { result, broadcast } = await render();
       const saves = holdSaves();
 
-      let first!: Promise<void>, second!: Promise<void>;
-      act(() => {
-        first = result.current.updateRuleSets(named("first"));
-        second = result.current.updateRuleSets(named("second"));
+      const next = vi.fn(() => named("next"));
+      let failed!: Promise<StoredRuleSets>;
+      await act(async () => {
+        failed = result.current.updateRuleSets(() => named("failed"));
+        void result.current.updateRuleSets(next);
       });
-      const secondFailed = expect(second).rejects.toThrow(new Error("save failed"));
-      await saves.succeed(0, versioned(1, "first"));
-      await first;
-      await saves.fail(1);
-      await secondFailed;
-
-      expect(result.current.ruleSets).toStrictEqual(named("first"));
-    });
-
-    it("fails the same rule sets sent again when the save still running fails", async () => {
-      const { result } = await render();
-      const saves = holdSaves();
-
-      let first!: Promise<void>, again!: Promise<void>;
-      act(() => {
-        first = result.current.updateRuleSets(named("failed"));
-        again = result.current.updateRuleSets(named("failed"));
-      });
-      const firstFailed = expect(first).rejects.toThrow(new Error("save failed"));
-      const againFailed = expect(again).rejects.toThrow(new Error("save failed"));
+      const rejected = expect(failed).rejects.toThrow(new Error("save failed"));
+      broadcast(versioned(1, "imported meanwhile"));
       await saves.fail(0);
-      await firstFailed;
-      await againFailed;
+      await rejected;
+
+      expect(result.current.ruleSets).toStrictEqual(named("imported meanwhile"));
+      expect(next).toHaveBeenCalledWith(named("imported meanwhile"));
     });
 
     it("keeps the state when the only save fails", async () => {
       const { result } = await render();
       const saves = holdSaves();
 
-      let save!: Promise<void>;
-      act(() => {
-        save = result.current.updateRuleSets(named("failed"));
+      let save!: Promise<StoredRuleSets>;
+      await act(async () => {
+        save = result.current.updateRuleSets(() => named("failed"));
       });
       const failed = expect(save).rejects.toThrow(new Error("save failed"));
       await saves.fail(0);
@@ -432,20 +431,6 @@ describe("useRequestBlockClient", () => {
       broadcast(versioned(2, "older"));
 
       expect(result.current.ruleSets).toStrictEqual(named("newer"));
-    });
-
-    it("sends an edit back to the state from before a waiting save", async () => {
-      const { result } = await render();
-      holdSaves();
-
-      act(() => {
-        void result.current.updateRuleSets(named("renamed"));
-        void result.current.updateRuleSets([]);
-      });
-
-      expect(mockSendMessage).toHaveBeenLastCalledWith(
-        expect.objectContaining({ method: "updateRuleSets", args: [[]] })
-      );
     });
   });
 

@@ -1,6 +1,6 @@
 import { Rule } from "@/modules/core/rules";
 
-export const RULE_ID_EDITING = -1;
+// The ID of a rule sent before the service has given it one
 export const RULE_ID_UNSAVED = 0;
 
 export interface StoredRule extends Rule {

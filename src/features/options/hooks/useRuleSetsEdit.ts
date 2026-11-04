@@ -1,184 +1,209 @@
-import { useEffect, useRef, useState } from "react";
-import cloneDeep from "lodash-es/cloneDeep";
-import { push, removeAt, replaceAt } from "@/modules/core/array";
+import { useRef, useState } from "react";
+import omit from "lodash-es/omit";
+import { Rule } from "@/modules/core/rules";
 import {
-  RULE_ID_EDITING,
   RULE_ID_UNSAVED,
-  StoredRule,
   StoredRuleSet,
   StoredRuleSets,
 } from "@/modules/rules/stored";
-import { newRuleSetTemplate } from "@/modules/rules/template";
+import { newRuleSetName, newRuleTemplate } from "@/modules/rules/template";
+
+export type RuleSetsChange = (stored: StoredRuleSets) => StoredRuleSets;
+
+// Resolves to the stored rule sets, or to false when the save was rejected
+export type SaveRuleSets = (
+  change: RuleSetsChange
+) => Promise<StoredRuleSets | false>;
+
+export type RuleEntry = {
+  // Stays the same from when the rule is added until it is removed
+  key: string;
+  rule: Rule;
+  // None while the rule is added on this page and not saved yet
+  id?: number;
+};
 
 export type RuleSetEntry = {
-  ruleSet: StoredRuleSet;
+  id: string;
+  name: string;
+  rules: RuleEntry[];
   // Whether its accordion starts open when it is first rendered
   open: boolean;
 };
 
-export function useRuleSetsEdit(
-  originalRuleSets: StoredRuleSets,
-  onChange: (ruleSets: StoredRuleSets) => void | Promise<boolean>
-) {
-  const [entries, setEntries] = useState<RuleSetEntry[]>(() =>
-    mergeEntries(originalRuleSets, [])
-  );
-  const ruleSets = entries.map((entry) => entry.ruleSet);
+type NewRule = { key: string; ruleSetId: string };
+type NewRuleSet = { id: string; name: string };
 
-  useEffect(() => {
-    const merged = mergeEntries(originalRuleSets, entries);
-    if (
-      JSON.stringify(merged.map((entry) => entry.ruleSet)) !==
-      JSON.stringify(ruleSets)
-    ) {
-      setEntries(merged);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [originalRuleSets]);
+// What is shown is the stored rule sets with what this page has not saved yet on top.
+export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
+  // Rule sets added on this page whose first rule is not saved yet
+  const [newRuleSets, setNewRuleSets] = useState<NewRuleSet[]>([]);
+  const [newRules, setNewRules] = useState<NewRule[]>([]);
+  // A new name is shown while it is saved, and the stored one again if the save is rejected
+  const [savingNames, setSavingNames] = useState<Record<string, string>>({});
+  // Rules added on this page keep their key once saved, so their editors stay
+  const savedKeys = useRef(new Map<number, string>());
 
-  // A failed save leaves the stored rule sets as they were
-  const storedRuleSets = useRef(originalRuleSets);
-  useEffect(() => {
-    storedRuleSets.current = originalRuleSets;
-  }, [originalRuleSets]);
+  const storedIds = new Set(stored.map((ruleSet) => ruleSet.id));
+  const newEntries = (ruleSetId: string): RuleEntry[] =>
+    newRules
+      .filter((newRule) => newRule.ruleSetId === ruleSetId)
+      .map(({ key }) => ({ key, rule: newRuleTemplate }));
 
-  async function save(newEntries: RuleSetEntry[]): Promise<boolean> {
-    const before = entries;
-    setEntries(newEntries);
-    const saved = await onChange(filterAvailableRuleSets(newEntries)); // filter editing
-    if (saved !== false) return true;
-    setEntries((current) => {
-      // A rejected removal brings the rule set back as it was shown
-      const ids = new Set(current.map((entry) => entry.ruleSet.id));
-      const removed = before.filter(
-        (entry) => !ids.has(entry.ruleSet.id) && !isUnsaved(entry)
-      );
-      return mergeEntries(
-        storedRuleSets.current,
-        reopenNewRules([...current, ...removed])
-      );
-    });
-    return false;
+  const shown: Omit<RuleSetEntry, "open">[] = [
+    ...stored.map((ruleSet) => ({
+      id: ruleSet.id,
+      name: savingNames[ruleSet.id] ?? ruleSet.name,
+      rules: [
+        ...ruleSet.rules.map((rule) => ({
+          key: savedKeys.current.get(rule.id) ?? `rule-${rule.id}`,
+          rule,
+          id: rule.id,
+        })),
+        ...newEntries(ruleSet.id),
+      ],
+    })),
+    ...newRuleSets
+      .filter((ruleSet) => !storedIds.has(ruleSet.id))
+      .map(({ id, name }) => ({ id, name, rules: newEntries(id) })),
+  ];
+  const isNewHere = (id: string) =>
+    newRuleSets.some((ruleSet) => ruleSet.id === id);
+  // Read only when an accordion is first rendered
+  const entries: RuleSetEntry[] = shown.map((entry) => ({
+    ...entry,
+    open: shown.length === 1 || isNewHere(entry.id),
+  }));
+
+  function dropNewRule(key: string) {
+    setNewRules((current) => current.filter((newRule) => newRule.key !== key));
+  }
+
+  function dropNewRuleSet(id: string) {
+    setNewRuleSets((current) => current.filter((ruleSet) => ruleSet.id !== id));
+    setNewRules((current) =>
+      current.filter((newRule) => newRule.ruleSetId !== id)
+    );
   }
 
   function addRuleSet() {
-    const newRuleSet = {
-      ...cloneDeep(newRuleSetTemplate),
-      id: crypto.randomUUID(),
-    };
-    const nameWithNumPattern = new RegExp(`^${newRuleSet.name} (\\d+)`);
-
-    const maxNumber = ruleSets.reduce((max, ruleSet) => {
-      const result = nameWithNumPattern.exec(ruleSet.name);
+    const pattern = new RegExp(`^${newRuleSetName} (\\d+)`);
+    const maxNumber = entries.reduce((max, { name }) => {
+      const result = pattern.exec(name);
       return result ? Math.max(max, parseInt(result[1], 10)) : max;
     }, 0);
-
-    newRuleSet.name = `${newRuleSet.name} ${maxNumber + 1}`;
-
-    setEntries(push(entries, { ruleSet: newRuleSet, open: true }));
+    const id = crypto.randomUUID();
+    const name = `${newRuleSetName} ${maxNumber + 1}`;
+    setNewRuleSets((current) => [...current, { id, name }]);
+    setNewRules((current) => [
+      ...current,
+      { key: crypto.randomUUID(), ruleSetId: id },
+    ]);
   }
 
-  function replaceRuleSet(index: number, ruleSet: StoredRuleSet) {
-    const newEntries = replaceAt(entries, index, { ...entries[index], ruleSet });
-    return save(newEntries);
+  function addRule(ruleSetId: string) {
+    setNewRules((current) => [
+      ...current,
+      { key: crypto.randomUUID(), ruleSetId },
+    ]);
   }
 
-  function updateRules(rules: StoredRule[], ruleSetIndex: number) {
-    if (rules.length === 0) {
-      // A canceled first rule, or a saved set's last rule (not offered on the page)
-      return removeRuleSet(ruleSetIndex);
+  async function saveNewRule(ruleSetId: string, key: string, rule: Rule) {
+    const newRule = { ...rule, id: RULE_ID_UNSAVED };
+    const { name } = entries.find((entry) => entry.id === ruleSetId)!;
+    // A rule set not stored yet, or no longer, is stored with the rule
+    const saved = await save((current) =>
+      current.some((ruleSet) => ruleSet.id === ruleSetId)
+        ? current.map((ruleSet) =>
+            ruleSet.id === ruleSetId
+              ? { ...ruleSet, rules: [...ruleSet.rules, newRule] }
+              : ruleSet
+          )
+        : [...current, { id: ruleSetId, name, rules: [newRule] }]
+    );
+    if (saved === false) return false;
+    // The service keeps the order, so the rule added is the last one
+    const { rules } = saved.find((ruleSet) => ruleSet.id === ruleSetId)!;
+    savedKeys.current.set(rules[rules.length - 1].id, key);
+    dropNewRule(key);
+    setNewRuleSets((current) => current.filter(({ id }) => id !== ruleSetId));
+    return true;
+  }
+
+  function updateRule(ruleSetId: string, ruleId: number, rule: Rule) {
+    return saveRules(ruleSetId, (rules) =>
+      rules.map((stored) =>
+        stored.id === ruleId ? { ...rule, id: ruleId } : stored
+      )
+    );
+  }
+
+  function removeRule(ruleSetId: string, ruleId: number) {
+    return saveRules(ruleSetId, (rules) =>
+      rules.filter((stored) => stored.id !== ruleId)
+    );
+  }
+
+  async function saveRules(
+    ruleSetId: string,
+    change: (rules: StoredRuleSet["rules"]) => StoredRuleSet["rules"]
+  ) {
+    const saved = await save((current) =>
+      current
+        .map((ruleSet) =>
+          ruleSet.id === ruleSetId
+            ? { ...ruleSet, rules: change(ruleSet.rules) }
+            : ruleSet
+        )
+        // A rule set goes with its last rule
+        .filter((ruleSet) => ruleSet.rules.length > 0)
+    );
+    return saved !== false;
+  }
+
+  function cancelNewRule(ruleSetId: string, key: string) {
+    if (storedIds.has(ruleSetId)) {
+      dropNewRule(key);
     } else {
-      return replaceRuleSet(ruleSetIndex, {
-        ...entries[ruleSetIndex].ruleSet,
-        rules,
-      });
+      // A canceled first rule takes its new rule set with it
+      dropNewRuleSet(ruleSetId);
     }
   }
 
-  function removeRuleSet(ruleSetIndex: number) {
-    const entry = entries[ruleSetIndex];
-    const newEntries = removeAt(entries, ruleSetIndex);
-    if (isUnsaved(entry)) {
-      setEntries(newEntries);
+  async function removeRuleSet(id: string) {
+    if (!storedIds.has(id)) {
+      dropNewRuleSet(id);
       return;
     }
-    return save(newEntries);
+    const saved = await save((current) =>
+      current.filter((ruleSet) => ruleSet.id !== id)
+    );
+    if (saved !== false) dropNewRuleSet(id);
   }
 
-  function updateRuleSetTitle(title: string, index: number) {
-    return replaceRuleSet(index, { ...entries[index].ruleSet, name: title });
+  async function renameRuleSet(id: string, name: string) {
+    if (!storedIds.has(id)) {
+      setNewRuleSets((current) =>
+        current.map((ruleSet) => (ruleSet.id === id ? { id, name } : ruleSet))
+      );
+      return;
+    }
+    setSavingNames((current) => ({ ...current, [id]: name }));
+    await save((current) =>
+      current.map((ruleSet) => (ruleSet.id === id ? { ...ruleSet, name } : ruleSet))
+    );
+    setSavingNames((current) => omit(current, id));
   }
 
   return {
     entries,
-    ruleSets,
     addRuleSet,
-    updateRules,
+    addRule,
+    saveNewRule,
+    updateRule,
+    removeRule,
+    cancelNewRule,
     removeRuleSet,
-    updateRuleSetTitle,
+    renameRuleSet,
   };
-}
-
-// A rule set added on this page whose first rule has not been saved yet
-function isUnsaved(entry: RuleSetEntry): boolean {
-  return entry.ruleSet.rules.every((rule) => rule.id === RULE_ID_EDITING);
-}
-
-// New rules whose save was rejected go back to being edited
-function reopenNewRules(entries: RuleSetEntry[]): RuleSetEntry[] {
-  return entries.map((entry) => {
-    const rules = entry.ruleSet.rules.map((rule) =>
-      rule.id === RULE_ID_UNSAVED ? { ...rule, id: RULE_ID_EDITING } : rule
-    );
-    return { ...entry, ruleSet: { ...entry.ruleSet, rules } };
-  });
-}
-
-function filterAvailableRuleSets(entries: RuleSetEntry[]): StoredRuleSets {
-  return entries
-    .map(({ ruleSet }) => {
-      const rules = ruleSet.rules.filter((rule) => rule.id !== RULE_ID_EDITING);
-      return { ...ruleSet, rules };
-    })
-    .filter((ruleSet) => ruleSet.rules.length > 0);
-}
-
-// Stored rule sets are matched by ID. Unsaved ones are not in storage; each
-// keeps its place after the stored rule set before it.
-function mergeEntries(
-  stored: StoredRuleSets,
-  entries: RuleSetEntry[]
-): RuleSetEntry[] {
-  const storedIds = new Set(stored.map((ruleSet) => ruleSet.id));
-  const previous = new Map(entries.map((entry) => [entry.ruleSet.id, entry]));
-  const pending: { entry: RuleSetEntry; after: string | null }[] = [];
-  let after: string | null = null;
-  entries.forEach((entry) => {
-    if (storedIds.has(entry.ruleSet.id)) {
-      after = entry.ruleSet.id;
-    } else if (isUnsaved(entry)) {
-      pending.push({ entry, after });
-    }
-  });
-  const followers = (id: string | null) =>
-    pending.filter((p) => p.after === id).map((p) => p.entry);
-
-  // Open the only rule set when the list is first filled
-  const openNew = entries.length === 0 && stored.length === 1;
-
-  const merged = stored.flatMap((original) => {
-    const ruleSet = cloneDeep(original);
-    const entry = previous.get(original.id);
-    // Keep the rules being added to this rule set
-    entry?.ruleSet.rules.forEach((rule, ruleIndex) => {
-      if (rule.id === RULE_ID_EDITING) {
-        ruleSet.rules.splice(ruleIndex, 0, rule);
-      }
-    });
-    return [
-      { ruleSet, open: entry?.open ?? openNew },
-      ...followers(original.id),
-    ];
-  });
-  return [...followers(null), ...merged];
 }

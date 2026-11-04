@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { RuleActionType } from "@/modules/core/rules";
 import { toRuleList, walkRules } from "./rulesets";
-import { RULE_ID_EDITING, RULE_ID_UNSAVED } from "./stored";
+import { RULE_ID_UNSAVED } from "./stored";
 import type { StoredRuleSets, StoredRule } from "./stored";
 
 describe("rulesets", () => {
@@ -92,27 +92,6 @@ describe("rulesets", () => {
       expect(result[1].id).toBe(2);
     });
 
-    it("excludes rules with RULE_ID_EDITING", () => {
-      const ruleSets: StoredRuleSets = [
-        {
-          id: "rs-6",
-          name: "Set 1",
-          rules: [
-            { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
-            {
-              id: RULE_ID_EDITING,
-              action: { type: RuleActionType.BLOCK },
-              condition: {},
-            },
-          ],
-        },
-      ];
-
-      const result = toRuleList(ruleSets);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe(1);
-    });
   });
 
   describe("walkRules", () => {
@@ -203,29 +182,6 @@ describe("rulesets", () => {
       expect(walker).toHaveBeenCalledTimes(2);
       const calledIds = walker.mock.calls.map((call) => call[0].id);
       expect(calledIds).toEqual([1, 2]);
-    });
-
-    it("skips rules with RULE_ID_EDITING", () => {
-      const walker = vi.fn();
-      const ruleSets: StoredRuleSets = [
-        {
-          id: "rs-11",
-          name: "Set 1",
-          rules: [
-            {
-              id: RULE_ID_EDITING,
-              action: { type: RuleActionType.BLOCK },
-              condition: {},
-            },
-            { id: 1, action: { type: RuleActionType.BLOCK }, condition: {} },
-          ],
-        },
-      ];
-
-      walkRules(ruleSets, walker);
-
-      expect(walker).toHaveBeenCalledTimes(1);
-      expect(walker.mock.calls[0][0].id).toBe(1);
     });
 
     it("walks rules from multiple ruleSets", () => {

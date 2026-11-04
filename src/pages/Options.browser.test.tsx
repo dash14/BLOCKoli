@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, onTestFinished, test, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
+import { RuleSetsChange } from "@/features/options/hooks/useRuleSetsEdit";
 import { EDITING_LOCK_NAME } from "@/hooks/useEditingTab";
 import { RuleActionType } from "@/modules/core/rules";
 import { StoredRuleSets } from "@/modules/rules/stored";
@@ -247,7 +248,7 @@ describe("Options page", () => {
   });
 
   test("closes the rule editor once the save succeeds", async () => {
-    const updateRuleSets = vi.fn().mockResolvedValue(undefined);
+    const updateRuleSets = vi.fn(async (change: RuleSetsChange) => change([]));
     mockUseRequestBlockClient.mockReturnValue(
       createMockReturnValue({ updateRuleSets })
     );

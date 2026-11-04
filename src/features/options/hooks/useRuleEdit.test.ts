@@ -406,7 +406,7 @@ describe("useRuleEdit", () => {
       act(() => result.current.enterEditMode());
       act(() => result.current.updateRequestDomains(["typed.com"]));
 
-      // The page goes back to the stored rule, a new object, before the save resolves
+      // The stored rule arrives again as a new object before the save resolves
       const onChange = vi.fn(async () => {
         rerender({ initialRule: structuredClone(validRule), onChange });
         return false;
@@ -464,12 +464,36 @@ describe("useRuleEdit", () => {
       expect(result.current.rule).toEqual(validRule);
     });
 
-    test("a later change of initialRule replaces what was typed", async () => {
+    test("keeps what was typed over a later change of initialRule", async () => {
       const { result, rerender } = await renderRejected();
 
       rerender({ initialRule: fullRule, onChange: vi.fn() });
 
-      await waitFor(() => expect(result.current.rule).toEqual(fullRule));
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      expect(result.current.rule.condition.requestDomains).toEqual([
+        "typed.com",
+      ]);
+    });
+  });
+
+  describe("successful save", () => {
+    test("drops what was typed and shows the given rule", async () => {
+      const { result, rerender } = renderHook(
+        ({ initialRule }) =>
+          useRuleEdit(initialRule, async () => true, vi.fn(), vi.fn()),
+        { initialProps: { initialRule: validRule } }
+      );
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains(["typed.com"]));
+
+      await act(async () => {
+        await result.current.save();
+      });
+      expect(result.current.isEditing).toBe(false);
+
+      rerender({ initialRule: fullRule });
+      expect(result.current.rule).toBe(fullRule);
     });
   });
 
