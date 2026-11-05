@@ -25,7 +25,10 @@ import {
   ImportSucceededDialogHandle,
 } from "@/features/options/components/ruleset/ImportSucceededDialog";
 import { RuleSetsEdit } from "@/features/options/components/ruleset/RuleSetsEdit";
-import { RuleSetsChange } from "@/features/options/hooks/useRuleSetsEdit";
+import {
+  RuleSetsChange,
+  RuleSetsSaved,
+} from "@/features/options/hooks/useRuleSetsEdit";
 import { useEditingTab } from "@/hooks/useEditingTab";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
 import { useTitleFontAdjuster } from "@/hooks/useTitleFontAdjuster";
@@ -60,10 +63,11 @@ const Options: React.FC = () => {
   const saveFailedDialog = useRef<FailedDialogHandle>(null);
 
   async function saveRuleSets(
-    change: RuleSetsChange
+    change: RuleSetsChange,
+    onSaved?: RuleSetsSaved
   ): Promise<StoredRuleSets | false> {
     try {
-      return await updateRuleSets(change);
+      return await updateRuleSets(change, onSaved);
     } catch (e) {
       await saveFailedDialog.current?.open([
         { message: e instanceof Error ? e.message : String(e) },

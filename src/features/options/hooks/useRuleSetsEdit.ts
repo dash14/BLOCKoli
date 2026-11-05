@@ -10,9 +10,13 @@ import { newRuleSetName, newRuleTemplate } from "@/modules/rules/template";
 
 export type RuleSetsChange = (stored: StoredRuleSets) => StoredRuleSets;
 
+// Called with the stored rule sets just before they are shown
+export type RuleSetsSaved = (saved: StoredRuleSets) => void;
+
 // Resolves to the stored rule sets, or to false when the save was rejected
 export type SaveRuleSets = (
-  change: RuleSetsChange
+  change: RuleSetsChange,
+  onSaved?: RuleSetsSaved
 ) => Promise<StoredRuleSets | false>;
 
 export type RuleEntry = {
@@ -112,22 +116,25 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
     const newRule = { ...rule, id: RULE_ID_UNSAVED };
     const { name } = entries.find((entry) => entry.id === ruleSetId)!;
     // A rule set that is new, or was removed meanwhile, is stored with this rule
-    const saved = await save((current) =>
-      current.some((ruleSet) => ruleSet.id === ruleSetId)
-        ? current.map((ruleSet) =>
-            ruleSet.id === ruleSetId
-              ? { ...ruleSet, rules: [...ruleSet.rules, newRule] }
-              : ruleSet
-          )
-        : [...current, { id: ruleSetId, name, rules: [newRule] }]
+    const saved = await save(
+      (current) =>
+        current.some((ruleSet) => ruleSet.id === ruleSetId)
+          ? current.map((ruleSet) =>
+              ruleSet.id === ruleSetId
+                ? { ...ruleSet, rules: [...ruleSet.rules, newRule] }
+                : ruleSet
+            )
+          : [...current, { id: ruleSetId, name, rules: [newRule] }],
+      // In the same render as the saved rule, so its editor keeps the key
+      (saved) => {
+        // The service keeps the order, so the rule added is the last one
+        const { rules } = saved.find((ruleSet) => ruleSet.id === ruleSetId)!;
+        savedKeys.current.set(rules[rules.length - 1].id, key);
+        dropNewRule(key);
+        setNewRuleSets((current) => current.filter(({ id }) => id !== ruleSetId));
+      }
     );
-    if (saved === false) return false;
-    // The service keeps the order, so the rule added is the last one
-    const { rules } = saved.find((ruleSet) => ruleSet.id === ruleSetId)!;
-    savedKeys.current.set(rules[rules.length - 1].id, key);
-    dropNewRule(key);
-    setNewRuleSets((current) => current.filter(({ id }) => id !== ruleSetId));
-    return true;
+    return saved !== false;
   }
 
   function updateRule(ruleSetId: string, ruleId: number, rule: Rule) {

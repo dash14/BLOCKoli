@@ -7,7 +7,12 @@ import {
   StoredRuleSets,
 } from "@/modules/rules/stored";
 import { newRuleTemplate } from "@/modules/rules/template";
-import { RuleSetsChange, useRuleSetsEdit } from "./useRuleSetsEdit";
+import {
+  RuleSetEntry,
+  RuleSetsChange,
+  RuleSetsSaved,
+  useRuleSetsEdit,
+} from "./useRuleSetsEdit";
 
 const savedRule: StoredRule = {
   id: 1,
@@ -29,20 +34,32 @@ const sampleRuleSets: StoredRuleSets = [
 function setup(initial: StoredRuleSets) {
   let stored = initial;
   let nextId = 100;
-  const save = vi.fn(async (change: RuleSetsChange): Promise<StoredRuleSets | false> => {
-    stored = change(stored).map((ruleSet) => ({
-      ...ruleSet,
-      rules: ruleSet.rules.map((rule) =>
-        rule.id === RULE_ID_UNSAVED ? { ...rule, id: nextId++ } : rule
-      ),
-    }));
-    hook.rerender({ ruleSets: stored });
-    return stored;
-  });
+  const save = vi.fn(
+    async (change: RuleSetsChange, onSaved?: RuleSetsSaved): Promise<StoredRuleSets | false> => {
+      stored = change(stored).map((ruleSet) => ({
+        ...ruleSet,
+        rules: ruleSet.rules.map((rule) =>
+          rule.id === RULE_ID_UNSAVED ? { ...rule, id: nextId++ } : rule
+        ),
+      }));
+      // Shows the stored rule sets in the same render as onSaved's updates
+      act(() => {
+        onSaved?.(stored);
+        hook.rerender({ ruleSets: stored });
+      });
+      return stored;
+    }
+  );
   // Rejects the next save, leaving the stored rule sets as they are
   const rejectNext = () => save.mockImplementationOnce(async () => false);
+  // The entries of every render
+  const renders: RuleSetEntry[][] = [];
   const hook = renderHook(
-    ({ ruleSets }) => useRuleSetsEdit(ruleSets, save),
+    ({ ruleSets }) => {
+      const edit = useRuleSetsEdit(ruleSets, save);
+      renders.push(edit.entries);
+      return edit;
+    },
     { initialProps: { ruleSets: stored } }
   );
   return {
@@ -55,6 +72,7 @@ function setup(initial: StoredRuleSets) {
       hook.rerender({ ruleSets });
     },
     stored: () => stored,
+    renders,
   };
 }
 
@@ -194,6 +212,20 @@ describe("useRuleSetsEdit", () => {
         { key: "rule-1", rule: savedRule, id: 1 },
         { key, rule: { ...typedRule, id: 100 }, id: 100 },
       ]);
+    });
+
+    test("never shows the saved rule beside its new entry, or under another key", async () => {
+      const { result, renders } = setup(sampleRuleSets);
+      act(() => result.current.addRule("rs-1"));
+      const { key } = result.current.entries[0].rules[1];
+      const start = renders.length;
+
+      // Not in act, so the stored rule sets render as soon as the save answers
+      await result.current.saveNewRule("rs-1", key, typedRule);
+
+      for (const entries of renders.slice(start)) {
+        expect(entries[0].rules.map((rule) => rule.key)).toEqual(["rule-1", key]);
+      }
     });
 
     test("stores a new rule set with its first rule", async () => {
