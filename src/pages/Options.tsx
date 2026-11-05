@@ -25,14 +25,10 @@ import {
   ImportSucceededDialogHandle,
 } from "@/features/options/components/ruleset/ImportSucceededDialog";
 import { RuleSetsEdit } from "@/features/options/components/ruleset/RuleSetsEdit";
-import {
-  RuleSetsChange,
-  RuleSetsSaved,
-} from "@/features/options/hooks/useRuleSetsEdit";
+import { SaveRuleSets } from "@/features/options/hooks/useRuleSetsEdit";
 import { useEditingTab } from "@/hooks/useEditingTab";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
 import { useTitleFontAdjuster } from "@/hooks/useTitleFontAdjuster";
-import { StoredRuleSets } from "@/modules/rules/stored";
 import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
 import { download } from "@/modules/utils/download";
 import { useI18n } from "../hooks/useI18n";
@@ -62,10 +58,7 @@ const Options: React.FC = () => {
   const importFailedDialog = useRef<FailedDialogHandle>(null);
   const saveFailedDialog = useRef<FailedDialogHandle>(null);
 
-  async function saveRuleSets(
-    change: RuleSetsChange,
-    onSaved?: RuleSetsSaved
-  ): Promise<StoredRuleSets | false> {
+  const saveRuleSets: SaveRuleSets = async (change, onSaved) => {
     try {
       return await updateRuleSets(change, onSaved);
     } catch (e) {
@@ -74,7 +67,7 @@ const Options: React.FC = () => {
       ]);
       return false;
     }
-  }
+  };
 
   async function onExport() {
     const exported = await performExport();

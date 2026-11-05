@@ -10,7 +10,7 @@ import { newRuleSetName, newRuleTemplate } from "@/modules/rules/template";
 
 export type RuleSetsChange = (stored: StoredRuleSets) => StoredRuleSets;
 
-// Called with the stored rule sets just before they are shown
+// Called with the stored rule sets in the same step that shows them
 export type RuleSetsSaved = (saved: StoredRuleSets) => void;
 
 // Resolves to the stored rule sets, or to false when the save was rejected

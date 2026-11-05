@@ -372,7 +372,7 @@ describe("useRequestBlockClient", () => {
       expect(result.current.ruleSets).toStrictEqual(named("second"));
     });
 
-    it("hands the stored rule sets to onSaved before showing them", async () => {
+    it("hands the stored rule sets to onSaved before they render", async () => {
       const { result } = await render();
       const saves = holdSaves();
 
@@ -390,6 +390,17 @@ describe("useRequestBlockClient", () => {
       expect(onSaved).toHaveBeenCalledWith(named("mine"));
       expect(shownWhenSaved).toStrictEqual([[]]);
       expect(result.current.ruleSets).toStrictEqual(named("mine"));
+    });
+
+    it("hands the stored rule sets to onSaved when the change leaves them as they are", async () => {
+      const { result } = await render();
+
+      const onSaved = vi.fn();
+      await act(async () => {
+        await result.current.updateRuleSets((stored) => stored, onSaved);
+      });
+
+      expect(onSaved).toHaveBeenCalledWith([]);
     });
 
     it("holds broadcasts during a save, then applies the newest after its response", async () => {

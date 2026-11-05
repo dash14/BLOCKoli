@@ -107,7 +107,7 @@ export function useRequestBlockClient() {
 
 
   // Resolves to the rule sets stored after the change, with the IDs the service gave new rules.
-  // onSaved runs before they are shown, so its state updates render with them.
+  // onSaved runs in the same step that shows them, so its state updates render with them.
   const updateRuleSets = (
     change: (stored: StoredRuleSets) => StoredRuleSets,
     onSaved?: (saved: StoredRuleSets) => void
@@ -115,12 +115,15 @@ export function useRequestBlockClient() {
     const run = queue.current.then(async () => {
       const current = latestRuleSets.current;
       const updated = change(current);
-      if (isEqual(updated, current)) return current;
+      if (isEqual(updated, current)) {
+        onSaved?.(current);
+        return current;
+      }
       saving.current = true;
       try {
         const saved = await service.updateRuleSets(updated);
-        onSaved?.(saved.ruleSets);
         receiveRuleSets(saved);
+        onSaved?.(saved.ruleSets);
         return saved.ruleSets;
       } finally {
         saving.current = false;
