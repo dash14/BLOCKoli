@@ -138,10 +138,12 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
     );
   }
 
-  function removeRule(ruleSetId: string, ruleId: number) {
-    return saveRules(ruleSetId, (rules) =>
+  async function removeRule(ruleSetId: string, ruleId: number) {
+    const saved = await saveRules(ruleSetId, (rules) =>
       rules.filter((stored) => stored.id !== ruleId)
     );
+    if (saved) savedKeys.current.delete(ruleId);
+    return saved;
   }
 
   async function saveRules(
@@ -155,8 +157,8 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
             ? { ...ruleSet, rules: change(ruleSet.rules) }
             : ruleSet
         )
-        // A rule set goes with its last rule
-        .filter((ruleSet) => ruleSet.rules.length > 0)
+        // The rule set goes with its last rule
+        .filter((ruleSet) => ruleSet.id !== ruleSetId || ruleSet.rules.length > 0)
     );
     return saved !== false;
   }
@@ -175,10 +177,13 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
       dropNewRuleSet(id);
       return;
     }
+    const { rules } = stored.find((ruleSet) => ruleSet.id === id)!;
     const saved = await save((current) =>
       current.filter((ruleSet) => ruleSet.id !== id)
     );
-    if (saved !== false) dropNewRuleSet(id);
+    if (saved === false) return;
+    dropNewRuleSet(id);
+    rules.forEach((rule) => savedKeys.current.delete(rule.id));
   }
 
   async function renameRuleSet(id: string, name: string) {

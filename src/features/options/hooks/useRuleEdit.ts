@@ -177,6 +177,8 @@ export function useRuleEdit(
   }
 
   useEffect(() => {
+    // A draft is what is shown, and its own check stands
+    if (draft) return;
     // For incomplete data, enter edit mode.
     validate(initialRule).then((valid) => {
       if (valid === false) {

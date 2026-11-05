@@ -498,6 +498,24 @@ describe("useRuleEdit", () => {
       expect(result.current.isValid).toBe(false);
       expect(result.current.isEditing).toBe(true);
     });
+    test("keeps the draft's errors when the stored rule changes", async () => {
+      const { result, rerender } = renderHook(
+        ({ initialRule }) => useRuleEdit(initialRule, vi.fn(), vi.fn(), vi.fn()),
+        { initialProps: { initialRule: validRule } }
+      );
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains([]));
+      await waitFor(() => expect(result.current.isValid).toBe(false));
+
+      const validate = vi.spyOn(RuleValidator.prototype, "validate");
+      onTestFinished(() => validate.mockRestore());
+      rerender({ initialRule: fullRule });
+
+      expect(validate).not.toHaveBeenCalled();
+      expect(result.current.isValid).toBe(false);
+      expect(result.current.rule.condition.requestDomains).toEqual([]);
+    });
   });
 
   describe("successful save", () => {

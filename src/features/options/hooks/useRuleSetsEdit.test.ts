@@ -269,6 +269,17 @@ describe("useRuleSetsEdit", () => {
       expect(stored()[0].rules).toStrictEqual([{ ...typedRule, id: 1 }, others]);
     });
 
+    test("leaves a rule set without rules elsewhere as it is", async () => {
+      const empty = { id: "rs-0", name: "Empty", rules: [] };
+      const { result, stored } = setup([empty, ...sampleRuleSets]);
+
+      await act(async () => {
+        await result.current.updateRule("rs-2", 2, typedRule);
+      });
+
+      expect(stored()[0]).toStrictEqual(empty);
+    });
+
     test("resolves to false when the save is rejected", async () => {
       const { result, rejectNext, stored } = setup(sampleRuleSets);
 
@@ -307,6 +318,35 @@ describe("useRuleSetsEdit", () => {
       });
 
       expect(stored()).toStrictEqual([sampleRuleSets[1]]);
+    });
+    test("keeps the rule when the save is rejected", async () => {
+      const { result, rejectNext, stored } = setup(sampleRuleSets);
+
+      rejectNext();
+      let saved: boolean | undefined;
+      await act(async () => {
+        saved = await result.current.removeRule("rs-1", 1);
+      });
+
+      expect(saved).toBe(false);
+      expect(stored()).toBe(sampleRuleSets);
+    });
+
+    test("forgets the key of a rule added on this page", async () => {
+      const { result, stored, storeElsewhere } = setup(sampleRuleSets);
+      act(() => result.current.addRule("rs-1"));
+      const { key } = result.current.entries[0].rules[1];
+      await act(async () => {
+        await result.current.saveNewRule("rs-1", key, typedRule);
+      });
+      const before = stored();
+
+      await act(async () => {
+        await result.current.removeRule("rs-1", 100);
+      });
+      act(() => storeElsewhere(before));
+
+      expect(result.current.entries[0].rules[1].key).toBe("rule-100");
     });
   });
 
@@ -360,6 +400,23 @@ describe("useRuleSetsEdit", () => {
       // The new rule does not come back with a rule set of the same ID
       act(() => storeElsewhere(sampleRuleSets));
       expect(result.current.entries[0].rules).toHaveLength(1);
+    });
+
+    test("forgets the keys of the rules added on this page", async () => {
+      const { result, stored, storeElsewhere } = setup(sampleRuleSets);
+      act(() => result.current.addRule("rs-1"));
+      const { key } = result.current.entries[0].rules[1];
+      await act(async () => {
+        await result.current.saveNewRule("rs-1", key, typedRule);
+      });
+      const before = stored();
+
+      await act(async () => {
+        await result.current.removeRuleSet("rs-1");
+      });
+      act(() => storeElsewhere(before));
+
+      expect(result.current.entries[0].rules[1].key).toBe("rule-100");
     });
 
     test("keeps showing a rule set whose removal is rejected", async () => {
