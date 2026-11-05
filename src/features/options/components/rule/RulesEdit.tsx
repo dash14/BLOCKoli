@@ -4,24 +4,37 @@ import { css } from "@emotion/react";
 import { LuPlus } from "react-icons/lu";
 import { CSSTransition } from "react-transition-group";
 import { SlideTransitionGroup } from "@/components/transition/SlideTransitionGroup";
-import { useRulesEdit } from "@/features/options/hooks/useRulesEdit";
+import { RuleEntry } from "@/features/options/hooks/useRuleSetsEdit";
 import { useI18n } from "@/hooks/useI18n";
-import { RULE_ID_EDITING, StoredRule } from "@/modules/rules/stored";
+import { Rule } from "@/modules/core/rules";
 import { RuleContainer } from "./RuleContainer";
 import { RuleEdit } from "./RuleEdit";
 import { RuleLimitReached } from "./RuleLimitReached";
 
 type Props = {
-  rules: StoredRule[];
+  rules: RuleEntry[];
   isAddAllowed: boolean;
-  onChange: (rules: StoredRule[]) => void | Promise<boolean>;
+  onAdd: () => void;
+  // Resolves to false when the save was rejected
+  onSaveNew: (key: string, rule: Rule) => Promise<boolean>;
+  onUpdate: (id: number, rule: Rule) => Promise<boolean>;
+  onCancelNew: (key: string) => void;
+  onRemove: (id: number) => void;
 };
 
-export const RulesEdit: React.FC<Props> = ({ rules, isAddAllowed, onChange }) => {
+export const RulesEdit: React.FC<Props> = ({
+  rules,
+  isAddAllowed,
+  onAdd,
+  onSaveNew,
+  onUpdate,
+  onCancelNew,
+  onRemove,
+}) => {
   const i18n = useI18n();
-  const { isAllowAdd, addRule, updateRule, removeRule, cancelEdit } =
-    useRulesEdit(rules, onChange);
-  const savedCount = rules.filter((r) => r.id !== RULE_ID_EDITING).length;
+  const savedCount = rules.filter(({ id }) => id !== undefined).length;
+  // One rule is added at a time
+  const isAdding = savedCount < rules.length;
 
   const boxRef = createRef<HTMLDivElement>();
 
@@ -53,11 +66,11 @@ export const RulesEdit: React.FC<Props> = ({ rules, isAddAllowed, onChange }) =>
   return (
     <>
       <SlideTransitionGroup style={listTransitionCss}>
-        {rules.map((rule, ruleIndex) => {
+        {rules.map(({ key, rule, id }) => {
           const nodeRef = createRef<HTMLDivElement>();
           return (
             <CSSTransition
-              key={ruleIndex}
+              key={key}
               timeout={250}
               classNames="slide"
               nodeRef={nodeRef}
@@ -65,12 +78,15 @@ export const RulesEdit: React.FC<Props> = ({ rules, isAddAllowed, onChange }) =>
               <div ref={nodeRef}>
                 <RuleEdit
                   rule={rule}
-                  isRemoveEnabled={
-                    rule.id !== RULE_ID_EDITING && savedCount > 1
+                  isRemoveEnabled={id !== undefined && savedCount > 1}
+                  onChange={(rule) =>
+                    id === undefined ? onSaveNew(key, rule) : onUpdate(id, rule)
                   }
-                  onChange={(rule) => updateRule(rule, ruleIndex)}
-                  onCancel={() => cancelEdit(ruleIndex)}
-                  onRemove={() => removeRule(ruleIndex)}
+                  onCancel={() => {
+                    if (id === undefined) onCancelNew(key);
+                  }}
+                  // Offered only for saved rules
+                  onRemove={() => onRemove(id!)}
                 />
               </div>
             </CSSTransition>
@@ -78,7 +94,7 @@ export const RulesEdit: React.FC<Props> = ({ rules, isAddAllowed, onChange }) =>
         })}
       </SlideTransitionGroup>
       <CSSTransition
-        in={isAllowAdd}
+        in={!isAdding}
         timeout={250}
         classNames="fade"
         unmountOnExit
@@ -92,7 +108,7 @@ export const RulesEdit: React.FC<Props> = ({ rules, isAddAllowed, onChange }) =>
                 variant="outline"
                 size="sm"
                 disabled={!isAddAllowed}
-                onClick={addRule}
+                onClick={onAdd}
               >
                 <Icon as={LuPlus} />
                 {i18n["AddARule"]}

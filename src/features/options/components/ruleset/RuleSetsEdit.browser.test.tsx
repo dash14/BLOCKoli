@@ -1,13 +1,39 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
+import {
+  RuleSetsChange,
+  SaveRuleSets,
+} from "@/features/options/hooks/useRuleSetsEdit";
 import { RuleActionType } from "@/modules/core/rules";
 import { MAX_RULES } from "@/modules/rules/limits";
-import { StoredRuleSets } from "@/modules/rules/stored";
+import { RULE_ID_UNSAVED, StoredRuleSets } from "@/modules/rules/stored";
 import { renderWithChakra } from "@/test/utils/render";
 import { RuleSetsEdit } from "./RuleSetsEdit";
 
-// Wrapper component for controlled component testing
+// Stores rule sets as the service does, giving new rules IDs
+function useStoredRuleSets(initial: StoredRuleSets) {
+  const [ruleSets, setRuleSets] = useState(initial);
+  const latest = useRef(initial);
+  const nextId = useRef(100);
+  const store = (stored: StoredRuleSets) => {
+    latest.current = stored;
+    setRuleSets(stored);
+  };
+  const save = async (change: RuleSetsChange) => {
+    store(
+      change(latest.current).map((ruleSet) => ({
+        ...ruleSet,
+        rules: ruleSet.rules.map((rule) =>
+          rule.id === RULE_ID_UNSAVED ? { ...rule, id: nextId.current++ } : rule
+        ),
+      }))
+    );
+    return latest.current;
+  };
+  return { ruleSets, store, save };
+}
+
 function StatefulRuleSetsEdit({
   initialRuleSets,
   titleFontAdjuster = 0,
@@ -19,21 +45,23 @@ function StatefulRuleSetsEdit({
   onChangeCapture?: (ruleSets: StoredRuleSets) => void;
   testId?: string;
 }) {
-  const [ruleSets, setRuleSets] = useState(initialRuleSets);
-  const handleChange = (newRuleSets: StoredRuleSets) => {
-    setRuleSets(newRuleSets);
-    onChangeCapture?.(newRuleSets);
-  };
+  const { ruleSets, save } = useStoredRuleSets(initialRuleSets);
   return (
     <div data-testid={testId}>
       <RuleSetsEdit
         ruleSets={ruleSets}
         titleFontAdjuster={titleFontAdjuster}
-        onChange={handleChange}
+        save={async (change) => {
+          const saved = await save(change);
+          onChangeCapture?.(saved);
+          return saved;
+        }}
       />
     </div>
   );
 }
+
+const noSave: SaveRuleSets = async () => false;
 
 // Test data: two rule sets
 const twoRuleSets: StoredRuleSets = [
@@ -91,7 +119,7 @@ describe("RuleSetsEdit component", () => {
           <RuleSetsEdit
             ruleSets={twoRuleSets}
             titleFontAdjuster={0}
-            onChange={() => {}}
+            save={noSave}
           />
         </div>
       );
@@ -121,7 +149,7 @@ describe("RuleSetsEdit component", () => {
           <RuleSetsEdit
             ruleSets={emptyRuleSets}
             titleFontAdjuster={0}
-            onChange={() => {}}
+            save={noSave}
           />
         </div>
       );
@@ -149,7 +177,7 @@ describe("RuleSetsEdit component", () => {
           <RuleSetsEdit
             ruleSets={singleRuleSet}
             titleFontAdjuster={0}
-            onChange={() => {}}
+            save={noSave}
           />
         </div>
       );
@@ -246,16 +274,16 @@ describe("RuleSetsEdit component", () => {
 
     // Saves rule sets from outside, as an import or another window does
     function WithExternalSave() {
-      const [ruleSets, setRuleSets] = useState(singleRuleSet);
+      const { ruleSets, store, save } = useStoredRuleSets(singleRuleSet);
       return (
         <>
-          <button onClick={() => setRuleSets([...ruleSets, importedRuleSet])}>
+          <button onClick={() => store([...ruleSets, importedRuleSet])}>
             external save
           </button>
           <RuleSetsEdit
             ruleSets={ruleSets}
             titleFontAdjuster={0}
-            onChange={setRuleSets}
+            save={save}
           />
         </>
       );
@@ -284,18 +312,16 @@ describe("RuleSetsEdit component", () => {
 
   describe("Rule set renamed elsewhere", () => {
     function WithExternalRename() {
-      const [ruleSets, setRuleSets] = useState(singleRuleSet);
+      const { ruleSets, store, save } = useStoredRuleSets(singleRuleSet);
       return (
         <>
-          <button
-            onClick={() => setRuleSets([{ ...ruleSets[0], name: "Renamed" }])}
-          >
+          <button onClick={() => store([{ ...ruleSets[0], name: "Renamed" }])}>
             external rename
           </button>
           <RuleSetsEdit
             ruleSets={ruleSets}
             titleFontAdjuster={0}
-            onChange={setRuleSets}
+            save={save}
           />
         </>
       );
@@ -338,8 +364,8 @@ describe("RuleSetsEdit component", () => {
         .getByRole("button", { name: /remove/i });
       await dialogRemoveButton.click();
 
-      // onChange is called with remaining rule sets
-      expect(onChangeCapture).toHaveBeenCalled();
+      // The rule set is stored without the removed one
+      await expect.poll(() => onChangeCapture.mock.calls.length).toBe(1);
       const lastCall =
         onChangeCapture.mock.calls[onChangeCapture.mock.calls.length - 1];
       const remainingRuleSets = lastCall?.[0] as StoredRuleSets;
@@ -350,12 +376,11 @@ describe("RuleSetsEdit component", () => {
 
   describe("Editing rule set title", () => {
     test("edits title via Edit button", async () => {
-      const onChange = vi.fn();
+      const onChangeCapture = vi.fn();
       await renderWithChakra(
-        <RuleSetsEdit
-          ruleSets={singleRuleSet}
-          titleFontAdjuster={0}
-          onChange={onChange}
+        <StatefulRuleSetsEdit
+          initialRuleSets={singleRuleSet}
+          onChangeCapture={onChangeCapture}
         />
       );
 
@@ -375,11 +400,11 @@ describe("RuleSetsEdit component", () => {
       // Click Apply button to confirm
       await page.getByRole("button", { name: "Apply" }).click();
 
-      // onChange is called with updated title
-      expect(onChange).toHaveBeenCalled();
-      const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1];
-      const updatedRuleSets = lastCall?.[0] as StoredRuleSets;
+      // The rule set is stored with the new title
+      await expect.poll(() => onChangeCapture.mock.calls.length).toBe(1);
+      const updatedRuleSets = onChangeCapture.mock.calls[0][0] as StoredRuleSets;
       expect(updatedRuleSets[0].name).toBe("Updated Title");
+      await expect.element(page.getByText("Updated Title")).toBeInTheDocument();
     });
   });
 
@@ -475,7 +500,7 @@ describe("RuleSetsEdit component", () => {
   });
 
   describe("Rule operations within rule set", () => {
-    test("calls onChange when rules are updated within a rule set", async () => {
+    test("stores a rule added to a rule set and shows it saved", async () => {
       const onChangeCapture = vi.fn();
       await renderWithChakra(
         <StatefulRuleSetsEdit
@@ -484,16 +509,95 @@ describe("RuleSetsEdit component", () => {
         />
       );
 
-      // Single rule set accordion opens by default
-      // Click "Add a Rule" button within the rule set to trigger updateRules (line 139)
+      await page.getByRole("button", { name: "Add a Rule", exact: true }).click();
+      await page.getByRole("textbox").first().fill("added.example.com");
+      await page.getByRole("button", { name: "Save" }).click();
+
+      await expect.poll(() => onChangeCapture.mock.calls.length).toBe(1);
+      const [stored] = onChangeCapture.mock.calls[0][0] as StoredRuleSets;
+      expect(stored.rules.map((rule) => rule.id)).toEqual([1, 100]);
+      expect(stored.rules[1].condition.requestDomains).toEqual(["added.example.com"]);
+      await expect.element(page.getByText("added.example.com")).toBeInTheDocument();
+      await expect.element(page.getByText("Editing")).not.toBeInTheDocument();
+    });
+
+    test("stores an edited rule", async () => {
+      const onChangeCapture = vi.fn();
+      await renderWithChakra(
+        <StatefulRuleSetsEdit
+          initialRuleSets={singleRuleSet}
+          onChangeCapture={onChangeCapture}
+        />
+      );
+
+      await page.getByRole("button", { name: "Edit", exact: true }).last().click();
+      const requestDomains = page.getByRole("textbox").first();
+      await requestDomains.clear();
+      await requestDomains.fill("edited.example.com");
+      await page.getByRole("button", { name: "Save" }).click();
+
+      await expect.poll(() => onChangeCapture.mock.calls.length).toBe(1);
+      const [stored] = onChangeCapture.mock.calls[0][0] as StoredRuleSets;
+      expect(stored.rules).toHaveLength(1);
+      expect(stored.rules[0].id).toBe(1);
+      expect(stored.rules[0].condition.requestDomains).toEqual(["edited.example.com"]);
+      await expect.element(page.getByText("edited.example.com")).toBeInTheDocument();
+    });
+
+    test("stores a rule set without a removed rule", async () => {
+      const onChangeCapture = vi.fn();
+      await renderWithChakra(
+        <StatefulRuleSetsEdit
+          initialRuleSets={[
+            {
+              ...singleRuleSet[0],
+              rules: [
+                ...singleRuleSet[0].rules,
+                {
+                  id: 2,
+                  action: { type: RuleActionType.ALLOW },
+                  condition: { requestDomains: ["kept.example.com"] },
+                },
+              ],
+            },
+          ]}
+          onChangeCapture={onChangeCapture}
+        />
+      );
+
+      await page.getByRole("button", { name: "more" }).nth(1).click();
+      await page.getByRole("menuitem", { name: /remove/i }).click();
       await page
-        .getByRole("button", { name: "Add a Rule", exact: true })
+        .getByRole("alertdialog")
+        .getByRole("button", { name: /remove/i })
         .click();
 
-      // Verify onChange was called (updateRules callback on line 139)
-      // Note: filterAvailableRuleSets filters out RULE_ID_EDITING rules,
-      // so we just verify the callback was triggered
-      expect(onChangeCapture).toHaveBeenCalled();
+      await expect.poll(() => onChangeCapture.mock.calls.length).toBe(1);
+      const [stored] = onChangeCapture.mock.calls[0][0] as StoredRuleSets;
+      expect(stored.rules.map((rule) => rule.id)).toEqual([2]);
+      await expect
+        .element(page.getByText("example.com", { exact: true }))
+        .not.toBeInTheDocument();
+    });
+
+    test("stores a new rule set with its first rule", async () => {
+      const onChangeCapture = vi.fn();
+      await renderWithChakra(
+        <StatefulRuleSetsEdit
+          initialRuleSets={singleRuleSet}
+          onChangeCapture={onChangeCapture}
+        />
+      );
+
+      await page.getByRole("button", { name: /add a rule set/i }).click();
+      await page.getByRole("textbox").first().fill("first.example.com");
+      await page.getByRole("button", { name: "Save" }).click();
+
+      await expect.poll(() => onChangeCapture.mock.calls.length).toBe(1);
+      const stored = onChangeCapture.mock.calls[0][0] as StoredRuleSets;
+      expect(stored.map(({ name }) => name)).toEqual(["My Rules", "My Rule Set 1"]);
+      expect(stored[1].rules[0].condition.requestDomains).toEqual(["first.example.com"]);
+      await expect.element(page.getByText("first.example.com")).toBeInTheDocument();
     });
   });
 });

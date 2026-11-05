@@ -1,689 +1,523 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
-import { RuleActionType } from "@/modules/core/rules";
+import { Rule, RuleActionType } from "@/modules/core/rules";
 import {
-  RULE_ID_EDITING,
   RULE_ID_UNSAVED,
   StoredRule,
   StoredRuleSets,
 } from "@/modules/rules/stored";
-import { useRuleSetsEdit } from "./useRuleSetsEdit";
+import { newRuleTemplate } from "@/modules/rules/template";
+import { RuleSetsChange, useRuleSetsEdit } from "./useRuleSetsEdit";
 
-// Test data: valid saved rule
 const savedRule: StoredRule = {
   id: 1,
   action: { type: RuleActionType.BLOCK },
   condition: { requestDomains: ["example.com"] },
 };
 
-// Test data: rule being edited
-const editingRule: StoredRule = {
-  id: RULE_ID_EDITING,
-  action: { type: RuleActionType.BLOCK },
-  condition: {},
+const typedRule: Rule = {
+  action: { type: RuleActionType.ALLOW },
+  condition: { requestDomains: ["typed.com"] },
 };
 
-// Test data: sample rule sets
 const sampleRuleSets: StoredRuleSets = [
-  {
-    id: "rs-1",
-    name: "Block Ads",
-    rules: [savedRule],
-  },
-  {
-    id: "rs-2",
-    name: "Allow Trusted",
-    rules: [{ ...savedRule, id: 2 }],
-  },
+  { id: "rs-1", name: "Block Ads", rules: [savedRule] },
+  { id: "rs-2", name: "Allow Trusted", rules: [{ ...savedRule, id: 2 }] },
 ];
 
-describe("useRuleSetsEdit", () => {
-  describe("initial state", () => {
-    test("returns originalRuleSets", () => {
-      const onChange = vi.fn();
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange)
-      );
+// Saves like the service does: new rules get IDs, and the page gets the stored rule sets back
+function setup(initial: StoredRuleSets) {
+  let stored = initial;
+  let nextId = 100;
+  const save = vi.fn(async (change: RuleSetsChange): Promise<StoredRuleSets | false> => {
+    stored = change(stored).map((ruleSet) => ({
+      ...ruleSet,
+      rules: ruleSet.rules.map((rule) =>
+        rule.id === RULE_ID_UNSAVED ? { ...rule, id: nextId++ } : rule
+      ),
+    }));
+    hook.rerender({ ruleSets: stored });
+    return stored;
+  });
+  // Rejects the next save, leaving the stored rule sets as they are
+  const rejectNext = () => save.mockImplementationOnce(async () => false);
+  const hook = renderHook(
+    ({ ruleSets }) => useRuleSetsEdit(ruleSets, save),
+    { initialProps: { ruleSets: stored } }
+  );
+  return {
+    result: hook.result,
+    save,
+    rejectNext,
+    // Rule sets stored by something other than this page, such as an import
+    storeElsewhere: (ruleSets: StoredRuleSets) => {
+      stored = ruleSets;
+      hook.rerender({ ruleSets });
+    },
+    stored: () => stored,
+  };
+}
 
-      expect(result.current.ruleSets).toEqual(sampleRuleSets);
+const names = (entries: { name: string }[]) => entries.map(({ name }) => name);
+
+describe("useRuleSetsEdit", () => {
+  describe("entries", () => {
+    test("shows the stored rule sets, each rule keyed by its ID", () => {
+      const { result } = setup(sampleRuleSets);
+
+      expect(result.current.entries).toStrictEqual([
+        {
+          id: "rs-1",
+          name: "Block Ads",
+          rules: [{ key: "rule-1", rule: savedRule, id: 1 }],
+          open: false,
+        },
+        {
+          id: "rs-2",
+          name: "Allow Trusted",
+          rules: [{ key: "rule-2", rule: { ...savedRule, id: 2 }, id: 2 }],
+          open: false,
+        },
+      ]);
     });
 
-    test("returns empty array when originalRuleSets is empty", () => {
-      const onChange = vi.fn();
-      const { result } = renderHook(() =>
-        useRuleSetsEdit([], onChange)
-      );
+    test("is empty when nothing is stored", () => {
+      const { result } = setup([]);
+      expect(result.current.entries).toStrictEqual([]);
+    });
 
-      expect(result.current.ruleSets).toEqual([]);
+    test("opens a rule set when it is the only one", () => {
+      const { result } = setup([sampleRuleSets[0]]);
+      expect(result.current.entries.map(({ open }) => open)).toEqual([true]);
     });
   });
 
   describe("addRuleSet", () => {
-    test("adds new rule set with sequential name", () => {
-      const onChange = vi.fn();
-      const { result } = renderHook(() =>
-        useRuleSetsEdit([], onChange)
-      );
+    test("adds an open rule set with a new rule at the end, without saving", () => {
+      const { result, save } = setup(sampleRuleSets);
 
-      act(() => {
-        result.current.addRuleSet();
-      });
+      act(() => result.current.addRuleSet());
 
-      expect(result.current.ruleSets).toHaveLength(1);
-      expect(result.current.ruleSets[0].name).toBe("My Rule Set 1");
-      expect(result.current.ruleSets[0].rules).toHaveLength(1);
-      expect(result.current.ruleSets[0].rules[0].id).toBe(RULE_ID_EDITING);
+      const added = result.current.entries[2];
+      expect(added.name).toBe("My Rule Set 1");
+      expect(added.open).toBe(true);
+      expect(added.rules).toStrictEqual([
+        { key: expect.any(String), rule: newRuleTemplate },
+      ]);
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    test("numbers each after the highest number in use", () => {
+      const { result } = setup([
+        { id: "rs-3", name: "My Rule Set 3", rules: [savedRule] },
+      ]);
+
+      act(() => result.current.addRuleSet());
+      act(() => result.current.addRuleSet());
+
+      expect(names(result.current.entries)).toEqual([
+        "My Rule Set 3",
+        "My Rule Set 4",
+        "My Rule Set 5",
+      ]);
     });
 
     test("gives each new rule set its own ID", () => {
-      const original: StoredRuleSets = [];
-      const { result } = renderHook(() => useRuleSetsEdit(original, vi.fn()));
+      const { result } = setup([]);
 
-      act(() => {
-        result.current.addRuleSet();
-      });
-      act(() => {
-        result.current.addRuleSet();
-      });
+      act(() => result.current.addRuleSet());
+      act(() => result.current.addRuleSet());
 
-      const [first, second] = result.current.ruleSets.map((r) => r.id);
-      expect(first).toMatch(/^[0-9a-f-]{36}$/);
-      expect(second).toMatch(/^[0-9a-f-]{36}$/);
-      expect(first).not.toBe(second);
+      const [first, second] = result.current.entries;
+      expect(first.id).not.toBe(second.id);
     });
 
-    test("respects existing 'My Rule Set N' naming", () => {
-      const onChange = vi.fn();
-      const existingRuleSets: StoredRuleSets = [
-        { id: "rs-3", name: "My Rule Set 1", rules: [savedRule] },
-        { id: "rs-4", name: "My Rule Set 3", rules: [savedRule] },
-      ];
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(existingRuleSets, onChange)
+    test("keeps a new rule set after rule sets stored elsewhere meanwhile", () => {
+      const { result, storeElsewhere } = setup(sampleRuleSets);
+
+      act(() => result.current.addRuleSet());
+      act(() =>
+        storeElsewhere([
+          ...sampleRuleSets,
+          { id: "rs-imported", name: "Imported", rules: [savedRule] },
+        ])
       );
 
-      act(() => {
-        result.current.addRuleSet();
-      });
-
-      // Should use 4 since 3 is the max existing number
-      expect(result.current.ruleSets).toHaveLength(3);
-      expect(result.current.ruleSets[2].name).toBe("My Rule Set 4");
-    });
-
-    test("adds rule set with RULE_ID_EDITING rule", () => {
-      const onChange = vi.fn();
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange)
-      );
-
-      act(() => {
-        result.current.addRuleSet();
-      });
-
-      const newRuleSet = result.current.ruleSets[2];
-      expect(newRuleSet.rules[0].id).toBe(RULE_ID_EDITING);
+      expect(names(result.current.entries)).toEqual([
+        "Block Ads",
+        "Allow Trusted",
+        "Imported",
+        "My Rule Set 1",
+      ]);
     });
   });
 
-  describe("updateRules", () => {
-    test("updates rules in rule set", () => {
-      const onChange = vi.fn();
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange)
-      );
+  describe("addRule", () => {
+    test("adds a new rule at the end of the rule set, without saving", () => {
+      const { result, save } = setup(sampleRuleSets);
 
-      const updatedRules: StoredRule[] = [
-        {
-          id: RULE_ID_UNSAVED,
-          action: { type: RuleActionType.ALLOW },
-          condition: { requestDomains: ["updated.com"] },
-        },
+      act(() => result.current.addRule("rs-1"));
+
+      expect(result.current.entries[0].rules).toStrictEqual([
+        { key: "rule-1", rule: savedRule, id: 1 },
+        { key: expect.any(String), rule: newRuleTemplate },
+      ]);
+      expect(result.current.entries[1].rules).toHaveLength(1);
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    test("drops a new rule whose rule set was removed elsewhere", () => {
+      const { result, storeElsewhere } = setup(sampleRuleSets);
+
+      act(() => result.current.addRule("rs-1"));
+      act(() => storeElsewhere([sampleRuleSets[1]]));
+
+      expect(result.current.entries).toHaveLength(1);
+      expect(result.current.entries[0].rules).toHaveLength(1);
+    });
+  });
+
+  describe("saveNewRule", () => {
+    test("adds the rule to its stored rule set and keeps its key once saved", async () => {
+      const { result, stored } = setup(sampleRuleSets);
+      act(() => result.current.addRule("rs-1"));
+      const { key } = result.current.entries[0].rules[1];
+
+      let saved: boolean | undefined;
+      await act(async () => {
+        saved = await result.current.saveNewRule("rs-1", key, typedRule);
+      });
+
+      expect(saved).toBe(true);
+      expect(stored()[0].rules).toStrictEqual([savedRule, { ...typedRule, id: 100 }]);
+      expect(result.current.entries[0].rules).toStrictEqual([
+        { key: "rule-1", rule: savedRule, id: 1 },
+        { key, rule: { ...typedRule, id: 100 }, id: 100 },
+      ]);
+    });
+
+    test("stores a new rule set with its first rule", async () => {
+      const { result, stored } = setup(sampleRuleSets);
+      act(() => result.current.addRuleSet());
+      act(() => {
+        void result.current.renameRuleSet(result.current.entries[2].id, "Renamed");
+      });
+      const { id, rules } = result.current.entries[2];
+
+      await act(async () => {
+        await result.current.saveNewRule(id, rules[0].key, typedRule);
+      });
+
+      expect(stored()[2]).toStrictEqual({
+        id,
+        name: "Renamed",
+        rules: [{ ...typedRule, id: 100 }],
+      });
+      expect(result.current.entries).toHaveLength(3);
+      expect(result.current.entries[2].rules).toStrictEqual([
+        { key: rules[0].key, rule: { ...typedRule, id: 100 }, id: 100 },
+      ]);
+    });
+
+    test("keeps the new rule when the save is rejected", async () => {
+      const { result, rejectNext } = setup(sampleRuleSets);
+      act(() => result.current.addRuleSet());
+      const { id, rules } = result.current.entries[2];
+
+      rejectNext();
+      let saved: boolean | undefined;
+      await act(async () => {
+        saved = await result.current.saveNewRule(id, rules[0].key, typedRule);
+      });
+
+      expect(saved).toBe(false);
+      expect(result.current.entries[2]).toStrictEqual({
+        id,
+        name: "My Rule Set 1",
+        rules,
+        open: true,
+      });
+    });
+  });
+
+  describe("updateRule", () => {
+    test("replaces the stored rule, keeping its ID", async () => {
+      const { result, stored } = setup(sampleRuleSets);
+
+      let saved: boolean | undefined;
+      await act(async () => {
+        saved = await result.current.updateRule("rs-2", 2, typedRule);
+      });
+
+      expect(saved).toBe(true);
+      expect(stored()).toStrictEqual([
+        sampleRuleSets[0],
+        { ...sampleRuleSets[1], rules: [{ ...typedRule, id: 2 }] },
+      ]);
+    });
+
+    test("leaves the other rules of the rule set as they are", async () => {
+      const others = { ...savedRule, id: 3 };
+      const { result, stored } = setup([
+        { id: "rs-1", name: "Two", rules: [savedRule, others] },
+      ]);
+
+      await act(async () => {
+        await result.current.updateRule("rs-1", 1, typedRule);
+      });
+
+      expect(stored()[0].rules).toStrictEqual([{ ...typedRule, id: 1 }, others]);
+    });
+
+    test("leaves a rule set without rules elsewhere as it is", async () => {
+      const empty = { id: "rs-0", name: "Empty", rules: [] };
+      const { result, stored } = setup([empty, ...sampleRuleSets]);
+
+      await act(async () => {
+        await result.current.updateRule("rs-2", 2, typedRule);
+      });
+
+      expect(stored()[0]).toStrictEqual(empty);
+    });
+
+    test("resolves to false when the save is rejected", async () => {
+      const { result, rejectNext, stored } = setup(sampleRuleSets);
+
+      rejectNext();
+      let saved: boolean | undefined;
+      await act(async () => {
+        saved = await result.current.updateRule("rs-2", 2, typedRule);
+      });
+
+      expect(saved).toBe(false);
+      expect(stored()).toBe(sampleRuleSets);
+    });
+  });
+
+  describe("removeRule", () => {
+    test("removes the stored rule", async () => {
+      const twoRules: StoredRuleSets = [
+        { id: "rs-1", name: "Two", rules: [savedRule, { ...savedRule, id: 2 }] },
       ];
+      const { result, stored } = setup(twoRules);
 
-      act(() => {
-        result.current.updateRules(updatedRules, 0);
+      await act(async () => {
+        await result.current.removeRule("rs-1", 1);
       });
 
-      expect(result.current.ruleSets[0].rules).toEqual(updatedRules);
-      expect(onChange).toHaveBeenCalled();
+      expect(stored()).toStrictEqual([
+        { id: "rs-1", name: "Two", rules: [{ ...savedRule, id: 2 }] },
+      ]);
     });
 
-    test("removes rule set when rules are empty", () => {
-      const onChange = vi.fn();
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange)
+    test("removes the rule set with its last rule", async () => {
+      const { result, stored } = setup(sampleRuleSets);
+
+      await act(async () => {
+        await result.current.removeRule("rs-1", 1);
+      });
+
+      expect(stored()).toStrictEqual([sampleRuleSets[1]]);
+    });
+    test("keeps the rule when the save is rejected", async () => {
+      const { result, rejectNext, stored } = setup(sampleRuleSets);
+
+      rejectNext();
+      let saved: boolean | undefined;
+      await act(async () => {
+        saved = await result.current.removeRule("rs-1", 1);
+      });
+
+      expect(saved).toBe(false);
+      expect(stored()).toBe(sampleRuleSets);
+    });
+
+    test("forgets the key of a rule added on this page", async () => {
+      const { result, stored, storeElsewhere } = setup(sampleRuleSets);
+      act(() => result.current.addRule("rs-1"));
+      const { key } = result.current.entries[0].rules[1];
+      await act(async () => {
+        await result.current.saveNewRule("rs-1", key, typedRule);
+      });
+      const before = stored();
+
+      await act(async () => {
+        await result.current.removeRule("rs-1", 100);
+      });
+      act(() => storeElsewhere(before));
+
+      expect(result.current.entries[0].rules[1].key).toBe("rule-100");
+    });
+  });
+
+  describe("cancelNewRule", () => {
+    test("drops a new rule from a stored rule set, without saving", () => {
+      const { result, save } = setup(sampleRuleSets);
+      act(() => result.current.addRule("rs-1"));
+
+      act(() =>
+        result.current.cancelNewRule("rs-1", result.current.entries[0].rules[1].key)
       );
 
-      act(() => {
-        result.current.updateRules([], 0);
-      });
-
-      expect(result.current.ruleSets).toHaveLength(1);
-      expect(result.current.ruleSets[0].name).toBe("Allow Trusted");
-      expect(result.current.ruleSets[0].id).toBe("rs-2");
-      expect(onChange).toHaveBeenCalledWith([sampleRuleSets[1]]);
+      expect(result.current.entries[0].rules).toHaveLength(1);
+      expect(save).not.toHaveBeenCalled();
     });
 
-    test("removes a new rule set without calling onChange when its first rule is canceled", () => {
-      const onChange = vi.fn();
-      const original = [sampleRuleSets[0]];
-      const { result } = renderHook(() => useRuleSetsEdit(original, onChange));
+    test("drops a new rule set with its first rule", () => {
+      const { result, save } = setup(sampleRuleSets);
+      act(() => result.current.addRuleSet());
+      const { id, rules } = result.current.entries[2];
 
-      act(() => {
-        result.current.addRuleSet();
-      });
-      act(() => {
-        result.current.updateRules([], 1);
-      });
+      act(() => result.current.cancelNewRule(id, rules[0].key));
 
-      expect(result.current.ruleSets).toEqual([sampleRuleSets[0]]);
-      expect(onChange).not.toHaveBeenCalled();
-    });
-
-    test("filters out RULE_ID_EDITING rules when calling onChange", () => {
-      const onChange = vi.fn();
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange)
-      );
-
-      const rulesWithEditing: StoredRule[] = [savedRule, editingRule];
-
-      act(() => {
-        result.current.updateRules(rulesWithEditing, 0);
-      });
-
-      // onChange should receive filtered rules (without RULE_ID_EDITING)
-      const onChangeArg = onChange.mock.calls[0][0] as StoredRuleSets;
-      expect(onChangeArg[0].rules).toHaveLength(1);
-      expect(onChangeArg[0].rules[0].id).toBe(savedRule.id);
+      expect(names(result.current.entries)).toEqual(["Block Ads", "Allow Trusted"]);
+      expect(save).not.toHaveBeenCalled();
     });
   });
 
   describe("removeRuleSet", () => {
-    test("removes rule set at specified index", () => {
-      const onChange = vi.fn();
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange)
-      );
+    test("drops a new rule set, without saving", async () => {
+      const { result, save } = setup(sampleRuleSets);
+      act(() => result.current.addRuleSet());
 
-      act(() => {
-        result.current.removeRuleSet(0);
+      await act(async () => {
+        await result.current.removeRuleSet(result.current.entries[2].id);
       });
 
-      expect(result.current.ruleSets).toHaveLength(1);
-      expect(result.current.ruleSets[0].name).toBe("Allow Trusted");
-      expect(result.current.ruleSets[0].id).toBe("rs-2");
-      expect(onChange).toHaveBeenCalled();
+      expect(result.current.entries).toHaveLength(2);
+      expect(save).not.toHaveBeenCalled();
     });
 
-    test("removes rule set with only RULE_ID_EDITING rules without calling onChange", () => {
-      const onChange = vi.fn();
-      const { result } = renderHook(() =>
-        useRuleSetsEdit([sampleRuleSets[0]], onChange)
-      );
+    test("removes a stored rule set with the rules being added to it", async () => {
+      const { result, stored, storeElsewhere } = setup(sampleRuleSets);
+      act(() => result.current.addRule("rs-1"));
 
-      act(() => {
-        result.current.addRuleSet();
+      await act(async () => {
+        await result.current.removeRuleSet("rs-1");
       });
-      act(() => {
-        result.current.removeRuleSet(1);
-      });
+      expect(stored()).toStrictEqual([sampleRuleSets[1]]);
 
-      expect(result.current.ruleSets).toHaveLength(1);
-      expect(onChange).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("updateRuleSetTitle", () => {
-    test("updates rule set name", () => {
-      const onChange = vi.fn();
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange)
-      );
-
-      act(() => {
-        result.current.updateRuleSetTitle("New Title", 0);
-      });
-
-      expect(result.current.ruleSets[0].name).toBe("New Title");
-      expect(onChange).toHaveBeenCalled();
+      // The new rule does not come back with a rule set of the same ID
+      act(() => storeElsewhere(sampleRuleSets));
+      expect(result.current.entries[0].rules).toHaveLength(1);
     });
 
-    test("preserves rules when updating title", () => {
-      const onChange = vi.fn();
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange)
-      );
+    test("forgets the keys of the rules added on this page", async () => {
+      const { result, stored, storeElsewhere } = setup(sampleRuleSets);
+      act(() => result.current.addRule("rs-1"));
+      const { key } = result.current.entries[0].rules[1];
+      await act(async () => {
+        await result.current.saveNewRule("rs-1", key, typedRule);
+      });
+      const before = stored();
 
-      act(() => {
-        result.current.updateRuleSetTitle("Updated Name", 0);
+      await act(async () => {
+        await result.current.removeRuleSet("rs-1");
+      });
+      act(() => storeElsewhere(before));
+
+      expect(result.current.entries[0].rules[1].key).toBe("rule-100");
+    });
+
+    test("keeps showing a rule set whose removal is rejected", async () => {
+      const { result, rejectNext } = setup(sampleRuleSets);
+      act(() => result.current.addRule("rs-1"));
+
+      rejectNext();
+      await act(async () => {
+        await result.current.removeRuleSet("rs-1");
       });
 
-      expect(result.current.ruleSets[0].rules).toEqual(sampleRuleSets[0].rules);
+      expect(names(result.current.entries)).toEqual(["Block Ads", "Allow Trusted"]);
+      expect(result.current.entries[0].rules).toHaveLength(2);
     });
   });
 
-  describe("merge editing state", () => {
-    test("merges editing rules when originalRuleSets changes", () => {
-      const onChange = vi.fn();
-      const { result, rerender } = renderHook(
-        ({ ruleSets }) =>
-          useRuleSetsEdit(ruleSets, onChange),
-        { initialProps: { ruleSets: sampleRuleSets } }
-      );
+  describe("renameRuleSet", () => {
+    test("renames a new rule set, without saving", () => {
+      const { result, save } = setup(sampleRuleSets);
+      act(() => result.current.addRuleSet());
+      act(() => result.current.addRuleSet());
 
-      // Add editing rule to first rule set
-      const rulesWithEditing: StoredRule[] = [savedRule, editingRule];
       act(() => {
-        result.current.updateRules(rulesWithEditing, 0);
+        void result.current.renameRuleSet(result.current.entries[2].id, "New");
       });
 
-      // Internal state now has editing rule
-      expect(result.current.ruleSets[0].rules).toHaveLength(2);
-
-      // Simulate external update (e.g., from storage)
-      const updatedRuleSets: StoredRuleSets = [
-        { id: "rs-1", name: "Block Ads", rules: [savedRule] },
-        { id: "rs-2", name: "Allow Trusted", rules: [{ ...savedRule, id: 2 }] },
-      ];
-
-      rerender({ ruleSets: updatedRuleSets });
-
-      // Editing rule should be preserved
-      expect(result.current.ruleSets[0].rules).toHaveLength(2);
-      expect(result.current.ruleSets[0].rules[1].id).toBe(RULE_ID_EDITING);
-    });
-
-    test("does not merge when ruleSets is empty (initial load)", () => {
-      const onChange = vi.fn();
-      const { result, rerender } = renderHook(
-        ({ ruleSets }) =>
-          useRuleSetsEdit(ruleSets, onChange),
-        { initialProps: { ruleSets: [] as StoredRuleSets } }
-      );
-
-      expect(result.current.ruleSets).toHaveLength(0);
-
-      // Provide initial data
-      rerender({ ruleSets: sampleRuleSets });
-
-      expect(result.current.ruleSets).toEqual(sampleRuleSets);
-    });
-  })
-
-  describe("tracking rule sets across updates", () => {
-    const ruleSetA = { id: "rs-a", name: "A", rules: [savedRule] };
-    const ruleSetB = {
-      id: "rs-b",
-      name: "B",
-      rules: [{ ...savedRule, id: 2 }],
-    };
-    const imported = {
-      id: "rs-imported",
-      name: "Imported", rules: [{ ...savedRule, id: 3 }] };
-
-    function render(initial: StoredRuleSets) {
-      const onChange = vi.fn();
-      const hook = renderHook(
-        ({ ruleSets }) => useRuleSetsEdit(ruleSets, onChange),
-        { initialProps: { ruleSets: initial } }
-      );
-      return { ...hook, onChange };
-    }
-
-    const names = (ruleSets: StoredRuleSets) => ruleSets.map((r) => r.name);
-
-    test("keeps a new rule set apart from rule sets imported while it is edited", () => {
-      const { result, rerender, onChange } = render([ruleSetA]);
-      act(() => {
-        result.current.addRuleSet();
-      });
-      const newId = result.current.ruleSets[1].id;
-
-      rerender({ ruleSets: [ruleSetA, imported] });
-
-      expect(names(result.current.ruleSets)).toEqual([
-        "A",
-        "My Rule Set 1",
-        "Imported",
-      ]);
-      expect(result.current.ruleSets[1].rules).toEqual([editingRule]);
-      expect(result.current.ruleSets[2]).toEqual(imported);
-      expect(result.current.ruleSets[1].id).toBe(newId);
-
-      // Cancel the new rule set
-      act(() => {
-        result.current.updateRules([], 1);
-      });
-
-      expect(result.current.ruleSets).toEqual([ruleSetA, imported]);
-      expect(onChange).not.toHaveBeenCalled();
-    });
-
-    test("keeps an unsaved rule set in place when a later one is saved", () => {
-      const { result, rerender, onChange } = render([ruleSetA]);
-      act(() => {
-        result.current.addRuleSet();
-      });
-      act(() => {
-        result.current.addRuleSet();
-      });
-      act(() => {
-        result.current.updateRules([{ ...savedRule, id: RULE_ID_UNSAVED }], 2);
-      });
-      expect(names(onChange.mock.lastCall![0])).toEqual(["A", "My Rule Set 2"]);
-
-      const saved = {
-        id: result.current.ruleSets[2].id,
-        name: "My Rule Set 2",
-        rules: [{ ...savedRule, id: 5 }],
-      };
-      rerender({ ruleSets: [ruleSetA, saved] });
-
-      expect(names(result.current.ruleSets)).toEqual([
-        "A",
-        "My Rule Set 1",
+      expect(names(result.current.entries)).toEqual([
+        "Block Ads",
+        "Allow Trusted",
+        "New",
         "My Rule Set 2",
       ]);
-      expect(result.current.ruleSets[1].rules).toEqual([editingRule]);
-      expect(result.current.ruleSets[2]).toEqual(saved);
+      expect(save).not.toHaveBeenCalled();
     });
 
-    test("keeps an unsaved rule set before the rule sets after it when the one before it is removed elsewhere", () => {
-      const { result, rerender } = render([ruleSetA]);
+    test("saves the name of a stored rule set, showing it while it is saved", async () => {
+      const { result, save, stored } = setup(sampleRuleSets);
+      let finish!: () => void;
+      save.mockImplementationOnce(async (change) => {
+        await new Promise<void>((resolve) => (finish = resolve));
+        return change(sampleRuleSets);
+      });
+
+      let renamed!: Promise<void>;
       act(() => {
-        result.current.addRuleSet();
+        renamed = result.current.renameRuleSet("rs-2", "Renamed");
       });
-      rerender({ ruleSets: [ruleSetA, imported] });
-
-      rerender({ ruleSets: [imported] });
-
-      expect(names(result.current.ruleSets)).toEqual([
-        "My Rule Set 1",
-        "Imported",
-      ]);
-    });
-
-    test("drops a saved rule set that a newer stored list no longer has", () => {
-      const { result, rerender } = render([ruleSetA]);
-      act(() => {
-        result.current.addRuleSet();
-      });
-      act(() => {
-        result.current.updateRules([{ ...savedRule, id: RULE_ID_UNSAVED }], 1);
-      });
-
-      // Saved over by another window that did not have it
-      rerender({ ruleSets: [ruleSetA, imported] });
-
-      expect(result.current.ruleSets).toEqual([ruleSetA, imported]);
-    });
-
-    test("does not move a rule being added to a rule set that took the same name elsewhere", () => {
-      const first = {
-        id: "rs-first",
-        name: "My Rule Set 1",
-        rules: [savedRule],
-      };
-      const { result, rerender } = render([first]);
-      act(() => {
-        result.current.updateRules([savedRule, editingRule], 0);
-      });
-
-      // Removed and added again in another window
-      const second = {
-        id: "rs-second",
-        name: "My Rule Set 1",
-        rules: [{ ...savedRule, id: 2 }],
-      };
-      rerender({ ruleSets: [second] });
-
-      expect(result.current.ruleSets).toEqual([second]);
-    });
-
-    test("keeps a rule being added with its own rule set among those of the same name", () => {
-      const sameName = (id: string, ruleId: number) => ({
-        id,
-        name: "Same",
-        rules: [{ ...savedRule, id: ruleId }],
-      });
-      const { result, rerender } = render([
-        sameName("rs-x", 1),
-        sameName("rs-y", 2),
-      ]);
-      act(() => {
-        result.current.updateRules([{ ...savedRule, id: 2 }, editingRule], 1);
-      });
-
-      // Elsewhere, the first one is removed and the second one's rule replaced
-      rerender({ ruleSets: [sameName("rs-y", 8)] });
-
-      expect(result.current.ruleSets).toEqual([
-        {
-          ...sameName("rs-y", 8),
-          rules: [{ ...savedRule, id: 8 }, editingRule],
-        },
-      ]);
-    });
-
-    test("keeps an unsaved rule set first when rule sets are stored after it", () => {
-      const { result, rerender } = render([]);
-      act(() => {
-        result.current.addRuleSet();
-      });
-
-      rerender({ ruleSets: [imported] });
-
-      expect(names(result.current.ruleSets)).toEqual([
-        "My Rule Set 1",
-        "Imported",
-      ]);
-    });
-
-    test("matches a rule set by ID when all its rules are replaced, as an import does", () => {
-      const { result, rerender } = render([ruleSetA, ruleSetB]);
-      act(() => {
-        result.current.updateRules([...ruleSetB.rules, editingRule], 1);
-      });
-
-      const replacedB = {
-        id: "rs-b",
-        name: "B",
-        rules: [{ ...savedRule, id: 9 }],
-      };
-      rerender({ ruleSets: [ruleSetA, replacedB] });
-
-      expect(result.current.ruleSets).toEqual([
-        ruleSetA,
-        { ...replacedB, rules: [...replacedB.rules, editingRule] },
-      ]);
-    });
-
-    test("opens only a rule set that is alone when the list is first filled, or added", () => {
-      const single = render([]);
-      single.rerender({ ruleSets: [ruleSetA] });
-      expect(single.result.current.entries.map((e) => e.open)).toEqual([true]);
-
-      const several = render([ruleSetA, ruleSetB]);
-      act(() => {
-        several.result.current.addRuleSet();
-      });
-      several.rerender({ ruleSets: [ruleSetA, ruleSetB, imported] });
-      expect(several.result.current.entries.map((e) => e.open)).toEqual([
-        false,
-        false,
-        true,
-        false,
-      ]);
-    });
-  });
-
-  describe("rejected save", () => {
-    const typedRule: StoredRule = {
-      id: RULE_ID_UNSAVED,
-      action: { type: RuleActionType.BLOCK },
-      condition: { requestDomains: ["typed.com"] },
-    };
-
-    test("resolves to true when onChange returns nothing", async () => {
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, vi.fn())
-      );
-
-      let saved: boolean | void = undefined;
-      await act(async () => {
-        saved = await result.current.updateRuleSetTitle("Renamed", 0);
-      });
-
-      expect(saved).toBe(true);
-      expect(result.current.ruleSets[0].name).toBe("Renamed");
-    });
-
-    test("goes back to the stored rule sets", async () => {
-      const onChange = vi.fn().mockResolvedValue(false);
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange)
-      );
-
-      let saved: boolean | void = undefined;
-      await act(async () => {
-        saved = await result.current.updateRules(
-          [{ ...savedRule, condition: { requestDomains: ["typed.com"] } }],
-          0
-        );
-      });
-      expect(saved).toBe(false);
-      expect(result.current.ruleSets).toEqual(sampleRuleSets);
+      expect(names(result.current.entries)).toEqual(["Block Ads", "Renamed"]);
 
       await act(async () => {
-        await result.current.removeRuleSet(1);
+        finish();
+        await renamed;
       });
-      expect(result.current.ruleSets).toEqual(sampleRuleSets);
-
-      await act(async () => {
-        await result.current.updateRuleSetTitle("Renamed", 0);
-      });
-      expect(result.current.ruleSets).toEqual(sampleRuleSets);
+      // Shown from the stored rule sets again, which this mock left as they were
+      expect(names(result.current.entries)).toEqual(["Block Ads", "Allow Trusted"]);
+      expect(stored()).toBe(sampleRuleSets);
     });
 
-    test("keeps a rejected new rule being edited", async () => {
-      const onChange = vi.fn().mockResolvedValue(false);
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange)
-      );
-
-      await act(async () => {
-        await result.current.updateRules([savedRule, typedRule], 0);
+    test("keeps showing a later name while it is still saving", async () => {
+      const { result, save } = setup(sampleRuleSets);
+      const finishes: (() => void)[] = [];
+      save.mockImplementation(async (change) => {
+        await new Promise<void>((resolve) => finishes.push(resolve));
+        return change(sampleRuleSets);
       });
 
-      expect(result.current.ruleSets[0].rules).toEqual([
-        savedRule,
-        { ...typedRule, id: RULE_ID_EDITING },
-      ]);
-      expect(result.current.ruleSets[1]).toEqual(sampleRuleSets[1]);
-    });
-
-    test("keeps a new rule set whose first rule was rejected", async () => {
-      const onChange = vi.fn().mockResolvedValue(false);
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange)
-      );
-      act(() => result.current.addRuleSet());
-
-      await act(async () => {
-        await result.current.updateRules([typedRule], 2);
-      });
-
-      expect(result.current.ruleSets).toHaveLength(3);
-      expect(result.current.ruleSets[2].rules).toEqual([
-        { ...typedRule, id: RULE_ID_EDITING },
-      ]);
-    });
-
-    test("brings back a rule set whose removal was rejected as it was shown", async () => {
-      const onChange = vi.fn().mockResolvedValue(false);
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange)
-      );
-      await act(async () => {
-        await result.current.updateRules([savedRule, editingRule], 0);
-      });
-      onChange.mockClear();
-
-      await act(async () => {
-        await result.current.removeRuleSet(0);
-      });
-
-      expect(onChange).toHaveBeenCalledTimes(1);
-      expect(result.current.entries[0].ruleSet.rules).toEqual([
-        savedRule,
-        editingRule,
-      ]);
-    });
-
-    test("does not bring back a new rule set dropped while a rejected save ran", async () => {
-      let resolve: (saved: boolean) => void = () => {};
-      const onChange = vi.fn(
-        () => new Promise<boolean>((r) => (resolve = r))
-      );
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange)
-      );
-      act(() => result.current.addRuleSet());
-
-      let saving: Promise<boolean | void> = Promise.resolve();
+      let first!: Promise<void>;
       act(() => {
-        saving = result.current.updateRuleSetTitle("Renamed", 0);
+        first = result.current.renameRuleSet("rs-2", "First");
       });
       act(() => {
-        result.current.removeRuleSet(2);
+        void result.current.renameRuleSet("rs-2", "Second");
       });
       await act(async () => {
-        resolve(false);
-        await saving;
+        finishes[0]();
+        await first;
       });
 
-      expect(result.current.ruleSets).toEqual(sampleRuleSets);
+      expect(names(result.current.entries)).toEqual(["Block Ads", "Second"]);
     });
 
-    test("goes back to the newest stored rule sets", async () => {
-      const onChange = vi.fn().mockResolvedValue(false);
-      const { result, rerender } = renderHook(
-        ({ original }) => useRuleSetsEdit(original, onChange),
-        { initialProps: { original: sampleRuleSets } }
-      );
-      const newer: StoredRuleSets = [sampleRuleSets[0]];
-      rerender({ original: newer });
+    test("goes back to the stored name when the save is rejected", async () => {
+      const { result, rejectNext } = setup(sampleRuleSets);
+
+      rejectNext();
+      await act(async () => {
+        await result.current.renameRuleSet("rs-2", "Renamed");
+      });
+
+      expect(names(result.current.entries)).toEqual(["Block Ads", "Allow Trusted"]);
+    });
+
+    test("applies the new name to the stored rule set", async () => {
+      const { result, stored } = setup(sampleRuleSets);
 
       await act(async () => {
-        await result.current.updateRuleSetTitle("Renamed", 0);
+        await result.current.renameRuleSet("rs-2", "Renamed");
       });
 
-      expect(result.current.ruleSets).toEqual(newer);
-    });
-  });
-
-  describe("onChange filtering", () => {
-    test("filters out rule sets with only RULE_ID_EDITING rules", () => {
-      const onChange = vi.fn();
-      const { result } = renderHook(() =>
-        useRuleSetsEdit(sampleRuleSets, onChange)
-      );
-
-      // Add new rule set (contains only editing rule)
-      act(() => {
-        result.current.addRuleSet();
-      });
-
-      // Update existing rule set to trigger onChange
-      act(() => {
-        result.current.updateRuleSetTitle("Updated", 0);
-      });
-
-      // onChange should not include the new rule set (only editing rule)
-      const onChangeArg = onChange.mock.calls[0][0] as StoredRuleSets;
-      expect(onChangeArg).toHaveLength(2); // Only original rule sets
+      expect(stored()[1]).toStrictEqual({ ...sampleRuleSets[1], name: "Renamed" });
+      expect(names(result.current.entries)).toEqual(["Block Ads", "Renamed"]);
     });
   });
 });

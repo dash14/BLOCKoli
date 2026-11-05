@@ -1,16 +1,11 @@
-import { RuleActionType } from "@/modules/core/rules";
-import { RULE_ID_EDITING, StoredRule, StoredRuleSet } from "./stored";
+import { Rule, RuleActionType } from "@/modules/core/rules";
 
-export const newRuleTemplate: StoredRule = {
-  id: RULE_ID_EDITING,
+export const newRuleTemplate: Rule = {
   action: {
     type: RuleActionType.BLOCK,
   },
   condition: {},
 };
 
-// Each new rule set gets its own ID when it is created
-export const newRuleSetTemplate: Omit<StoredRuleSet, "id"> = {
-  name: "My Rule Set",
-  rules: [newRuleTemplate],
-};
+// New rule sets get this name and the next free number
+export const newRuleSetName = "My Rule Set";

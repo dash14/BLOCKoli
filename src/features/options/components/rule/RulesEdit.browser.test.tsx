@@ -1,29 +1,50 @@
 import { useState } from "react";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import { RuleActionType } from "@/modules/core/rules";
-import { RULE_ID_UNSAVED, StoredRule } from "@/modules/rules/stored";
+import { RuleEntry } from "@/features/options/hooks/useRuleSetsEdit";
+import { Rule, RuleActionType } from "@/modules/core/rules";
+import { StoredRule } from "@/modules/rules/stored";
+import { newRuleTemplate } from "@/modules/rules/template";
 import { renderWithChakra } from "@/test/utils/render";
 import { RulesEdit } from "./RulesEdit";
 
-// 状態管理を行うラッパーコンポーネント（controlled componentのテスト用）
+const entries = (rules: StoredRule[]): RuleEntry[] =>
+  rules.map((rule) => ({ key: `rule-${rule.id}`, rule, id: rule.id }));
+
+const handlers = () => ({
+  onAdd: vi.fn(),
+  onSaveNew: vi.fn(async () => true),
+  onUpdate: vi.fn(async () => true),
+  onCancelNew: vi.fn(),
+  onRemove: vi.fn(),
+});
+
+// 親の代わりに、追加中のルールと保存を受け持つラッパー
 function StatefulRulesEdit({
   initialRules,
-  onChangeCapture,
+  onSaveNew,
   testId,
 }: {
   initialRules: StoredRule[];
-  onChangeCapture?: (rules: StoredRule[]) => void;
+  onSaveNew?: (key: string, rule: Rule) => void;
   testId?: string;
 }) {
-  const [rules, setRules] = useState(initialRules);
-  const handleChange = (newRules: StoredRule[]) => {
-    setRules(newRules);
-    onChangeCapture?.(newRules);
-  };
+  const [rules, setRules] = useState(entries(initialRules));
   return (
     <div data-testid={testId}>
-      <RulesEdit rules={rules} isAddAllowed onChange={handleChange} />
+      <RulesEdit
+        rules={rules}
+        isAddAllowed
+        onAdd={() => setRules([...rules, { key: "new", rule: newRuleTemplate }])}
+        onSaveNew={async (key, rule) => {
+          onSaveNew?.(key, rule);
+          setRules(rules.map((entry) => (entry.key === key ? { key, rule, id: 99 } : entry)));
+          return true;
+        }}
+        onUpdate={async () => true}
+        onCancelNew={(key) => setRules(rules.filter((entry) => entry.key !== key))}
+        onRemove={() => {}}
+      />
     </div>
   );
 }
@@ -69,7 +90,7 @@ describe("RulesEdit component", () => {
     test("複数ルールがリスト表示される", async () => {
       await renderWithChakra(
         <div data-testid="container">
-          <RulesEdit rules={twoRules} isAddAllowed onChange={() => {}} />
+          <RulesEdit rules={entries(twoRules)} isAddAllowed {...handlers()} />
         </div>
       );
 
@@ -102,7 +123,7 @@ describe("RulesEdit component", () => {
     test("単一ルールの場合、削除ボタンが無効", async () => {
       await renderWithChakra(
         <div data-testid="container">
-          <RulesEdit rules={simpleRule} isAddAllowed onChange={() => {}} />
+          <RulesEdit rules={entries(simpleRule)} isAddAllowed {...handlers()} />
         </div>
       );
 
@@ -151,13 +172,10 @@ describe("RulesEdit component", () => {
       );
     });
 
-    test("新規ルールを保存するとonChangeが呼ばれる", async () => {
-      const onChangeCapture = vi.fn();
+    test("新規ルールを保存するとonSaveNewが呼ばれる", async () => {
+      const onSaveNew = vi.fn();
       await renderWithChakra(
-        <StatefulRulesEdit
-          initialRules={simpleRule}
-          onChangeCapture={onChangeCapture}
-        />
+        <StatefulRulesEdit initialRules={simpleRule} onSaveNew={onSaveNew} />
       );
 
       // Add a Ruleボタンをクリック
@@ -175,23 +193,24 @@ describe("RulesEdit component", () => {
       // Saveボタンをクリック
       await page.getByRole("button", { name: /save/i }).click();
 
-      // onChangeCaptureが呼ばれる（最後の呼び出しが保存後）
-      expect(onChangeCapture).toHaveBeenCalled();
-      const lastCall =
-        onChangeCapture.mock.calls[onChangeCapture.mock.calls.length - 1];
-      const newRules = lastCall?.[0] as StoredRule[];
-      expect(newRules).toHaveLength(2);
-      // 新規ルールのIDはRULE_ID_UNSAVED (0)
-      expect(newRules[1].id).toBe(RULE_ID_UNSAVED);
-      expect(newRules[1].condition.requestDomains).toContain("newdomain.com");
+      // 追加中のルールのkeyと入力した内容で呼ばれる
+      await expect.poll(() => onSaveNew.mock.calls.length).toBe(1);
+      const [key, rule] = onSaveNew.mock.calls[0];
+      expect(key).toBe("new");
+      expect(rule.condition.requestDomains).toEqual(["newdomain.com"]);
+
+      // 保存後は表示モードに戻り、また追加できる
+      await expect
+        .element(page.getByRole("button", { name: /add a rule/i }))
+        .toBeInTheDocument();
     });
   });
 
   describe("ルール編集", () => {
-    test("既存ルールを編集してSaveするとonChangeが呼ばれる", async () => {
-      const onChange = vi.fn();
+    test("既存ルールを編集してSaveするとonUpdateが呼ばれる", async () => {
+      const props = handlers();
       await renderWithChakra(
-        <RulesEdit rules={singleRule} isAddAllowed onChange={onChange} />
+        <RulesEdit rules={entries(singleRule)} isAddAllowed {...props} />
       );
 
       // Editボタンをクリック
@@ -208,18 +227,19 @@ describe("RulesEdit component", () => {
       // Saveボタンをクリック
       await page.getByRole("button", { name: /save/i }).click();
 
-      // onChangeが呼ばれる
-      expect(onChange).toHaveBeenCalled();
-      const updatedRules = onChange.mock.calls[0][0] as StoredRule[];
-      expect(updatedRules[0].condition.urlFilter).toBe("||tracking.com^");
+      // ルールのIDと入力した内容で呼ばれる
+      await expect.poll(() => props.onUpdate.mock.calls.length).toBe(1);
+      const [id, rule] = props.onUpdate.mock.calls[0] as unknown as [number, Rule];
+      expect(id).toBe(1);
+      expect(rule.condition.urlFilter).toBe("||tracking.com^");
     });
   });
 
   describe("ルール削除", () => {
     test("複数ルールの場合、ルールを削除できる", async () => {
-      const onChange = vi.fn();
+      const props = handlers();
       await renderWithChakra(
-        <RulesEdit rules={twoRules} isAddAllowed onChange={onChange} />
+        <RulesEdit rules={entries(twoRules)} isAddAllowed {...props} />
       );
 
       // 最初のルールのメニューボタンをクリック
@@ -238,24 +258,14 @@ describe("RulesEdit component", () => {
         .getByRole("button", { name: /remove/i });
       await dialogRemoveButton.click();
 
-      // onChangeが呼ばれる
-      expect(onChange).toHaveBeenCalled();
-      const remainingRules = onChange.mock.calls[0][0] as StoredRule[];
-      expect(remainingRules).toHaveLength(1);
-      // 2番目のルールのみ残る
-      expect(remainingRules[0].id).toBe(2);
+      // 1番目のルールのIDで呼ばれる
+      await expect.poll(() => props.onRemove.mock.calls).toEqual([[1]]);
     });
   });
 
   describe("キャンセル操作", () => {
     test("新規ルール編集中にCancelでルールが削除される", async () => {
-      const onChangeCapture = vi.fn();
-      await renderWithChakra(
-        <StatefulRulesEdit
-          initialRules={simpleRule}
-          onChangeCapture={onChangeCapture}
-        />
-      );
+      await renderWithChakra(<StatefulRulesEdit initialRules={simpleRule} />);
 
       // Add a Ruleボタンをクリック
       await page.getByRole("button", { name: /add a rule/i }).click();
@@ -273,16 +283,13 @@ describe("RulesEdit component", () => {
         .element(page.getByRole("button", { name: /add a rule/i }))
         .toBeInTheDocument();
 
-      // 最後のonChangeCapture呼び出しでルールが1件に戻っている
-      const lastCall =
-        onChangeCapture.mock.calls[onChangeCapture.mock.calls.length - 1];
-      const rules = lastCall?.[0] as StoredRule[];
-      expect(rules).toHaveLength(1);
+      // 追加中のルールがなくなっている
+      await expect.element(page.getByText("Editing")).not.toBeInTheDocument();
     });
 
     test("既存ルール編集中にCancelで変更が破棄される", async () => {
       await renderWithChakra(
-        <RulesEdit rules={singleRule} isAddAllowed onChange={() => {}} />
+        <RulesEdit rules={entries(singleRule)} isAddAllowed {...handlers()} />
       );
 
       // Editボタンをクリック
@@ -303,9 +310,9 @@ describe("RulesEdit component", () => {
 
   describe("複数ルールの操作", () => {
     test("2番目のルールを編集できる", async () => {
-      const onChange = vi.fn();
+      const props = handlers();
       await renderWithChakra(
-        <RulesEdit rules={twoRules} isAddAllowed onChange={onChange} />
+        <RulesEdit rules={entries(twoRules)} isAddAllowed {...props} />
       );
 
       // 2番目のルールのEditボタンをクリック
@@ -327,19 +334,18 @@ describe("RulesEdit component", () => {
       // Saveボタンをクリック
       await page.getByRole("button", { name: /save/i }).click();
 
-      // onChangeが呼ばれる
-      expect(onChange).toHaveBeenCalled();
-      const updatedRules = onChange.mock.calls[0][0] as StoredRule[];
-      expect(updatedRules[1].condition.initiatorDomains).toContain(
-        "updated.com"
-      );
+      // 2番目のルールのIDで呼ばれる
+      await expect.poll(() => props.onUpdate.mock.calls.length).toBe(1);
+      const [id, rule] = props.onUpdate.mock.calls[0] as unknown as [number, Rule];
+      expect(id).toBe(2);
+      expect(rule.condition.initiatorDomains).toContain("updated.com");
     });
   });
 
   describe("Rule limit", () => {
     test("disables adding a rule and says why", async () => {
       await renderWithChakra(
-        <RulesEdit rules={singleRule} isAddAllowed={false} onChange={() => {}} />
+        <RulesEdit rules={entries(singleRule)} isAddAllowed={false} {...handlers()} />
       );
 
       await expect

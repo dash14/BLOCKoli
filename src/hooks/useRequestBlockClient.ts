@@ -21,28 +21,33 @@ export function useRequestBlockClient() {
 
   // Responses and broadcasts arrive by separate channels, so the revision decides which is newer.
   const appliedRevision = useRef(-1);
-  // While this page's own saves are waiting, the newest value is held and applied once they
-  // settle, so the editor does not fall back to rule sets from before the latest edit.
-  const pendingSaves = useRef(0);
+  // Each change waits for the save before it and applies to what that save stored
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
+  // Broadcasts are held during a save, so a rule it adds is not shown twice before the response
+  const saving = useRef(false);
   const held = useRef<VersionedRuleSets | undefined>(undefined);
-  const latestRequest = useRef<StoredRuleSets>([]);
-  // The save of latestRequest, so sending the same rule sets again waits on its result
-  const latestSave = useRef<Promise<void>>(Promise.resolve());
 
-  // Compare with the latest state, not the one this render's callbacks closed over.
+  // Changes apply to the latest state, not the one this render's callbacks closed over
   const latestRuleSets = useRef<StoredRuleSets>([]);
 
   const receiveRuleSets = useCallback((received: VersionedRuleSets) => {
-    if (pendingSaves.current > 0) {
-      if (!held.current || received.revision > held.current.revision) {
-        held.current = received;
-      }
-    } else if (received.revision > appliedRevision.current) {
+    if (received.revision > appliedRevision.current) {
       appliedRevision.current = received.revision;
       latestRuleSets.current = received.ruleSets;
       setRuleSets(received.ruleSets);
     }
   }, []);
+
+  const receiveBroadcast = useCallback(
+    (received: VersionedRuleSets) => {
+      if (!saving.current) {
+        receiveRuleSets(received);
+      } else if (!held.current || received.revision > held.current.revision) {
+        held.current = received;
+      }
+    },
+    [receiveRuleSets]
+  );
 
   // Keep one proxy per mount so the effect adds and removes a single onMessage listener.
   const [service] = useState(() =>
@@ -62,7 +67,7 @@ export function useRequestBlockClient() {
       stateBroadcast = true;
       setEnabled(state === "enable");
     });
-    service.addEventListener("updateRuleSets", receiveRuleSets);
+    service.addEventListener("updateRuleSets", receiveBroadcast);
 
     (async () => {
       try {
@@ -90,7 +95,7 @@ export function useRequestBlockClient() {
       active = false;
       service.removeAllEventListeners();
     };
-  }, [service, receiveRuleSets]);
+  }, [service, receiveRuleSets, receiveBroadcast]);
 
   const changeState = async (enabled: boolean) => {
     if (enabled) {
@@ -101,34 +106,29 @@ export function useRequestBlockClient() {
   };
 
 
-  const updateRuleSets = async (updatedRuleSets: StoredRuleSets) => {
-    // Compare with what was last sent while saves wait, so an edit back is still sent
-    const current =
-      pendingSaves.current > 0 ? latestRequest.current : latestRuleSets.current;
-    if (isEqual(updatedRuleSets, current)) {
-      if (pendingSaves.current > 0) await latestSave.current;
-      return;
-    }
-
-    latestRequest.current = updatedRuleSets;
-    const save = send(updatedRuleSets);
-    latestSave.current = save;
-    await save;
-  };
-
-  const send = async (updatedRuleSets: StoredRuleSets) => {
-    pendingSaves.current++;
-    try {
-      // New rules come back with the IDs the service assigned
-      receiveRuleSets(await service.updateRuleSets(updatedRuleSets));
-    } finally {
-      pendingSaves.current--;
-      if (pendingSaves.current === 0 && held.current) {
-        const newest = held.current;
-        held.current = undefined;
-        receiveRuleSets(newest);
+  // Resolves to the rule sets stored after the change, with the IDs the service gave new rules
+  const updateRuleSets = (
+    change: (stored: StoredRuleSets) => StoredRuleSets
+  ): Promise<StoredRuleSets> => {
+    const run = queue.current.then(async () => {
+      const current = latestRuleSets.current;
+      const updated = change(current);
+      if (isEqual(updated, current)) return current;
+      saving.current = true;
+      try {
+        const saved = await service.updateRuleSets(updated);
+        receiveRuleSets(saved);
+        return saved.ruleSets;
+      } finally {
+        saving.current = false;
+        if (held.current) {
+          receiveRuleSets(held.current);
+          held.current = undefined;
+        }
       }
-    }
+    });
+    queue.current = run.catch(() => undefined);
+    return run;
   };
 
   const getMatchedRule = async () => {

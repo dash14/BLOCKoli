@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import cloneDeep from "lodash-es/cloneDeep";
+import isEqual from "lodash-es/isEqual";
 import { createRegexValidator } from "@/modules/chrome/regex";
 import {
   RequestMethod,
@@ -17,14 +18,23 @@ type ValidationErrors = Required<{
 }>;
 
 export function useRuleEdit(
-  initialRule: Rule,
+  givenRule: Rule,
   // Resolves to false when the save was rejected
   onChange: (rule: Rule) => void | Promise<boolean>,
   onCancel: () => void,
   onRemove: () => void
 ) {
+  // Every save brings all stored rules back as new objects; only a changed rule counts
+  const latestGivenRule = useRef(givenRule);
+  if (!isEqual(latestGivenRule.current, givenRule)) {
+    latestGivenRule.current = givenRule;
+  }
+  const initialRule = latestGivenRule.current;
+
   const [isEditing, setIsEditing] = useState(false);
-  const [rule, setRuleObject] = useState(initialRule);
+  // Edits not saved yet; until the first one, the given rule is shown
+  const [draft, setDraft] = useState<Rule | undefined>(undefined);
+  const rule = draft ?? initialRule;
   const [isValid, setIsValid] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
     requestDomains: [],
@@ -52,26 +62,6 @@ export function useRuleEdit(
     latestOnChange.current = onChange;
   }, [onChange]);
 
-  // What a rejected save sent, kept in the editor when the page goes back to the stored rule
-  const rejectedRule = useRef<Rule>(undefined);
-
-  useEffect(() => {
-    const next = rejectedRule.current ?? initialRule;
-    setRuleObject(next);
-    // For incomplete data, enter edit mode.
-    validate(next).then((valid) => {
-      if (valid === false) {
-        setIsEditing(true);
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialRule]);
-
-  // Cleared after every commit; save() also sets the rule in case the revert rendered first
-  useEffect(() => {
-    rejectedRule.current = undefined;
-  });
-
   // Unmounting drops a running check, so a pending save() skips onChange
   useEffect(
     () => () => {
@@ -87,16 +77,18 @@ export function useRuleEdit(
     }
     setIsEditing(false);
     if ((await latestOnChange.current(rule)) === false) {
-      rejectedRule.current = rule;
-      setRuleObject(rule);
-      validate(rule);
+      // The draft is kept, so the rule can be fixed and saved again
       setIsEditing(true);
+    } else {
+      // Unless editing started again while the save waited
+      setDraft((current) => (current === rule ? undefined : current));
     }
   }
 
   function cancel() {
     setIsEditing(false);
-    resetRuleObject();
+    setDraft(undefined);
+    validate(initialRule);
     onCancel();
   }
 
@@ -111,49 +103,49 @@ export function useRuleEdit(
   function updateAction(value: RuleActionType) {
     const newRule = cloneDeep(rule);
     newRule.action.type = value;
-    setRuleObject(newRule);
+    setDraft(newRule);
     validate(newRule);
   }
 
   function updateRequestMethods(value: RequestMethod[]) {
     const newRule = cloneDeep(rule);
     newRule.condition.requestMethods = value;
-    setRuleObject(newRule);
+    setDraft(newRule);
     validate(newRule);
   }
 
   function updateResourceTypes(value: ResourceType[]) {
     const newRule = cloneDeep(rule);
     newRule.condition.resourceTypes = value;
-    setRuleObject(newRule);
+    setDraft(newRule);
     validate(newRule);
   }
 
   async function updateUrlFilter(text: string) {
     const newRule = cloneDeep(rule);
     newRule.condition.urlFilter = text;
-    setRuleObject(newRule);
+    setDraft(newRule);
     validate(newRule);
   }
 
   function updateIsRegexFilter(checked: boolean) {
     const newRule = cloneDeep(rule);
     newRule.condition.isRegexFilter = checked;
-    setRuleObject(newRule);
+    setDraft(newRule);
     validate(newRule);
   }
 
   function updateRequestDomains(domains: string[]) {
     const newRule = cloneDeep(rule);
     newRule.condition.requestDomains = domains;
-    setRuleObject(newRule);
+    setDraft(newRule);
     validate(newRule);
   }
 
   function updateInitiatorDomains(domains: string[]) {
     const newRule = cloneDeep(rule);
     newRule.condition.initiatorDomains = domains;
-    setRuleObject(newRule);
+    setDraft(newRule);
     validate(newRule);
   }
 
@@ -184,11 +176,17 @@ export function useRuleEdit(
     return result.valid;
   }
 
-  function resetRuleObject() {
-    const rule = initialRule;
-    setRuleObject(rule);
-    validate(rule);
-  }
+  useEffect(() => {
+    // A draft is what is shown, and its own check stands
+    if (draft) return;
+    // For incomplete data, enter edit mode.
+    validate(initialRule).then((valid) => {
+      if (valid === false) {
+        setIsEditing(true);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialRule]);
 
   return {
     save,
