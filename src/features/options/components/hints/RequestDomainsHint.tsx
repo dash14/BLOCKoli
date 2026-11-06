@@ -17,6 +17,7 @@ export const RequestDomainsHint: React.FC<Props> = (props) => {
         <List.Item>{i18n["hint_Domains_note_2"]}</List.Item>
         <List.Item>{i18n["hint_Domains_note_3"]}</List.Item>
         <List.Item>{i18n["hint_Domains_note_4"]}</List.Item>
+        <List.Item>{i18n["hint_Domains_note_5"]}</List.Item>
       </List.Root>
     </HintPopover>
   );

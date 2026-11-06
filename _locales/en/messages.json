@@ -178,6 +178,9 @@
   "hint_Domains_note_4": {
     "message": "Sub-domains of the listed domains are also matched."
   },
+  "hint_Domains_note_5": {
+    "message": "Specify only the domain name, without \"*.\", \"http://\", a port or a path."
+  },
   "hint_RequestMethods_1": {
     "message": "List of HTTP request methods which the rule can match."
   },
