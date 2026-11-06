@@ -178,6 +178,9 @@
   "hint_Domains_note_4": {
     "message": "指定されたドメインのサブドメインにも一致します。"
   },
+  "hint_Domains_note_5": {
+    "message": "ドメイン名だけを指定します。\"http://\"、ポート番号、パス、\"*.\" は付けません。"
+  },
   "hint_RequestMethods_1": {
     "message": "ルールにマッチさせたい HTTP リクエストメソッドのリストです。"
   },
