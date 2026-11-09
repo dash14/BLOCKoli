@@ -116,7 +116,6 @@ export function useRequestBlockClient() {
     }
   };
 
-
   // Resolves to the rule sets stored after the change, with the IDs the service gave new rules.
   // onSaved runs in the same step that shows them, so its state updates render with them.
   const updateRuleSets = (

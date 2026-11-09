@@ -336,6 +336,43 @@ describe("useRuleSetsEdit", () => {
       expectConflict(page, elsewhere);
     });
 
+    test("leaves a rule another page already changed the same way", async () => {
+      const page = setup(sampleRuleSets);
+      const elsewhere = [
+        sampleRuleSets[0],
+        { ...sampleRuleSets[1], rules: [{ ...typedRule, id: 2 }] },
+      ];
+      page.storeElsewhere(elsewhere);
+
+      let saved: SaveResult | undefined;
+      await act(async () => {
+        saved = await page.result.current.updateRule(
+          "rs-2",
+          2,
+          typedRule,
+          sampleRuleSets[1].rules[0]
+        );
+      });
+
+      expect(saved).toBe(true);
+      expect(page.conflicts).toEqual([]);
+      expect(page.stored()).toStrictEqual(elsewhere);
+    });
+
+    test("leaves a rule set another page already gave the same name", async () => {
+      const page = setup(sampleRuleSets);
+      const rename = page.result.current.renameRuleSet;
+      const elsewhere = [{ ...sampleRuleSets[0], name: "Same" }, sampleRuleSets[1]];
+      act(() => page.storeElsewhere(elsewhere));
+
+      await act(async () => {
+        await rename("rs-1", "Same");
+      });
+
+      expect(page.conflicts).toEqual([]);
+      expect(page.stored()).toStrictEqual(elsewhere);
+    });
+
     test("does not update a rule removed on another page", async () => {
       const page = setup(sampleRuleSets);
       const elsewhere = [sampleRuleSets[0], { ...sampleRuleSets[1], rules: [changedRule] }];

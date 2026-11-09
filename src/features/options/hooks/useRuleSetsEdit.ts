@@ -13,7 +13,6 @@ import { newRuleSetName, newRuleTemplate } from "@/modules/rules/template";
 // Throws SaveConflictError when what it changes is no longer as this page showed it
 export type RuleSetsChange = (stored: StoredRuleSets) => StoredRuleSets;
 
-
 // Called with the stored rule sets in the same step that shows them
 export type RuleSetsSaved = (saved: StoredRuleSets) => void;
 
@@ -158,6 +157,8 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
   function updateRule(ruleSetId: string, ruleId: number, rule: Rule, base: Rule) {
     return saveRules(ruleSetId, (rules) => {
       const stored = rules.find(({ id }) => id === ruleId);
+      // Another page already saved the same rule
+      if (stored && isSameRule(stored, rule)) return rules;
       if (!stored || !isSameRule(stored, base)) throw new SaveConflictError();
       return rules.map((stored) =>
         stored.id === ruleId ? { ...rule, id: ruleId } : stored
@@ -244,6 +245,8 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
     setSavingNames((current) => ({ ...current, [id]: name }));
     await save((current) => {
       const target = current.find((ruleSet) => ruleSet.id === id);
+      // Another page already gave it the same name
+      if (target?.name === name) return current;
       if (target?.name !== base) throw new SaveConflictError();
       return current.map((ruleSet) =>
         ruleSet === target ? { ...ruleSet, name } : ruleSet
