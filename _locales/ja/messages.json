@@ -254,6 +254,15 @@
   "save_conflict": {
     "message": "別のタブで変更されていたため、保存しませんでした。最新の内容を確認して、もう一度操作してください。"
   },
+  "error_too_many_rules": {
+    "message": "ルールが {count} 件になります。定義できるのは {max} 件までです。"
+  },
+  "error_too_many_chrome_rules": {
+    "message": "ルールが {count} 件になります。Chrome で使えるのは {max} 件までです。"
+  },
+  "error_too_many_regex_rules": {
+    "message": "正規表現のルールが {count} 件になります。Chrome で使えるのは {max} 件までです。"
+  },
   "json_parse_error": {
     "message": "JSONパースエラー"
   },

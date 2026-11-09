@@ -10,8 +10,14 @@ import { RuleSetsValidationError } from "../rules/validation/RuleSets";
 
 export const ServiceId = "RequestBlock";
 
-// Rejects an update made on rule sets older than the stored ones
-export const STALE_RULE_SETS_ERROR = "The rule sets were changed on another page";
+// Codes of the ServiceErrors that reject a change to the rule sets
+export const ErrorCode = {
+  // The change was made on rule sets older than the stored ones
+  STALE_RULE_SETS: "stale_rule_sets",
+  TOO_MANY_RULES: "too_many_rules",
+  TOO_MANY_CHROME_RULES: "too_many_chrome_rules",
+  TOO_MANY_REGEX_RULES: "too_many_regex_rules",
+} as const;
 
 export type Events = {
   changeState: State;

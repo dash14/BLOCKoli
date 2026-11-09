@@ -1,9 +1,13 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
+import { ServiceError } from "@/modules/core/ServiceError";
+import { ErrorCode } from "@/modules/services/RequestBlockService";
 import {
   useI18n,
   updateI18nLanguage,
   getLocalizedValidationErrorText,
   I18nMessageMap,
+  formatMessage,
+  getErrorText,
 } from "./useI18n";
 
 describe("useI18n", () => {
@@ -148,6 +152,52 @@ describe("useI18n", () => {
         mockI18n
       );
       expect(result).toBe("追加プロパティを持ってはなりません");
+    });
+  });
+
+  describe("formatMessage", () => {
+    it("fills in every placeholder and leaves unknown ones", () => {
+      expect(
+        formatMessage("{count} of {max}, {count} again, {other}", {
+          count: 3,
+          max: 2,
+        })
+      ).toBe("3 of 2, 3 again, {other}");
+    });
+  });
+
+  describe("getErrorText", () => {
+    const tooMany = new ServiceError(
+      "Too many rules: 501, but at most 500 can be defined",
+      ErrorCode.TOO_MANY_RULES,
+      { count: 501, max: 500 }
+    );
+
+    it("translates a ServiceError into the page's language", () => {
+      updateI18nLanguage("ja");
+      expect(getErrorText(tooMany, useI18n())).toBe(
+        "ルールが 501 件になります。定義できるのは 500 件までです。"
+      );
+    });
+
+    it.each([
+      [ErrorCode.TOO_MANY_RULES, "There would be 3 rules, but at most 2 can be defined."],
+      [ErrorCode.TOO_MANY_CHROME_RULES, "There would be 3 rules, but Chrome allows at most 2."],
+      [ErrorCode.TOO_MANY_REGEX_RULES, "There would be 3 regex rules, but Chrome allows at most 2."],
+    ])("has an English text for %s", (code, text) => {
+      updateI18nLanguage("en");
+      const error = new ServiceError("", code, { count: 3, max: 2 });
+      expect(getErrorText(error, useI18n())).toBe(text);
+    });
+
+    it("keeps the message of a ServiceError without a text", () => {
+      const error = new ServiceError("Changed elsewhere", ErrorCode.STALE_RULE_SETS);
+      expect(getErrorText(error, useI18n())).toBe("Changed elsewhere");
+    });
+
+    it("keeps the message of any other error", () => {
+      expect(getErrorText(new Error("Failed"), useI18n())).toBe("Failed");
+      expect(getErrorText("Rejected", useI18n())).toBe("Rejected");
     });
   });
 });

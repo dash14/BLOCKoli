@@ -22,7 +22,7 @@ import type { StoredRuleSets } from "@/modules/rules/stored";
 import { RULE_ID_UNSAVED } from "@/modules/rules/stored";
 import { UNSUPPORTED_REGEX_SYNTAX_MESSAGE } from "@/modules/rules/validation/edit";
 import type * as RequestBlock from "@/modules/services/RequestBlockService";
-import { STALE_RULE_SETS_ERROR } from "@/modules/services/RequestBlockService";
+import { ErrorCode } from "@/modules/services/RequestBlockService";
 import type { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import logging from "@/modules/utils/logging";
 import { RequestBlockServiceImpl } from "./RequestBlockServiceImpl";
@@ -594,9 +594,12 @@ describe("RequestBlockServiceImpl", () => {
     });
 
     it("refuses to save when another page saved since", async () => {
-      await expect(createService().updateRuleSets(ruleSets, 6)).rejects.toThrow(
-        STALE_RULE_SETS_ERROR
-      );
+      await expect(
+        createService().updateRuleSets(ruleSets, 6)
+      ).rejects.toMatchObject({
+        name: "ServiceError",
+        code: ErrorCode.STALE_RULE_SETS,
+      });
 
       expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
       expect(mockStore.saveNextRuleId).not.toHaveBeenCalled();
@@ -976,9 +979,12 @@ describe("RequestBlockServiceImpl", () => {
         { name: "a", rules: [rule(11), rule(12), rule(RULE_ID_UNSAVED)] },
       ];
 
-      await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
-        "Too many rules: 3, but Chrome allows at most 2"
-      );
+      await expect(createService().updateRuleSets(ruleSets)).rejects.toMatchObject({
+        name: "ServiceError",
+        message: "Too many rules: 3, but Chrome allows at most 2",
+        code: ErrorCode.TOO_MANY_CHROME_RULES,
+        params: { count: 3, max: 2 },
+      });
       expect(mockStore.saveNextRuleId).not.toHaveBeenCalled();
       expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
     });
@@ -986,9 +992,12 @@ describe("RequestBlockServiceImpl", () => {
     it("refuses to save more regex rules than Chrome allows", async () => {
       const ruleSets = [{ name: "a", rules: [rule(11, regex), rule(12, regex)] }];
 
-      await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
-        "Too many regex rules: 2, but Chrome allows at most 1"
-      );
+      await expect(createService().updateRuleSets(ruleSets)).rejects.toMatchObject({
+        name: "ServiceError",
+        message: "Too many regex rules: 2, but Chrome allows at most 1",
+        code: ErrorCode.TOO_MANY_REGEX_RULES,
+        params: { count: 2, max: 1 },
+      });
       expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
     });
 
@@ -1034,9 +1043,12 @@ describe("RequestBlockServiceImpl", () => {
           { name: "b", rules: [rule(RULE_ID_UNSAVED)] },
         ];
 
-        await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
-          `Too many rules: ${MAX_RULES + 1}, but at most ${MAX_RULES} can be defined`
-        );
+        await expect(createService().updateRuleSets(ruleSets)).rejects.toMatchObject({
+          name: "ServiceError",
+          message: `Too many rules: ${MAX_RULES + 1}, but at most ${MAX_RULES} can be defined`,
+          code: ErrorCode.TOO_MANY_RULES,
+          params: { count: MAX_RULES + 1, max: MAX_RULES },
+        });
         expect(mockStore.saveNextRuleId).not.toHaveBeenCalled();
         expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
       });

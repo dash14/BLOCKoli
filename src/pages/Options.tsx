@@ -30,7 +30,7 @@ import { useTitleFontAdjuster } from "@/hooks/useTitleFontAdjuster";
 import { SaveConflictError } from "@/modules/rules/conflict";
 import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
 import { download } from "@/modules/utils/download";
-import { useI18n } from "../hooks/useI18n";
+import { getErrorText, useI18n } from "../hooks/useI18n";
 
 const DOWNLOAD_FILENAME = "BLOCKoli.json";
 
@@ -63,11 +63,7 @@ const Options: React.FC = () => {
       const conflicted = e instanceof SaveConflictError;
       await saveFailedDialog.current?.open([
         {
-          message: conflicted
-            ? i18n["save_conflict"]
-            : e instanceof Error
-              ? e.message
-              : String(e),
+          message: conflicted ? i18n["save_conflict"] : getErrorText(e, i18n),
         },
       ]);
       return conflicted ? "conflict" : false;
@@ -97,7 +93,7 @@ const Options: React.FC = () => {
       [success, errors] = await performImport(object);
     } catch (e) {
       success = false;
-      errors = [{ message: e instanceof Error ? e.message : String(e) }];
+      errors = [{ message: getErrorText(e, i18n) }];
     }
     if (success) {
       // reload, display succeeded dialog

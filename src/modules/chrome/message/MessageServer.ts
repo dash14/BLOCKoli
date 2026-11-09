@@ -1,8 +1,10 @@
+import { ServiceError } from "@/modules/core/ServiceError";
 import { EventEmitter, EventsOf, ServiceBase } from "@/modules/core/service";
 import logging from "@/modules/utils/logging";
 import {
   Message,
   BroadcastMessage,
+  ErrorResponseMessage,
   RequestMessage,
   ResponseMessage,
 } from "./types";
@@ -96,11 +98,7 @@ export class MessageServer<T extends ServiceBase>
       try {
         result = method.call(service, ...request.args);
       } catch (error: unknown) {
-        sendResponse({
-          type: "response",
-          success: false,
-          error: errorMessage(error),
-        });
+        sendResponse(errorResponse(error));
         return false;
       }
 
@@ -114,11 +112,7 @@ export class MessageServer<T extends ServiceBase>
             });
           })
           .catch((error) => {
-            sendResponse({
-              type: "response",
-              success: false,
-              error: errorMessage(error),
-            });
+            sendResponse(errorResponse(error));
           });
         return true; // async
       }
@@ -134,7 +128,12 @@ export class MessageServer<T extends ServiceBase>
   }
 }
 
-// The page shows the message, so it carries no "Error: " prefix
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+function errorResponse(error: unknown): ErrorResponseMessage {
+  if (error instanceof ServiceError) {
+    const { message, code, params } = error;
+    return { type: "response", success: false, error: message, code, params };
+  }
+  // The page shows the message, so it carries no "Error: " prefix
+  const message = error instanceof Error ? error.message : String(error);
+  return { type: "response", success: false, error: message };
 }

@@ -1,5 +1,6 @@
 import en from "@locales/en/messages.json";
 import ja from "@locales/ja/messages.json";
+import { ServiceError } from "@/modules/core/ServiceError";
 
 type Getter = { get: (target: unknown, name: string) => string };
 export type I18nMessageMap = Record<string, string>;
@@ -42,4 +43,21 @@ export function getLocalizedValidationErrorText(
   const key = text.replace(/[- ]/g, "_").replace(/[^\w]/g, "").toLowerCase();
   const translated = i18n[key];
   return translated ? translated : text;
+}
+
+// Fills in {name} placeholders
+export function formatMessage(message: string, params: Record<string, number>) {
+  return Object.entries(params).reduce(
+    (text, [name, value]) => text.split(`{${name}}`).join(String(value)),
+    message
+  );
+}
+
+// A ServiceError in the page's language; any other error keeps its own message
+export function getErrorText(error: unknown, i18n: I18nMessageMap): string {
+  if (error instanceof ServiceError) {
+    const message = i18n[`error_${error.code}`];
+    if (message) return formatMessage(message, error.params);
+  }
+  return error instanceof Error ? error.message : String(error);
 }
