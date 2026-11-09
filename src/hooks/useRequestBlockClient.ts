@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import isEqual from "lodash-es/isEqual";
 import { MessageProxyFactory } from "@/modules/chrome/message/MessageProxy";
+import { SaveConflictError } from "@/modules/rules/conflict";
 import { ExportedRuleSets } from "@/modules/rules/export";
 import { StoredRuleSets, VersionedRuleSets } from "@/modules/rules/stored";
 import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
@@ -9,6 +10,16 @@ import logging from "@/modules/utils/logging";
 import { updateI18nLanguage } from "./useI18n";
 
 const log = logging.getLogger("client");
+
+// Save attempts before giving up, when other pages keep saving first
+const MAX_SAVE_ATTEMPTS = 3;
+
+function isStale(error: unknown) {
+  return (
+    error instanceof Error &&
+    error.message === RequestBlock.STALE_RULE_SETS_ERROR
+  );
+}
 
 export function useRequestBlockClient() {
   const [loaded, setLoaded] = useState(false);
@@ -105,7 +116,6 @@ export function useRequestBlockClient() {
     }
   };
 
-
   // Resolves to the rule sets stored after the change, with the IDs the service gave new rules.
   // onSaved runs in the same step that shows them, so its state updates render with them.
   const updateRuleSets = (
@@ -113,24 +123,34 @@ export function useRequestBlockClient() {
     onSaved?: (saved: StoredRuleSets) => void
   ): Promise<StoredRuleSets> => {
     const run = queue.current.then(async () => {
-      const current = latestRuleSets.current;
-      const updated = change(current);
-      if (isEqual(updated, current)) {
-        onSaved?.(current);
-        return current;
-      }
-      saving.current = true;
-      try {
-        const saved = await service.updateRuleSets(updated);
-        receiveRuleSets(saved);
-        onSaved?.(saved.ruleSets);
-        return saved.ruleSets;
-      } finally {
-        saving.current = false;
-        if (held.current) {
-          receiveRuleSets(held.current);
-          held.current = undefined;
+      for (let attempt = 1; ; attempt++) {
+        const current = latestRuleSets.current;
+        const updated = change(current);
+        if (isEqual(updated, current)) {
+          onSaved?.(current);
+          return current;
         }
+        saving.current = true;
+        try {
+          const saved = await service.updateRuleSets(
+            updated,
+            appliedRevision.current
+          );
+          receiveRuleSets(saved);
+          onSaved?.(saved.ruleSets);
+          return saved.ruleSets;
+        } catch (error) {
+          if (!isStale(error)) throw error;
+          if (attempt >= MAX_SAVE_ATTEMPTS) throw new SaveConflictError();
+        } finally {
+          saving.current = false;
+          if (held.current) {
+            receiveRuleSets(held.current);
+            held.current = undefined;
+          }
+        }
+        // Another page saved first: apply the change again to what it stored
+        receiveRuleSets(await service.getRuleSets());
       }
     });
     queue.current = run.catch(() => undefined);

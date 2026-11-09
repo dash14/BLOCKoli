@@ -23,6 +23,7 @@ import {
   UNSUPPORTED_REGEX_SYNTAX_MESSAGE,
 } from "@/modules/rules/validation/edit";
 import { useRuleEdit } from "./useRuleEdit";
+import { SaveResult } from "./useRuleSetsEdit";
 
 beforeEach(() => {
   mockIsRegexSupported.mockResolvedValue({ isSupported: true });
@@ -401,7 +402,7 @@ describe("useRuleEdit", () => {
         {
           initialProps: {
             initialRule: validRule,
-            onChange: vi.fn() as (rule: Rule) => void | Promise<boolean>,
+            onChange: vi.fn() as (rule: Rule, base: Rule) => void | Promise<boolean>,
           },
         }
       );
@@ -562,6 +563,153 @@ describe("useRuleEdit", () => {
 
       rerender({ initialRule: fullRule });
       expect(result.current.rule).toBe(fullRule);
+    });
+  });
+
+  describe("base of a save", () => {
+    type OnChange = (rule: Rule, base: Rule) => void | Promise<SaveResult>;
+
+    function renderEditor(onChange: OnChange = vi.fn(async () => true)) {
+      return renderHook(
+        ({ initialRule, onChange }) =>
+          useRuleEdit(initialRule, onChange, vi.fn(), vi.fn()),
+        { initialProps: { initialRule: validRule, onChange } }
+      );
+    }
+
+    test("is the given rule when nothing was typed", async () => {
+      const onChange = vi.fn(async () => true);
+      const { result } = renderEditor(onChange);
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+
+      await act(async () => {
+        await result.current.save();
+      });
+
+      expect(onChange).toHaveBeenCalledWith(validRule, validRule);
+    });
+
+    test("is the given rule when typing started, not one given later", async () => {
+      const onChange = vi.fn(async () => true);
+      const { result, rerender } = renderEditor(onChange);
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains(["typed.com"]));
+
+      // Saved on another page while this one edits
+      rerender({ initialRule: fullRule, onChange });
+      await act(async () => {
+        await result.current.save();
+      });
+
+      expect(onChange).toHaveBeenCalledWith(
+        expect.objectContaining({ condition: { requestDomains: ["typed.com"] } }),
+        validRule
+      );
+    });
+
+    test("is the latest given rule after a conflict, so saving again overwrites it", async () => {
+      const onChange = vi.fn<OnChange>(async () => "conflict" as const);
+      const { result, rerender } = renderEditor(onChange);
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains(["typed.com"]));
+      await act(async () => {
+        await result.current.save();
+      });
+
+      rerender({ initialRule: fullRule, onChange });
+      await act(async () => {
+        await result.current.save();
+      });
+
+      expect(onChange.mock.calls.map(([, base]) => base)).toEqual([validRule, fullRule]);
+    });
+
+    test("stays the same after a save rejected for another reason", async () => {
+      const onChange = vi.fn<OnChange>(async () => false);
+      const { result, rerender } = renderEditor(onChange);
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains(["typed.com"]));
+      await act(async () => {
+        await result.current.save();
+      });
+
+      rerender({ initialRule: fullRule, onChange });
+      await act(async () => {
+        await result.current.save();
+      });
+
+      expect(onChange.mock.calls.map(([, base]) => base)).toEqual([validRule, validRule]);
+    });
+
+    test("is the rule of a save still waiting, for a save made on top of it", async () => {
+      const resolves: ((saved: boolean) => void)[] = [];
+      const onChange = vi.fn<OnChange>(
+        () => new Promise<boolean>((r) => resolves.push(r))
+      );
+      const { result } = renderEditor(onChange);
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains(["first.com"]));
+      let first!: Promise<void>;
+      act(() => {
+        first = result.current.save();
+      });
+      await waitFor(() => expect(onChange).toHaveBeenCalledTimes(1));
+
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains(["second.com"]));
+      let second!: Promise<void>;
+      act(() => {
+        second = result.current.save();
+      });
+      await waitFor(() => expect(onChange).toHaveBeenCalledTimes(2));
+      await act(async () => {
+        resolves.forEach((resolve) => resolve(true));
+        await Promise.all([first, second]);
+      });
+
+      expect(onChange.mock.calls[1][1]).toBe(onChange.mock.calls[0][0]);
+    });
+
+    test("starts again from the given rule after a saved edit", async () => {
+      const onChange = vi.fn<OnChange>(async () => true);
+      const { result, rerender } = renderEditor(onChange);
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains(["typed.com"]));
+      await act(async () => {
+        await result.current.save();
+      });
+
+      rerender({ initialRule: fullRule, onChange });
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains(["again.com"]));
+      await act(async () => {
+        await result.current.save();
+      });
+
+      expect(onChange.mock.calls[1][1]).toBe(fullRule);
+    });
+
+    test("starts again from the given rule after a cancel", async () => {
+      const onChange = vi.fn<OnChange>(async () => true);
+      const { result, rerender } = renderEditor(onChange);
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains(["typed.com"]));
+      act(() => result.current.cancel());
+
+      rerender({ initialRule: fullRule, onChange });
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains(["again.com"]));
+      await act(async () => {
+        await result.current.save();
+      });
+
+      expect(onChange).toHaveBeenCalledWith(expect.anything(), fullRule);
     });
   });
 
@@ -884,7 +1032,7 @@ describe("useRuleEdit", () => {
         await act(() => saving);
 
         expect(first).not.toHaveBeenCalled();
-        expect(latest).toHaveBeenCalledWith(regexRule);
+        expect(latest).toHaveBeenCalledWith(regexRule, regexRule);
       });
 
       test("saves without checking again when the rule was already checked", async () => {
@@ -900,7 +1048,7 @@ describe("useRuleEdit", () => {
           void result.current.save();
         });
 
-        expect(onChange).toHaveBeenCalledWith(regexRule);
+        expect(onChange).toHaveBeenCalledWith(regexRule, regexRule);
         expect(mockIsRegexSupported).not.toHaveBeenCalled();
       });
 

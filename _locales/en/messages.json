@@ -211,12 +211,6 @@
   "load_failed": {
     "message": "Could not load the settings. Close this page and open it again."
   },
-  "opened_in_another_tab": {
-    "message": "The options are open in another tab, where they can be edited."
-  },
-  "edit_here": {
-    "message": "Edit in this tab"
-  },
 
   "ImportAndExportRules": {
     "message": "Import and Export Rules"
@@ -256,6 +250,9 @@
   },
   "save_failed": {
     "message": "Save failed"
+  },
+  "save_conflict": {
+    "message": "It was changed in another tab, so your change was not saved. Check the latest content and try again."
   },
   "json_parse_error": {
     "message": "JSON parse error"

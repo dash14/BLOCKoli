@@ -211,12 +211,6 @@
   "load_failed": {
     "message": "設定を読み込めませんでした。この画面を閉じて、もう一度開いてください。"
   },
-  "opened_in_another_tab": {
-    "message": "オプションは別のタブで開かれていて、そちらで編集できます。"
-  },
-  "edit_here": {
-    "message": "このタブで編集する"
-  },
 
   "ImportAndExportRules": {
     "message": "ルールのインポートとエクスポート"
@@ -256,6 +250,9 @@
   },
   "save_failed": {
     "message": "保存できませんでした"
+  },
+  "save_conflict": {
+    "message": "別のタブで変更されていたため、保存しませんでした。最新の内容を確認して、もう一度操作してください。"
   },
   "json_parse_error": {
     "message": "JSONパースエラー"

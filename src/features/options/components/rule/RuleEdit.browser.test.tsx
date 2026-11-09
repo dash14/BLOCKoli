@@ -248,7 +248,8 @@ describe("RuleEdit component", () => {
       expect(onChange).toHaveBeenCalledWith(
         expect.objectContaining({
           action: { type: RuleActionType.ALLOW },
-        })
+        }),
+        validRule
       );
     });
 
@@ -285,7 +286,8 @@ describe("RuleEdit component", () => {
           condition: expect.objectContaining({
             requestDomains: ["newdomain.com", "anotherdomain.org"],
           }),
-        })
+        }),
+        validRule
       );
     });
 
@@ -322,7 +324,8 @@ describe("RuleEdit component", () => {
           condition: expect.objectContaining({
             urlFilter: "||tracking.com^",
           }),
-        })
+        }),
+        validRule
       );
     });
 
@@ -365,7 +368,8 @@ describe("RuleEdit component", () => {
           condition: expect.objectContaining({
             isRegexFilter: true,
           }),
-        })
+        }),
+        ruleWithValidRegexUrl
       );
     });
   });

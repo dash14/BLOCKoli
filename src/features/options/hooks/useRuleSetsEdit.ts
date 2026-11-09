@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
+import isEqual from "lodash-es/isEqual";
 import omit from "lodash-es/omit";
 import { Rule } from "@/modules/core/rules";
+import { SaveConflictError } from "@/modules/rules/conflict";
 import {
   RULE_ID_UNSAVED,
   StoredRuleSet,
@@ -8,16 +10,26 @@ import {
 } from "@/modules/rules/stored";
 import { newRuleSetName, newRuleTemplate } from "@/modules/rules/template";
 
+// Throws SaveConflictError when what it changes is no longer as this page showed it
 export type RuleSetsChange = (stored: StoredRuleSets) => StoredRuleSets;
 
 // Called with the stored rule sets in the same step that shows them
 export type RuleSetsSaved = (saved: StoredRuleSets) => void;
 
-// Resolves to the stored rule sets, or to false when the save was rejected
+// Resolves to the stored rule sets, or says why the save was rejected
 export type SaveRuleSets = (
   change: RuleSetsChange,
   onSaved?: RuleSetsSaved
-) => Promise<StoredRuleSets | false>;
+) => Promise<StoredRuleSets | SaveRejection>;
+
+export type SaveRejection = false | "conflict";
+
+// true when saved; otherwise why not
+export type SaveResult = true | SaveRejection;
+
+function toResult(saved: StoredRuleSets | SaveRejection): SaveResult {
+  return Array.isArray(saved) || saved;
+}
 
 export type RuleEntry = {
   // Stays the same from when the rule is added until it is removed
@@ -115,16 +127,20 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
   async function saveNewRule(ruleSetId: string, key: string, rule: Rule) {
     const newRule = { ...rule, id: RULE_ID_UNSAVED };
     const { name } = entries.find((entry) => entry.id === ruleSetId)!;
-    // A rule set that is new, or was removed meanwhile, is stored with this rule
+    const isNew = !storedIds.has(ruleSetId);
     const saved = await save(
-      (current) =>
-        current.some((ruleSet) => ruleSet.id === ruleSetId)
-          ? current.map((ruleSet) =>
-              ruleSet.id === ruleSetId
-                ? { ...ruleSet, rules: [...ruleSet.rules, newRule] }
-                : ruleSet
-            )
-          : [...current, { id: ruleSetId, name, rules: [newRule] }],
+      (current) => {
+        if (current.some((ruleSet) => ruleSet.id === ruleSetId)) {
+          return current.map((ruleSet) =>
+            ruleSet.id === ruleSetId
+              ? { ...ruleSet, rules: [...ruleSet.rules, newRule] }
+              : ruleSet
+          );
+        }
+        // Removed on another page
+        if (!isNew) throw new SaveConflictError();
+        return [...current, { id: ruleSetId, name, rules: [newRule] }];
+      },
       // In the same render as the saved rule, so its editor keeps the key
       (saved) => {
         // The service keeps the order, so the rule added is the last one
@@ -134,40 +150,59 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
         setNewRuleSets((current) => current.filter(({ id }) => id !== ruleSetId));
       }
     );
-    return saved !== false;
+    return toResult(saved);
   }
 
-  function updateRule(ruleSetId: string, ruleId: number, rule: Rule) {
-    return saveRules(ruleSetId, (rules) =>
-      rules.map((stored) =>
+  // base is the rule as it was when editing started
+  function updateRule(ruleSetId: string, ruleId: number, rule: Rule, base: Rule) {
+    return saveRules(ruleSetId, (rules) => {
+      const stored = rules.find(({ id }) => id === ruleId);
+      // Another page already saved the same rule
+      if (stored && isSameRule(stored, rule)) return rules;
+      if (!stored || !isSameRule(stored, base)) throw new SaveConflictError();
+      return rules.map((stored) =>
         stored.id === ruleId ? { ...rule, id: ruleId } : stored
-      )
-    );
+      );
+    });
   }
 
-  async function removeRule(ruleSetId: string, ruleId: number) {
-    const saved = await saveRules(ruleSetId, (rules) =>
-      rules.filter((stored) => stored.id !== ruleId)
+  // base is the rule as shown when it was removed
+  async function removeRule(ruleSetId: string, ruleId: number, base: Rule) {
+    const saved = await saveRules(
+      ruleSetId,
+      (rules) => {
+        const stored = rules.find(({ id }) => id === ruleId);
+        // Already removed on another page
+        if (!stored) return rules;
+        if (!isSameRule(stored, base)) throw new SaveConflictError();
+        return rules.filter((stored) => stored.id !== ruleId);
+      },
+      // Removed on another page with its rule set
+      (current) => current
     );
-    if (saved) savedKeys.current.delete(ruleId);
+    if (saved === true) savedKeys.current.delete(ruleId);
     return saved;
   }
 
   async function saveRules(
     ruleSetId: string,
-    change: (rules: StoredRuleSet["rules"]) => StoredRuleSet["rules"]
+    change: (rules: StoredRuleSet["rules"]) => StoredRuleSet["rules"],
+    // When the rule set was removed on another page
+    ifRemoved: RuleSetsChange = () => {
+      throw new SaveConflictError();
+    }
   ) {
-    const saved = await save((current) =>
-      current
-        .map((ruleSet) =>
-          ruleSet.id === ruleSetId
-            ? { ...ruleSet, rules: change(ruleSet.rules) }
-            : ruleSet
-        )
-        // The rule set goes with its last rule
-        .filter((ruleSet) => ruleSet.id !== ruleSetId || ruleSet.rules.length > 0)
-    );
-    return saved !== false;
+    const saved = await save((current) => {
+      const target = current.find((ruleSet) => ruleSet.id === ruleSetId);
+      if (!target) return ifRemoved(current);
+      const rules = change(target.rules);
+      // The rule set goes with its last rule
+      if (rules.length === 0) return current.filter((ruleSet) => ruleSet !== target);
+      return current.map((ruleSet) =>
+        ruleSet === target ? { ...ruleSet, rules } : ruleSet
+      );
+    });
+    return toResult(saved);
   }
 
   function cancelNewRule(ruleSetId: string, key: string) {
@@ -184,11 +219,16 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
       dropNewRuleSet(id);
       return;
     }
+    // The rules shown; a rename does not stop the removal
     const { rules } = stored.find((ruleSet) => ruleSet.id === id)!;
-    const saved = await save((current) =>
-      current.filter((ruleSet) => ruleSet.id !== id)
-    );
-    if (saved === false) return;
+    const saved = await save((current) => {
+      const target = current.find((ruleSet) => ruleSet.id === id);
+      // Already removed on another page
+      if (!target) return current;
+      if (!isEqual(target.rules, rules)) throw new SaveConflictError();
+      return current.filter((ruleSet) => ruleSet !== target);
+    });
+    if (!Array.isArray(saved)) return;
     dropNewRuleSet(id);
     rules.forEach((rule) => savedKeys.current.delete(rule.id));
   }
@@ -200,10 +240,18 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
       );
       return;
     }
+    // The name shown, which may be a rename still saving
+    const base = entries.find((entry) => entry.id === id)!.name;
     setSavingNames((current) => ({ ...current, [id]: name }));
-    await save((current) =>
-      current.map((ruleSet) => (ruleSet.id === id ? { ...ruleSet, name } : ruleSet))
-    );
+    await save((current) => {
+      const target = current.find((ruleSet) => ruleSet.id === id);
+      // Another page already gave it the same name
+      if (target?.name === name) return current;
+      if (target?.name !== base) throw new SaveConflictError();
+      return current.map((ruleSet) =>
+        ruleSet === target ? { ...ruleSet, name } : ruleSet
+      );
+    });
     // A later rename that is still saving keeps its name shown
     setSavingNames((current) =>
       current[id] === name ? omit(current, id) : current
@@ -221,4 +269,9 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
     removeRuleSet,
     renameRuleSet,
   };
+}
+
+// The editor's rule has no ID until its first save comes back
+function isSameRule(stored: Rule, base: Rule) {
+  return isEqual(omit(stored, "id"), omit(base, "id"));
 }

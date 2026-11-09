@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 import { Rule, RuleActionType } from "@/modules/core/rules";
+import { SaveConflictError } from "@/modules/rules/conflict";
 import {
   RULE_ID_UNSAVED,
   StoredRule,
@@ -11,6 +12,8 @@ import {
   RuleSetEntry,
   RuleSetsChange,
   RuleSetsSaved,
+  SaveRejection,
+  SaveResult,
   useRuleSetsEdit,
 } from "./useRuleSetsEdit";
 
@@ -35,8 +38,16 @@ function setup(initial: StoredRuleSets) {
   let stored = initial;
   let nextId = 100;
   const save = vi.fn(
-    async (change: RuleSetsChange, onSaved?: RuleSetsSaved): Promise<StoredRuleSets | false> => {
-      stored = change(stored).map((ruleSet) => ({
+    async (change: RuleSetsChange, onSaved?: RuleSetsSaved): Promise<StoredRuleSets | SaveRejection> => {
+      let changed: StoredRuleSets;
+      try {
+        changed = change(stored);
+      } catch (error) {
+        // Rejected like the options page does
+        conflicts.push(error);
+        return "conflict";
+      }
+      stored = changed.map((ruleSet) => ({
         ...ruleSet,
         rules: ruleSet.rules.map((rule) =>
           rule.id === RULE_ID_UNSAVED ? { ...rule, id: nextId++ } : rule
@@ -50,6 +61,7 @@ function setup(initial: StoredRuleSets) {
       return stored;
     }
   );
+  const conflicts: unknown[] = [];
   // Rejects the next save, leaving the stored rule sets as they are
   const rejectNext = () => save.mockImplementationOnce(async () => false);
   // The entries of every render
@@ -73,6 +85,7 @@ function setup(initial: StoredRuleSets) {
     },
     stored: () => stored,
     renders,
+    conflicts,
   };
 }
 
@@ -201,7 +214,7 @@ describe("useRuleSetsEdit", () => {
       act(() => result.current.addRule("rs-1"));
       const { key } = result.current.entries[0].rules[1];
 
-      let saved: boolean | undefined;
+      let saved: SaveResult | undefined;
       await act(async () => {
         saved = await result.current.saveNewRule("rs-1", key, typedRule);
       });
@@ -257,7 +270,7 @@ describe("useRuleSetsEdit", () => {
       const { id, rules } = result.current.entries[2];
 
       rejectNext();
-      let saved: boolean | undefined;
+      let saved: SaveResult | undefined;
       await act(async () => {
         saved = await result.current.saveNewRule(id, rules[0].key, typedRule);
       });
@@ -272,13 +285,290 @@ describe("useRuleSetsEdit", () => {
     });
   });
 
+  describe("saving over changes made on another page", () => {
+    const changedRule: StoredRule = { ...savedRule, condition: { urlFilter: "/changed" } };
+
+    function expectConflict(
+      { conflicts, stored }: ReturnType<typeof setup>,
+      expected: StoredRuleSets
+    ) {
+      expect(conflicts).toEqual([expect.any(SaveConflictError)]);
+      expect(stored()).toBe(expected);
+    }
+
+    test("adds a rule to a stored rule set only while it is stored", async () => {
+      const page = setup(sampleRuleSets);
+      act(() => page.result.current.addRule("rs-1"));
+      const { key } = page.result.current.entries[0].rules[1];
+      // Saved from the page as it was before the removal arrived
+      const saveNewRule = page.result.current.saveNewRule;
+      const elsewhere = [sampleRuleSets[1]];
+      act(() => page.storeElsewhere(elsewhere));
+
+      let saved: SaveResult | undefined;
+      await act(async () => {
+        saved = await saveNewRule("rs-1", key, typedRule);
+      });
+
+      expect(saved).toBe("conflict");
+      expectConflict(page, elsewhere);
+    });
+
+    test("updates a rule only while it is as it was when editing started", async () => {
+      const page = setup(sampleRuleSets);
+      const elsewhere = [
+        sampleRuleSets[0],
+        { ...sampleRuleSets[1], rules: [{ ...changedRule, id: 2 }] },
+      ];
+      page.storeElsewhere(elsewhere);
+
+      let saved: SaveResult | undefined;
+      await act(async () => {
+        saved = await page.result.current.updateRule(
+          "rs-2",
+          2,
+          typedRule,
+          sampleRuleSets[1].rules[0]
+        );
+      });
+
+      expect(saved).toBe("conflict");
+      expectConflict(page, elsewhere);
+    });
+
+    test("leaves a rule another page already changed the same way", async () => {
+      const page = setup(sampleRuleSets);
+      const elsewhere = [
+        sampleRuleSets[0],
+        { ...sampleRuleSets[1], rules: [{ ...typedRule, id: 2 }] },
+      ];
+      page.storeElsewhere(elsewhere);
+
+      let saved: SaveResult | undefined;
+      await act(async () => {
+        saved = await page.result.current.updateRule(
+          "rs-2",
+          2,
+          typedRule,
+          sampleRuleSets[1].rules[0]
+        );
+      });
+
+      expect(saved).toBe(true);
+      expect(page.conflicts).toEqual([]);
+      expect(page.stored()).toStrictEqual(elsewhere);
+    });
+
+    test("leaves a rule set another page already gave the same name", async () => {
+      const page = setup(sampleRuleSets);
+      const rename = page.result.current.renameRuleSet;
+      const elsewhere = [{ ...sampleRuleSets[0], name: "Same" }, sampleRuleSets[1]];
+      act(() => page.storeElsewhere(elsewhere));
+
+      await act(async () => {
+        await rename("rs-1", "Same");
+      });
+
+      expect(page.conflicts).toEqual([]);
+      expect(page.stored()).toStrictEqual(elsewhere);
+    });
+
+    test("does not update a rule removed on another page", async () => {
+      const page = setup(sampleRuleSets);
+      const elsewhere = [sampleRuleSets[0], { ...sampleRuleSets[1], rules: [changedRule] }];
+      page.storeElsewhere(elsewhere);
+
+      await act(async () => {
+        await page.result.current.updateRule("rs-2", 2, typedRule, savedRule);
+      });
+
+      expectConflict(page, elsewhere);
+    });
+
+    test("does not save rules of a rule set removed on another page", async () => {
+      const page = setup(sampleRuleSets);
+      const elsewhere = [sampleRuleSets[0]];
+      page.storeElsewhere(elsewhere);
+
+      await act(async () => {
+        await page.result.current.updateRule("rs-2", 2, typedRule, savedRule);
+      });
+
+      expectConflict(page, elsewhere);
+    });
+
+    test("removes a rule only while it is as shown", async () => {
+      const page = setup([{ id: "rs-1", name: "Two", rules: [savedRule, { ...savedRule, id: 2 }] }]);
+      const elsewhere = [{ id: "rs-1", name: "Two", rules: [{ ...changedRule, id: 1 }, { ...savedRule, id: 2 }] }];
+      page.storeElsewhere(elsewhere);
+
+      await act(async () => {
+        await page.result.current.removeRule("rs-1", 1, savedRule);
+      });
+
+      expectConflict(page, elsewhere);
+    });
+
+    test("leaves a rule removed on another page as it is", async () => {
+      const page = setup([{ id: "rs-1", name: "Two", rules: [savedRule, { ...savedRule, id: 2 }] }]);
+      const elsewhere = [{ id: "rs-1", name: "Two", rules: [{ ...savedRule, id: 2 }] }];
+      page.storeElsewhere(elsewhere);
+
+      let saved: SaveResult | undefined;
+      await act(async () => {
+        saved = await page.result.current.removeRule("rs-1", 1, savedRule);
+      });
+
+      expect(saved).toBe(true);
+      expect(page.conflicts).toEqual([]);
+      expect(page.stored()).toStrictEqual(elsewhere);
+    });
+
+    test("leaves a rule removed on another page with its rule set as it is", async () => {
+      const page = setup(sampleRuleSets);
+      const elsewhere = [sampleRuleSets[1]];
+      page.storeElsewhere(elsewhere);
+
+      let saved: SaveResult | undefined;
+      await act(async () => {
+        saved = await page.result.current.removeRule("rs-1", 1, savedRule);
+      });
+
+      expect(saved).toBe(true);
+      expect(page.conflicts).toEqual([]);
+      expect(page.stored()).toStrictEqual(elsewhere);
+    });
+
+    test("compares rules without their IDs, as a new rule has none until saved", async () => {
+      const page = setup(sampleRuleSets);
+      const { id: _id, ...base } = sampleRuleSets[1].rules[0];
+
+      await act(async () => {
+        await page.result.current.updateRule("rs-2", 2, typedRule, base);
+      });
+
+      expect(page.conflicts).toEqual([]);
+      expect(page.stored()[1].rules).toStrictEqual([{ ...typedRule, id: 2 }]);
+    });
+
+    test("removes a rule set while other rule sets changed on another page", async () => {
+      const page = setup(sampleRuleSets);
+      const remove = page.result.current.removeRuleSet;
+      const elsewhere = [{ ...sampleRuleSets[0], rules: [changedRule] }, sampleRuleSets[1]];
+      act(() => page.storeElsewhere(elsewhere));
+
+      await act(async () => {
+        await remove("rs-2");
+      });
+
+      expect(page.conflicts).toEqual([]);
+      expect(page.stored()).toStrictEqual([elsewhere[0]]);
+    });
+
+    test("leaves a rule set removed on another page as it is", async () => {
+      const page = setup(sampleRuleSets);
+      const remove = page.result.current.removeRuleSet;
+      const elsewhere = [sampleRuleSets[1]];
+      act(() => page.storeElsewhere(elsewhere));
+
+      await act(async () => {
+        await remove("rs-1");
+      });
+
+      expect(page.conflicts).toEqual([]);
+      expect(page.stored()).toStrictEqual(elsewhere);
+    });
+
+    test("removes a rule set renamed on another page", async () => {
+      const page = setup(sampleRuleSets);
+      const remove = page.result.current.removeRuleSet;
+      act(() =>
+        page.storeElsewhere([{ ...sampleRuleSets[0], name: "Renamed" }, sampleRuleSets[1]])
+      );
+
+      await act(async () => {
+        await remove("rs-1");
+      });
+
+      expect(page.conflicts).toEqual([]);
+      expect(page.stored()).toStrictEqual([sampleRuleSets[1]]);
+    });
+
+    test("does not remove a rule set whose rules changed on another page since it was shown", async () => {
+      const page = setup(sampleRuleSets);
+      const remove = page.result.current.removeRuleSet;
+      const elsewhere = [{ ...sampleRuleSets[0], rules: [changedRule] }, sampleRuleSets[1]];
+      act(() => page.storeElsewhere(elsewhere));
+
+      await act(async () => {
+        await remove("rs-1");
+      });
+
+      expectConflict(page, elsewhere);
+    });
+
+    test("does not rename a rule set renamed on another page since it was shown", async () => {
+      const page = setup(sampleRuleSets);
+      const rename = page.result.current.renameRuleSet;
+      const elsewhere = [{ ...sampleRuleSets[0], name: "Elsewhere" }, sampleRuleSets[1]];
+      act(() => page.storeElsewhere(elsewhere));
+
+      await act(async () => {
+        await rename("rs-1", "Here");
+      });
+
+      expectConflict(page, elsewhere);
+      expect(names(page.result.current.entries)).toEqual(["Elsewhere", "Allow Trusted"]);
+    });
+
+    test("does not rename a rule set removed on another page", async () => {
+      const page = setup(sampleRuleSets);
+      const rename = page.result.current.renameRuleSet;
+      const elsewhere = [sampleRuleSets[1]];
+      act(() => page.storeElsewhere(elsewhere));
+
+      await act(async () => {
+        await rename("rs-1", "Here");
+      });
+
+      expectConflict(page, elsewhere);
+    });
+
+    test("renames again on top of a rename still saving", async () => {
+      const page = setup(sampleRuleSets);
+      const finishes: (() => void)[] = [];
+      let saved = sampleRuleSets;
+      page.save.mockImplementation(async (change) => {
+        await new Promise<void>((resolve) => finishes.push(resolve));
+        return (saved = change(saved));
+      });
+
+      let first!: Promise<void>;
+      let second!: Promise<void>;
+      act(() => {
+        first = page.result.current.renameRuleSet("rs-2", "First");
+      });
+      act(() => {
+        second = page.result.current.renameRuleSet("rs-2", "Second");
+      });
+      await act(async () => {
+        finishes[0]();
+        await first;
+        finishes[1]();
+        await second;
+      });
+
+      expect(saved[1].name).toBe("Second");
+    });
+  });
+
   describe("updateRule", () => {
     test("replaces the stored rule, keeping its ID", async () => {
       const { result, stored } = setup(sampleRuleSets);
 
-      let saved: boolean | undefined;
+      let saved: SaveResult | undefined;
       await act(async () => {
-        saved = await result.current.updateRule("rs-2", 2, typedRule);
+        saved = await result.current.updateRule("rs-2", 2, typedRule, sampleRuleSets[1].rules[0]);
       });
 
       expect(saved).toBe(true);
@@ -295,7 +585,7 @@ describe("useRuleSetsEdit", () => {
       ]);
 
       await act(async () => {
-        await result.current.updateRule("rs-1", 1, typedRule);
+        await result.current.updateRule("rs-1", 1, typedRule, savedRule);
       });
 
       expect(stored()[0].rules).toStrictEqual([{ ...typedRule, id: 1 }, others]);
@@ -306,7 +596,7 @@ describe("useRuleSetsEdit", () => {
       const { result, stored } = setup([empty, ...sampleRuleSets]);
 
       await act(async () => {
-        await result.current.updateRule("rs-2", 2, typedRule);
+        await result.current.updateRule("rs-2", 2, typedRule, sampleRuleSets[1].rules[0]);
       });
 
       expect(stored()[0]).toStrictEqual(empty);
@@ -316,9 +606,9 @@ describe("useRuleSetsEdit", () => {
       const { result, rejectNext, stored } = setup(sampleRuleSets);
 
       rejectNext();
-      let saved: boolean | undefined;
+      let saved: SaveResult | undefined;
       await act(async () => {
-        saved = await result.current.updateRule("rs-2", 2, typedRule);
+        saved = await result.current.updateRule("rs-2", 2, typedRule, sampleRuleSets[1].rules[0]);
       });
 
       expect(saved).toBe(false);
@@ -334,7 +624,7 @@ describe("useRuleSetsEdit", () => {
       const { result, stored } = setup(twoRules);
 
       await act(async () => {
-        await result.current.removeRule("rs-1", 1);
+        await result.current.removeRule("rs-1", 1, savedRule);
       });
 
       expect(stored()).toStrictEqual([
@@ -346,7 +636,7 @@ describe("useRuleSetsEdit", () => {
       const { result, stored } = setup(sampleRuleSets);
 
       await act(async () => {
-        await result.current.removeRule("rs-1", 1);
+        await result.current.removeRule("rs-1", 1, savedRule);
       });
 
       expect(stored()).toStrictEqual([sampleRuleSets[1]]);
@@ -355,9 +645,9 @@ describe("useRuleSetsEdit", () => {
       const { result, rejectNext, stored } = setup(sampleRuleSets);
 
       rejectNext();
-      let saved: boolean | undefined;
+      let saved: SaveResult | undefined;
       await act(async () => {
-        saved = await result.current.removeRule("rs-1", 1);
+        saved = await result.current.removeRule("rs-1", 1, savedRule);
       });
 
       expect(saved).toBe(false);
@@ -374,7 +664,7 @@ describe("useRuleSetsEdit", () => {
       const before = stored();
 
       await act(async () => {
-        await result.current.removeRule("rs-1", 100);
+        await result.current.removeRule("rs-1", 100, { ...typedRule, id: 100 });
       });
       act(() => storeElsewhere(before));
 
@@ -510,9 +800,10 @@ describe("useRuleSetsEdit", () => {
     test("keeps showing a later name while it is still saving", async () => {
       const { result, save } = setup(sampleRuleSets);
       const finishes: (() => void)[] = [];
+      let saved = sampleRuleSets;
       save.mockImplementation(async (change) => {
         await new Promise<void>((resolve) => finishes.push(resolve));
-        return change(sampleRuleSets);
+        return (saved = change(saved));
       });
 
       let first!: Promise<void>;

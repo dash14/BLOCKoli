@@ -1,8 +1,8 @@
-import { beforeAll, describe, expect, onTestFinished, test, vi } from "vitest";
+import { beforeAll, describe, expect, test, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { RuleSetsChange } from "@/features/options/hooks/useRuleSetsEdit";
-import { EDITING_LOCK_NAME } from "@/hooks/useEditingTab";
 import { RuleActionType } from "@/modules/core/rules";
+import { SaveConflictError } from "@/modules/rules/conflict";
 import { StoredRuleSets } from "@/modules/rules/stored";
 import { renderWithChakra } from "@/test/utils/render";
 
@@ -138,47 +138,6 @@ describe("Options page", () => {
     );
   });
 
-  test("shows a notice while another page edits, until this one takes over again", async () => {
-    mockUseRequestBlockClient.mockReturnValue(
-      createMockReturnValue({ ruleSets: sampleRuleSets }),
-    );
-    await renderWithChakra(
-      <div data-testid="container" style={{ width: 1024, height: 900 }}>
-        <Options />
-      </div>,
-    );
-    await expect.element(page.getByText("Block Ads")).toBeInTheDocument();
-
-    // Another options page opens
-    let closeOther = () => {};
-    const other = navigator.locks
-      .request(EDITING_LOCK_NAME, { steal: true }, () =>
-        new Promise<void>((resolve) => (closeOther = resolve))
-      )
-      .catch(() => "taken back");
-    onTestFinished(() => closeOther());
-
-    await expect
-      .element(page.getByRole("status"))
-      .toHaveTextContent(
-        "The options are open in another tab, where they can be edited."
-      );
-    await expect.element(page.getByText("Block Ads")).not.toBeInTheDocument();
-    await expect.element(page.getByRole("checkbox")).not.toBeInTheDocument();
-    await expect.element(page.getByRole("combobox")).toBeInTheDocument();
-
-    // VRT screenshot
-    await userEvent.unhover(page.getByRole("document"));
-    await expect(page.getByTestId("container")).toMatchScreenshot(
-      "Options-opened-in-another-tab",
-    );
-
-    await page.getByRole("button", { name: "Edit in this tab" }).click();
-
-    await expect.element(page.getByText("Block Ads")).toBeInTheDocument();
-    expect(await other).toBe("taken back");
-  });
-
   test("renders with rule sets", async () => {
     mockUseRequestBlockClient.mockReturnValue(
       createMockReturnValue({ ruleSets: sampleRuleSets }),
@@ -268,9 +227,12 @@ describe("Options page", () => {
     expect(page.getByRole("alertdialog").query()).toBeNull();
   });
 
+  const conflictMessage =
+    "It was changed in another tab, so your change was not saved. Check the latest content and try again.";
   for (const [rejection, shown] of [
     [new Error("Too many rules: 501, but at most 500 can be defined"), "Too many rules: 501, but at most 500 can be defined"],
     ["Rejected", "Rejected"],
+    [new SaveConflictError(), conflictMessage],
   ] as const) {
     test(`shows why a save was rejected and keeps the rule being edited (${shown})`, async () => {
       const updateRuleSets = vi.fn().mockRejectedValue(rejection);
