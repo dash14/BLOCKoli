@@ -1,12 +1,9 @@
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
-import {
-  RuleSetsChange,
-  SaveConflictError,
-} from "@/features/options/hooks/useRuleSetsEdit";
+import { RuleSetsChange } from "@/features/options/hooks/useRuleSetsEdit";
 import { RuleActionType } from "@/modules/core/rules";
+import { SaveConflictError } from "@/modules/rules/conflict";
 import { StoredRuleSets } from "@/modules/rules/stored";
-import { STALE_RULE_SETS_ERROR } from "@/modules/services/RequestBlockService";
 import { renderWithChakra } from "@/test/utils/render";
 
 // Mock useRequestBlockClient before importing Options
@@ -236,7 +233,6 @@ describe("Options page", () => {
     [new Error("Too many rules: 501, but at most 500 can be defined"), "Too many rules: 501, but at most 500 can be defined"],
     ["Rejected", "Rejected"],
     [new SaveConflictError(), conflictMessage],
-    [new Error(STALE_RULE_SETS_ERROR), conflictMessage],
   ] as const) {
     test(`shows why a save was rejected and keeps the rule being edited (${shown})`, async () => {
       const updateRuleSets = vi.fn().mockRejectedValue(rejection);

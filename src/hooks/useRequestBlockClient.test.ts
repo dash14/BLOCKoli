@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach, onTestFinished } from "vitest";
 import { Rule, RuleActionType } from "@/modules/core/rules";
+import { SaveConflictError } from "@/modules/rules/conflict";
 import { StoredRuleSets } from "@/modules/rules/stored";
 import { STALE_RULE_SETS_ERROR } from "@/modules/services/RequestBlockService";
 import logging from "@/modules/utils/logging";
@@ -535,7 +536,7 @@ describe("useRequestBlockClient", () => {
       expect(saved).toStrictEqual(named("elsewhere"));
     });
 
-    it("gives up after three saves in a row are refused", async () => {
+    it("reports a conflict after three saves in a row are refused", async () => {
       const result = await render();
       storedElsewhere(3);
 
@@ -548,7 +549,7 @@ describe("useRequestBlockClient", () => {
         await failed.catch(() => {});
       });
 
-      await expect(failed).rejects.toThrow(STALE_RULE_SETS_ERROR);
+      await expect(failed).rejects.toBeInstanceOf(SaveConflictError);
       expect(sentRevisions()).toEqual([0, 5, 5]);
       expect(result.current.ruleSets).toStrictEqual(named("elsewhere"));
     });

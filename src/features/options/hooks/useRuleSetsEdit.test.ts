@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 import { Rule, RuleActionType } from "@/modules/core/rules";
+import { SaveConflictError } from "@/modules/rules/conflict";
 import {
   RULE_ID_UNSAVED,
   StoredRule,
@@ -11,7 +12,8 @@ import {
   RuleSetEntry,
   RuleSetsChange,
   RuleSetsSaved,
-  SaveConflictError,
+  SaveRejection,
+  SaveResult,
   useRuleSetsEdit,
 } from "./useRuleSetsEdit";
 
@@ -36,14 +38,14 @@ function setup(initial: StoredRuleSets) {
   let stored = initial;
   let nextId = 100;
   const save = vi.fn(
-    async (change: RuleSetsChange, onSaved?: RuleSetsSaved): Promise<StoredRuleSets | false> => {
+    async (change: RuleSetsChange, onSaved?: RuleSetsSaved): Promise<StoredRuleSets | SaveRejection> => {
       let changed: StoredRuleSets;
       try {
         changed = change(stored);
       } catch (error) {
         // Rejected like the options page does
         conflicts.push(error);
-        return false;
+        return "conflict";
       }
       stored = changed.map((ruleSet) => ({
         ...ruleSet,
@@ -212,7 +214,7 @@ describe("useRuleSetsEdit", () => {
       act(() => result.current.addRule("rs-1"));
       const { key } = result.current.entries[0].rules[1];
 
-      let saved: boolean | undefined;
+      let saved: SaveResult | undefined;
       await act(async () => {
         saved = await result.current.saveNewRule("rs-1", key, typedRule);
       });
@@ -268,7 +270,7 @@ describe("useRuleSetsEdit", () => {
       const { id, rules } = result.current.entries[2];
 
       rejectNext();
-      let saved: boolean | undefined;
+      let saved: SaveResult | undefined;
       await act(async () => {
         saved = await result.current.saveNewRule(id, rules[0].key, typedRule);
       });
@@ -303,29 +305,34 @@ describe("useRuleSetsEdit", () => {
       const elsewhere = [sampleRuleSets[1]];
       act(() => page.storeElsewhere(elsewhere));
 
-      let saved: boolean | undefined;
+      let saved: SaveResult | undefined;
       await act(async () => {
         saved = await saveNewRule("rs-1", key, typedRule);
       });
 
-      expect(saved).toBe(false);
+      expect(saved).toBe("conflict");
       expectConflict(page, elsewhere);
     });
 
     test("updates a rule only while it is as it was when editing started", async () => {
       const page = setup(sampleRuleSets);
-      const elsewhere = [sampleRuleSets[0], { ...sampleRuleSets[1], rules: [changedRule] }];
+      const elsewhere = [
+        sampleRuleSets[0],
+        { ...sampleRuleSets[1], rules: [{ ...changedRule, id: 2 }] },
+      ];
       page.storeElsewhere(elsewhere);
 
-      let saved: boolean | undefined;
+      let saved: SaveResult | undefined;
       await act(async () => {
-        saved = await page.result.current.updateRule("rs-2", 2, typedRule, {
-          ...savedRule,
-          id: 2,
-        });
+        saved = await page.result.current.updateRule(
+          "rs-2",
+          2,
+          typedRule,
+          sampleRuleSets[1].rules[0]
+        );
       });
 
-      expect(saved).toBe(false);
+      expect(saved).toBe("conflict");
       expectConflict(page, elsewhere);
     });
 
@@ -353,18 +360,6 @@ describe("useRuleSetsEdit", () => {
       expectConflict(page, elsewhere);
     });
 
-    test("compares rules without their IDs", async () => {
-      const page = setup(sampleRuleSets);
-      const { id: _id, ...base } = sampleRuleSets[1].rules[0];
-
-      await act(async () => {
-        await page.result.current.updateRule("rs-2", 2, typedRule, base);
-      });
-
-      expect(page.conflicts).toEqual([]);
-      expect(page.stored()[1].rules).toStrictEqual([{ ...typedRule, id: 2 }]);
-    });
-
     test("removes a rule only while it is as shown", async () => {
       const page = setup([{ id: "rs-1", name: "Two", rules: [savedRule, { ...savedRule, id: 2 }] }]);
       const elsewhere = [{ id: "rs-1", name: "Two", rules: [{ ...changedRule, id: 1 }, { ...savedRule, id: 2 }] }];
@@ -382,7 +377,7 @@ describe("useRuleSetsEdit", () => {
       const elsewhere = [{ id: "rs-1", name: "Two", rules: [{ ...savedRule, id: 2 }] }];
       page.storeElsewhere(elsewhere);
 
-      let saved: boolean | undefined;
+      let saved: SaveResult | undefined;
       await act(async () => {
         saved = await page.result.current.removeRule("rs-1", 1, savedRule);
       });
@@ -390,6 +385,33 @@ describe("useRuleSetsEdit", () => {
       expect(saved).toBe(true);
       expect(page.conflicts).toEqual([]);
       expect(page.stored()).toStrictEqual(elsewhere);
+    });
+
+    test("leaves a rule removed on another page with its rule set as it is", async () => {
+      const page = setup(sampleRuleSets);
+      const elsewhere = [sampleRuleSets[1]];
+      page.storeElsewhere(elsewhere);
+
+      let saved: SaveResult | undefined;
+      await act(async () => {
+        saved = await page.result.current.removeRule("rs-1", 1, savedRule);
+      });
+
+      expect(saved).toBe(true);
+      expect(page.conflicts).toEqual([]);
+      expect(page.stored()).toStrictEqual(elsewhere);
+    });
+
+    test("compares rules without their IDs, as a new rule has none until saved", async () => {
+      const page = setup(sampleRuleSets);
+      const { id: _id, ...base } = sampleRuleSets[1].rules[0];
+
+      await act(async () => {
+        await page.result.current.updateRule("rs-2", 2, typedRule, base);
+      });
+
+      expect(page.conflicts).toEqual([]);
+      expect(page.stored()[1].rules).toStrictEqual([{ ...typedRule, id: 2 }]);
     });
 
     test("removes a rule set while other rule sets changed on another page", async () => {
@@ -507,7 +529,7 @@ describe("useRuleSetsEdit", () => {
     test("replaces the stored rule, keeping its ID", async () => {
       const { result, stored } = setup(sampleRuleSets);
 
-      let saved: boolean | undefined;
+      let saved: SaveResult | undefined;
       await act(async () => {
         saved = await result.current.updateRule("rs-2", 2, typedRule, sampleRuleSets[1].rules[0]);
       });
@@ -547,7 +569,7 @@ describe("useRuleSetsEdit", () => {
       const { result, rejectNext, stored } = setup(sampleRuleSets);
 
       rejectNext();
-      let saved: boolean | undefined;
+      let saved: SaveResult | undefined;
       await act(async () => {
         saved = await result.current.updateRule("rs-2", 2, typedRule, sampleRuleSets[1].rules[0]);
       });
@@ -586,7 +608,7 @@ describe("useRuleSetsEdit", () => {
       const { result, rejectNext, stored } = setup(sampleRuleSets);
 
       rejectNext();
-      let saved: boolean | undefined;
+      let saved: SaveResult | undefined;
       await act(async () => {
         saved = await result.current.removeRule("rs-1", 1, savedRule);
       });

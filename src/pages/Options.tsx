@@ -24,14 +24,11 @@ import {
   ImportSucceededDialogHandle,
 } from "@/features/options/components/ruleset/ImportSucceededDialog";
 import { RuleSetsEdit } from "@/features/options/components/ruleset/RuleSetsEdit";
-import {
-  SaveConflictError,
-  SaveRuleSets,
-} from "@/features/options/hooks/useRuleSetsEdit";
+import { SaveRuleSets } from "@/features/options/hooks/useRuleSetsEdit";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
 import { useTitleFontAdjuster } from "@/hooks/useTitleFontAdjuster";
+import { SaveConflictError } from "@/modules/rules/conflict";
 import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
-import { STALE_RULE_SETS_ERROR } from "@/modules/services/RequestBlockService";
 import { download } from "@/modules/utils/download";
 import { useI18n } from "../hooks/useI18n";
 
@@ -63,9 +60,7 @@ const Options: React.FC = () => {
     try {
       return await updateRuleSets(change, onSaved);
     } catch (e) {
-      const conflicted =
-        e instanceof SaveConflictError ||
-        (e instanceof Error && e.message === STALE_RULE_SETS_ERROR);
+      const conflicted = e instanceof SaveConflictError;
       await saveFailedDialog.current?.open([
         {
           message: conflicted
@@ -75,7 +70,7 @@ const Options: React.FC = () => {
               : String(e),
         },
       ]);
-      return false;
+      return conflicted ? "conflict" : false;
     }
   };
 

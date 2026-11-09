@@ -10,6 +10,7 @@ import {
   RuleCondition,
 } from "@/modules/core/rules";
 import { RuleValidator } from "@/modules/rules/validation/edit";
+import { SaveResult } from "./useRuleSetsEdit";
 
 const ruleValidator = new RuleValidator(createRegexValidator());
 
@@ -19,8 +20,7 @@ type ValidationErrors = Required<{
 
 export function useRuleEdit(
   givenRule: Rule,
-  // Resolves to false when the save was rejected. base is the given rule the edits started from.
-  onChange: (rule: Rule, base: Rule) => void | Promise<boolean>,
+  onChange: (rule: Rule, base: Rule) => void | Promise<SaveResult>,
   onCancel: () => void,
   onRemove: () => void
 ) {
@@ -94,10 +94,11 @@ export function useRuleEdit(
     const savedFrom = base.current ?? initialRule;
     // A save started while this one waits applies on top of it
     base.current = rule;
-    if ((await latestOnChange.current(rule, savedFrom)) === false) {
-      // The draft is kept, so the rule can be fixed and saved again. Edits from
-      // now on start from the latest given rule, so saving again overwrites it.
-      base.current = undefined;
+    const result = await latestOnChange.current(rule, savedFrom);
+    if (result === false || result === "conflict") {
+      // The draft stays for another try. After a conflict the user has seen,
+      // that try saves over the latest given rule.
+      base.current = result === "conflict" ? undefined : savedFrom;
       setIsEditing(true);
     } else if (latestDraft.current === rule) {
       // Unless editing started again while the save waited

@@ -23,6 +23,7 @@ import {
   UNSUPPORTED_REGEX_SYNTAX_MESSAGE,
 } from "@/modules/rules/validation/edit";
 import { useRuleEdit } from "./useRuleEdit";
+import { SaveResult } from "./useRuleSetsEdit";
 
 beforeEach(() => {
   mockIsRegexSupported.mockResolvedValue({ isSupported: true });
@@ -566,7 +567,7 @@ describe("useRuleEdit", () => {
   });
 
   describe("base of a save", () => {
-    type OnChange = (rule: Rule, base: Rule) => void | Promise<boolean>;
+    type OnChange = (rule: Rule, base: Rule) => void | Promise<SaveResult>;
 
     function renderEditor(onChange: OnChange = vi.fn(async () => true)) {
       return renderHook(
@@ -607,8 +608,8 @@ describe("useRuleEdit", () => {
       );
     });
 
-    test("is the latest given rule after a rejected save, so saving again overwrites it", async () => {
-      const onChange = vi.fn<OnChange>(async () => false);
+    test("is the latest given rule after a conflict, so saving again overwrites it", async () => {
+      const onChange = vi.fn<OnChange>(async () => "conflict" as const);
       const { result, rerender } = renderEditor(onChange);
       await waitFor(() => expect(result.current.isValid).toBe(true));
       act(() => result.current.enterEditMode());
@@ -623,6 +624,24 @@ describe("useRuleEdit", () => {
       });
 
       expect(onChange.mock.calls.map(([, base]) => base)).toEqual([validRule, fullRule]);
+    });
+
+    test("stays the same after a save rejected for another reason", async () => {
+      const onChange = vi.fn<OnChange>(async () => false);
+      const { result, rerender } = renderEditor(onChange);
+      await waitFor(() => expect(result.current.isValid).toBe(true));
+      act(() => result.current.enterEditMode());
+      act(() => result.current.updateRequestDomains(["typed.com"]));
+      await act(async () => {
+        await result.current.save();
+      });
+
+      rerender({ initialRule: fullRule, onChange });
+      await act(async () => {
+        await result.current.save();
+      });
+
+      expect(onChange.mock.calls.map(([, base]) => base)).toEqual([validRule, validRule]);
     });
 
     test("is the rule of a save still waiting, for a save made on top of it", async () => {

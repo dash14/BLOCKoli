@@ -171,12 +171,12 @@ export class RequestBlockServiceImpl
       this.store.loadRuleSets(),
       this.store.loadRuleSetsRevision(),
     ]);
-    if (baseRevision !== undefined && baseRevision !== prevRevision) {
-      throw new Error(RequestBlock.STALE_RULE_SETS_ERROR);
-    }
     if (isEqual(ruleSets, prevRuleSets)) {
       log.debug("No updated");
       return { revision: prevRevision, ruleSets: prevRuleSets };
+    }
+    if (baseRevision !== undefined && baseRevision !== prevRevision) {
+      throw new Error(RequestBlock.STALE_RULE_SETS_ERROR);
     }
 
     checkRuleCount(ruleSets, prevRuleSets);

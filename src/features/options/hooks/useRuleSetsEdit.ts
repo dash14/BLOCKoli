@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import isEqual from "lodash-es/isEqual";
 import omit from "lodash-es/omit";
 import { Rule } from "@/modules/core/rules";
+import { SaveConflictError } from "@/modules/rules/conflict";
 import {
   RULE_ID_UNSAVED,
   StoredRuleSet,
@@ -12,22 +13,24 @@ import { newRuleSetName, newRuleTemplate } from "@/modules/rules/template";
 // Throws SaveConflictError when what it changes is no longer as this page showed it
 export type RuleSetsChange = (stored: StoredRuleSets) => StoredRuleSets;
 
-// Another page changed what this page was saving
-export class SaveConflictError extends Error {
-  constructor() {
-    super("Changed on another page");
-    this.name = "SaveConflictError";
-  }
-}
 
 // Called with the stored rule sets in the same step that shows them
 export type RuleSetsSaved = (saved: StoredRuleSets) => void;
 
-// Resolves to the stored rule sets, or to false when the save was rejected
+// Resolves to the stored rule sets, or says why the save was rejected
 export type SaveRuleSets = (
   change: RuleSetsChange,
   onSaved?: RuleSetsSaved
-) => Promise<StoredRuleSets | false>;
+) => Promise<StoredRuleSets | SaveRejection>;
+
+export type SaveRejection = false | "conflict";
+
+// true when saved; otherwise why not
+export type SaveResult = true | SaveRejection;
+
+function toResult(saved: StoredRuleSets | SaveRejection): SaveResult {
+  return Array.isArray(saved) || saved;
+}
 
 export type RuleEntry = {
   // Stays the same from when the rule is added until it is removed
@@ -148,7 +151,7 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
         setNewRuleSets((current) => current.filter(({ id }) => id !== ruleSetId));
       }
     );
-    return saved !== false;
+    return toResult(saved);
   }
 
   // base is the rule as it was when editing started
@@ -164,25 +167,33 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
 
   // base is the rule as shown when it was removed
   async function removeRule(ruleSetId: string, ruleId: number, base: Rule) {
-    const saved = await saveRules(ruleSetId, (rules) => {
-      const stored = rules.find(({ id }) => id === ruleId);
-      // Already removed on another page
-      if (!stored) return rules;
-      if (!isSameRule(stored, base)) throw new SaveConflictError();
-      return rules.filter((stored) => stored.id !== ruleId);
-    });
-    if (saved) savedKeys.current.delete(ruleId);
+    const saved = await saveRules(
+      ruleSetId,
+      (rules) => {
+        const stored = rules.find(({ id }) => id === ruleId);
+        // Already removed on another page
+        if (!stored) return rules;
+        if (!isSameRule(stored, base)) throw new SaveConflictError();
+        return rules.filter((stored) => stored.id !== ruleId);
+      },
+      // Removed on another page with its rule set
+      (current) => current
+    );
+    if (saved === true) savedKeys.current.delete(ruleId);
     return saved;
   }
 
   async function saveRules(
     ruleSetId: string,
-    change: (rules: StoredRuleSet["rules"]) => StoredRuleSet["rules"]
+    change: (rules: StoredRuleSet["rules"]) => StoredRuleSet["rules"],
+    // When the rule set was removed on another page
+    ifRemoved: RuleSetsChange = () => {
+      throw new SaveConflictError();
+    }
   ) {
     const saved = await save((current) => {
       const target = current.find((ruleSet) => ruleSet.id === ruleSetId);
-      // Removed on another page
-      if (!target) throw new SaveConflictError();
+      if (!target) return ifRemoved(current);
       const rules = change(target.rules);
       // The rule set goes with its last rule
       if (rules.length === 0) return current.filter((ruleSet) => ruleSet !== target);
@@ -190,7 +201,7 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
         ruleSet === target ? { ...ruleSet, rules } : ruleSet
       );
     });
-    return saved !== false;
+    return toResult(saved);
   }
 
   function cancelNewRule(ruleSetId: string, key: string) {
@@ -216,7 +227,7 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
       if (!isEqual(target.rules, rules)) throw new SaveConflictError();
       return current.filter((ruleSet) => ruleSet !== target);
     });
-    if (saved === false) return;
+    if (!Array.isArray(saved)) return;
     dropNewRuleSet(id);
     rules.forEach((rule) => savedKeys.current.delete(rule.id));
   }
@@ -257,7 +268,7 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
   };
 }
 
-// Rules from the editor may carry their ID or not
+// The editor's rule has no ID until its first save comes back
 function isSameRule(stored: Rule, base: Rule) {
   return isEqual(omit(stored, "id"), omit(base, "id"));
 }

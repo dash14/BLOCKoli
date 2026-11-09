@@ -584,6 +584,15 @@ describe("RequestBlockServiceImpl", () => {
       expect(result).toEqual({ revision: 8, ruleSets });
     });
 
+    it("returns the stored rule sets they equal, whatever revision they were based on", async () => {
+      vi.mocked(mockStore.loadRuleSets).mockResolvedValue(ruleSets);
+
+      const result = await createService().updateRuleSets(ruleSets, 6);
+
+      expect(result).toEqual({ revision: 7, ruleSets });
+      expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
+    });
+
     it("refuses to save when another page saved since", async () => {
       await expect(createService().updateRuleSets(ruleSets, 6)).rejects.toThrow(
         STALE_RULE_SETS_ERROR

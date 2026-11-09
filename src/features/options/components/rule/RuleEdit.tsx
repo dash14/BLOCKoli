@@ -1,6 +1,7 @@
 import { Box, Field, HStack, Heading, Text, VStack } from "@chakra-ui/react";
 import { css } from "@emotion/react";
 import { useRuleEdit } from "@/features/options/hooks/useRuleEdit";
+import { SaveResult } from "@/features/options/hooks/useRuleSetsEdit";
 import { useI18n } from "@/hooks/useI18n";
 import { Rule } from "@/modules/core/rules";
 import { InitiatorDomainsHint } from "../hints/InitiatorDomainsHint";
@@ -24,7 +25,7 @@ type Props = {
   rule: Rule;
   isRemoveEnabled: boolean;
   // base is the rule as it was when editing started
-  onChange: (rule: Rule, base: Rule) => void | Promise<boolean>;
+  onChange: (rule: Rule, base: Rule) => void | Promise<SaveResult>;
   onCancel: () => void;
   onRemove: () => void;
 };

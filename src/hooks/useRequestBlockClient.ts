@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import isEqual from "lodash-es/isEqual";
 import { MessageProxyFactory } from "@/modules/chrome/message/MessageProxy";
+import { SaveConflictError } from "@/modules/rules/conflict";
 import { ExportedRuleSets } from "@/modules/rules/export";
 import { StoredRuleSets, VersionedRuleSets } from "@/modules/rules/stored";
 import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
@@ -10,7 +11,7 @@ import { updateI18nLanguage } from "./useI18n";
 
 const log = logging.getLogger("client");
 
-// Other pages saving in between make a save retry; this many failures in a row give up
+// Save attempts before giving up, when other pages keep saving first
 const MAX_SAVE_ATTEMPTS = 3;
 
 function isStale(error: unknown) {
@@ -140,7 +141,8 @@ export function useRequestBlockClient() {
           onSaved?.(saved.ruleSets);
           return saved.ruleSets;
         } catch (error) {
-          if (!isStale(error) || attempt >= MAX_SAVE_ATTEMPTS) throw error;
+          if (!isStale(error)) throw error;
+          if (attempt >= MAX_SAVE_ATTEMPTS) throw new SaveConflictError();
         } finally {
           saving.current = false;
           if (held.current) {
