@@ -3,6 +3,7 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach, onTestFinished } from "vitest";
 import { Rule, RuleActionType } from "@/modules/core/rules";
 import { StoredRuleSets } from "@/modules/rules/stored";
+import { STALE_RULE_SETS_ERROR } from "@/modules/services/RequestBlockService";
 import logging from "@/modules/utils/logging";
 import { updateI18nLanguage } from "./useI18n";
 import { useRequestBlockClient } from "./useRequestBlockClient";
@@ -201,7 +202,8 @@ describe("useRequestBlockClient", () => {
       expect.objectContaining({
         type: "request",
         method: "updateRuleSets",
-        args: [newRuleSets],
+        // Based on the revision loaded
+        args: [newRuleSets, 0],
       })
     );
   });
@@ -298,7 +300,7 @@ describe("useRequestBlockClient", () => {
 
     expect(change).toHaveBeenCalledWith(fromAnotherPage);
     expect(mockSendMessage).toHaveBeenCalledWith(
-      expect.objectContaining({ method: "updateRuleSets", args: [[]] })
+      expect.objectContaining({ method: "updateRuleSets", args: [[], 1] })
     );
     expect(result.current.ruleSets).toStrictEqual([]);
   });
@@ -462,6 +464,112 @@ describe("useRequestBlockClient", () => {
       broadcast(versioned(2, "older"));
 
       expect(result.current.ruleSets).toStrictEqual(named("newer"));
+    });
+  });
+
+  describe("saving after another page saved", () => {
+    const named = (name: string): StoredRuleSets => [
+      { id: "rs-3", name, rules: [{ id: 1, ...rule }] },
+    ];
+    const stale = { type: "response", success: false, error: STALE_RULE_SETS_ERROR };
+
+    // The service holds rule sets saved by another page that this one has not received yet
+    const storedElsewhere = (staleSaves: number) => {
+      const defaultImpl = mockSendMessage.getMockImplementation()!;
+      let rejected = 0;
+      mockSendMessage.mockImplementation(async (request) => {
+        if (request.method === "getRuleSets") {
+          return {
+            type: "response",
+            success: true,
+            result: { revision: 5, ruleSets: named("elsewhere") },
+          };
+        }
+        if (request.method === "updateRuleSets" && rejected++ < staleSaves) {
+          return stale;
+        }
+        return defaultImpl(request);
+      });
+    };
+    const sentRevisions = () =>
+      mockSendMessage.mock.calls
+        .map(([request]) => request)
+        .filter((request) => request.method === "updateRuleSets")
+        .map((request) => request.args[1]);
+
+    const render = async () => {
+      const hook = renderHook(() => useRequestBlockClient());
+      await waitFor(() => expect(hook.result.current.loaded).toBe(true));
+      return hook.result;
+    };
+
+    it("applies the change again to the stored rule sets and saves on their revision", async () => {
+      const result = await render();
+      storedElsewhere(1);
+
+      const mine = { id: "rs-mine", name: "mine", rules: [] };
+      const change = vi.fn((stored: StoredRuleSets) => [...stored, mine]);
+      let saved: StoredRuleSets | undefined;
+      await act(async () => {
+        saved = await result.current.updateRuleSets(change);
+      });
+
+      expect(change.mock.calls).toEqual([[[]], [named("elsewhere")]]);
+      expect(sentRevisions()).toEqual([0, 5]);
+      expect(saved).toStrictEqual([...named("elsewhere"), mine]);
+      expect(result.current.ruleSets).toStrictEqual([...named("elsewhere"), mine]);
+    });
+
+    it("does not save when the change no longer changes the stored rule sets", async () => {
+      const result = await render();
+      storedElsewhere(1);
+
+      let saved: StoredRuleSets | undefined;
+      await act(async () => {
+        saved = await result.current.updateRuleSets((stored) =>
+          stored.length === 0 ? named("elsewhere") : stored
+        );
+      });
+
+      expect(sentRevisions()).toEqual([0]);
+      expect(saved).toStrictEqual(named("elsewhere"));
+    });
+
+    it("gives up after three saves in a row are refused", async () => {
+      const result = await render();
+      storedElsewhere(3);
+
+      let failed!: Promise<StoredRuleSets>;
+      await act(async () => {
+        failed = result.current.updateRuleSets((stored) => [
+          ...stored,
+          ...named("mine"),
+        ]);
+        await failed.catch(() => {});
+      });
+
+      await expect(failed).rejects.toThrow(STALE_RULE_SETS_ERROR);
+      expect(sentRevisions()).toEqual([0, 5, 5]);
+      expect(result.current.ruleSets).toStrictEqual(named("elsewhere"));
+    });
+
+    it("rejects without saving when the change finds a conflict", async () => {
+      const result = await render();
+      storedElsewhere(1);
+      const conflict = new Error("conflict");
+
+      let failed!: Promise<StoredRuleSets>;
+      await act(async () => {
+        failed = result.current.updateRuleSets((stored) => {
+          if (stored.length > 0) throw conflict;
+          return named("mine");
+        });
+        await failed.catch(() => {});
+      });
+
+      await expect(failed).rejects.toBe(conflict);
+      expect(sentRevisions()).toEqual([0]);
+      expect(result.current.ruleSets).toStrictEqual(named("elsewhere"));
     });
   });
 

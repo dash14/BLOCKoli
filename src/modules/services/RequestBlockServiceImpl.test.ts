@@ -22,6 +22,7 @@ import type { StoredRuleSets } from "@/modules/rules/stored";
 import { RULE_ID_UNSAVED } from "@/modules/rules/stored";
 import { UNSUPPORTED_REGEX_SYNTAX_MESSAGE } from "@/modules/rules/validation/edit";
 import type * as RequestBlock from "@/modules/services/RequestBlockService";
+import { STALE_RULE_SETS_ERROR } from "@/modules/services/RequestBlockService";
 import type { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import logging from "@/modules/utils/logging";
 import { RequestBlockServiceImpl } from "./RequestBlockServiceImpl";
@@ -560,6 +561,37 @@ describe("RequestBlockServiceImpl", () => {
       ).toBeLessThan(
         vi.mocked(mockStore.saveRuleSets).mock.invocationCallOrder[0]
       );
+    });
+  });
+
+  describe("updateRuleSets on a base revision", () => {
+    const ruleSets: StoredRuleSets = [
+      {
+        id: "rs-10",
+        name: "Test Set",
+        rules: [{ id: 1, action: { type: RuleActionType.BLOCK }, condition: {} }],
+      },
+    ];
+
+    beforeEach(() => {
+      vi.mocked(mockStore.loadRuleSets).mockResolvedValue([]);
+      vi.mocked(mockStore.loadState).mockResolvedValue("disable");
+    });
+
+    it("saves when the stored rule sets are at that revision", async () => {
+      const result = await createService().updateRuleSets(ruleSets, 7);
+
+      expect(result).toEqual({ revision: 8, ruleSets });
+    });
+
+    it("refuses to save when another page saved since", async () => {
+      await expect(createService().updateRuleSets(ruleSets, 6)).rejects.toThrow(
+        STALE_RULE_SETS_ERROR
+      );
+
+      expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
+      expect(mockStore.saveNextRuleId).not.toHaveBeenCalled();
+      expect(mockEmitter.emit).not.toHaveBeenCalled();
     });
   });
 

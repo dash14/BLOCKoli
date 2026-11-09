@@ -90,9 +90,10 @@ export class RequestBlockServiceImpl
   }
 
   public updateRuleSets(
-    ruleSets: UnidentifiedRuleSet[]
+    ruleSets: UnidentifiedRuleSet[],
+    baseRevision?: number
   ): Promise<VersionedRuleSets> {
-    return this.serialize(() => this.updateRuleSetsNow(ruleSets));
+    return this.serialize(() => this.updateRuleSetsNow(ruleSets, baseRevision));
   }
 
   // Queued so the rule sets and their revision are read together
@@ -160,7 +161,8 @@ export class RequestBlockServiceImpl
   }
 
   private async updateRuleSetsNow(
-    unidentified: UnidentifiedRuleSet[]
+    unidentified: UnidentifiedRuleSet[],
+    baseRevision?: number
   ): Promise<VersionedRuleSets> {
     log.debug("updateRuleSets");
 
@@ -169,6 +171,9 @@ export class RequestBlockServiceImpl
       this.store.loadRuleSets(),
       this.store.loadRuleSetsRevision(),
     ]);
+    if (baseRevision !== undefined && baseRevision !== prevRevision) {
+      throw new Error(RequestBlock.STALE_RULE_SETS_ERROR);
+    }
     if (isEqual(ruleSets, prevRuleSets)) {
       log.debug("No updated");
       return { revision: prevRevision, ruleSets: prevRuleSets };

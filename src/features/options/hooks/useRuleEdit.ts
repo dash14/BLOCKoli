@@ -19,8 +19,8 @@ type ValidationErrors = Required<{
 
 export function useRuleEdit(
   givenRule: Rule,
-  // Resolves to false when the save was rejected
-  onChange: (rule: Rule) => void | Promise<boolean>,
+  // Resolves to false when the save was rejected. base is the given rule the edits started from.
+  onChange: (rule: Rule, base: Rule) => void | Promise<boolean>,
   onCancel: () => void,
   onRemove: () => void
 ) {
@@ -35,6 +35,11 @@ export function useRuleEdit(
   // Edits not saved yet; until the first one, the given rule is shown
   const [draft, setDraft] = useState<Rule | undefined>(undefined);
   const rule = draft ?? initialRule;
+  // The given rule when editing started, as later ones may come from another page
+  const base = useRef<Rule | undefined>(undefined);
+  // The draft as of the last change, for a save that finishes later
+  const latestDraft = useRef<Rule | undefined>(undefined);
+
   const [isValid, setIsValid] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
     requestDomains: [],
@@ -44,6 +49,16 @@ export function useRuleEdit(
     requestMethods: [],
     resourceTypes: [],
   });
+
+  function changeDraft(newRule: Rule | undefined) {
+    if (newRule) {
+      base.current ??= initialRule;
+    } else {
+      base.current = undefined;
+    }
+    latestDraft.current = newRule;
+    setDraft(newRule);
+  }
 
   // Checks await Chrome and can finish out of order; only the latest counts
   const latestValidation = useRef(0);
@@ -76,18 +91,23 @@ export function useRuleEdit(
       if (!(await validate(rule))) return;
     }
     setIsEditing(false);
-    if ((await latestOnChange.current(rule)) === false) {
-      // The draft is kept, so the rule can be fixed and saved again
+    const savedFrom = base.current ?? initialRule;
+    // A save started while this one waits applies on top of it
+    base.current = rule;
+    if ((await latestOnChange.current(rule, savedFrom)) === false) {
+      // The draft is kept, so the rule can be fixed and saved again. Edits from
+      // now on start from the latest given rule, so saving again overwrites it.
+      base.current = undefined;
       setIsEditing(true);
-    } else {
+    } else if (latestDraft.current === rule) {
       // Unless editing started again while the save waited
-      setDraft((current) => (current === rule ? undefined : current));
+      changeDraft(undefined);
     }
   }
 
   function cancel() {
     setIsEditing(false);
-    setDraft(undefined);
+    changeDraft(undefined);
     validate(initialRule);
     onCancel();
   }
@@ -103,49 +123,49 @@ export function useRuleEdit(
   function updateAction(value: RuleActionType) {
     const newRule = cloneDeep(rule);
     newRule.action.type = value;
-    setDraft(newRule);
+    changeDraft(newRule);
     validate(newRule);
   }
 
   function updateRequestMethods(value: RequestMethod[]) {
     const newRule = cloneDeep(rule);
     newRule.condition.requestMethods = value;
-    setDraft(newRule);
+    changeDraft(newRule);
     validate(newRule);
   }
 
   function updateResourceTypes(value: ResourceType[]) {
     const newRule = cloneDeep(rule);
     newRule.condition.resourceTypes = value;
-    setDraft(newRule);
+    changeDraft(newRule);
     validate(newRule);
   }
 
   async function updateUrlFilter(text: string) {
     const newRule = cloneDeep(rule);
     newRule.condition.urlFilter = text;
-    setDraft(newRule);
+    changeDraft(newRule);
     validate(newRule);
   }
 
   function updateIsRegexFilter(checked: boolean) {
     const newRule = cloneDeep(rule);
     newRule.condition.isRegexFilter = checked;
-    setDraft(newRule);
+    changeDraft(newRule);
     validate(newRule);
   }
 
   function updateRequestDomains(domains: string[]) {
     const newRule = cloneDeep(rule);
     newRule.condition.requestDomains = domains;
-    setDraft(newRule);
+    changeDraft(newRule);
     validate(newRule);
   }
 
   function updateInitiatorDomains(domains: string[]) {
     const newRule = cloneDeep(rule);
     newRule.condition.initiatorDomains = domains;
-    setDraft(newRule);
+    changeDraft(newRule);
     validate(newRule);
   }
 

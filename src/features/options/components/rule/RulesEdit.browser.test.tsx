@@ -229,9 +229,11 @@ describe("RulesEdit component", () => {
 
       // ルールのIDと入力した内容で呼ばれる
       await expect.poll(() => props.onUpdate.mock.calls.length).toBe(1);
-      const [id, rule] = props.onUpdate.mock.calls[0] as unknown as [number, Rule];
+      const [id, rule, base] = props.onUpdate.mock.calls[0] as unknown as [number, Rule, Rule];
       expect(id).toBe(1);
       expect(rule.condition.urlFilter).toBe("||tracking.com^");
+      // The rule as it was when editing started
+      expect(base).toStrictEqual(singleRule[0]);
     });
   });
 
@@ -258,8 +260,8 @@ describe("RulesEdit component", () => {
         .getByRole("button", { name: /remove/i });
       await dialogRemoveButton.click();
 
-      // 1番目のルールのIDで呼ばれる
-      await expect.poll(() => props.onRemove.mock.calls).toEqual([[1]]);
+      // 1番目のルールのIDと、表示していたルールで呼ばれる
+      await expect.poll(() => props.onRemove.mock.calls).toEqual([[1, twoRules[0]]]);
     });
   });
 

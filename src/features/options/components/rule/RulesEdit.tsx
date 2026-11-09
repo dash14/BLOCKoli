@@ -17,9 +17,9 @@ type Props = {
   onAdd: () => void;
   // Resolves to false when the save was rejected
   onSaveNew: (key: string, rule: Rule) => Promise<boolean>;
-  onUpdate: (id: number, rule: Rule) => Promise<boolean>;
+  onUpdate: (id: number, rule: Rule, base: Rule) => Promise<boolean>;
   onCancelNew: (key: string) => void;
-  onRemove: (id: number) => void;
+  onRemove: (id: number, rule: Rule) => void;
 };
 
 export const RulesEdit: React.FC<Props> = ({
@@ -79,14 +79,16 @@ export const RulesEdit: React.FC<Props> = ({
                 <RuleEdit
                   rule={rule}
                   isRemoveEnabled={id !== undefined && savedCount > 1}
-                  onChange={(rule) =>
-                    id === undefined ? onSaveNew(key, rule) : onUpdate(id, rule)
+                  onChange={(changed, base) =>
+                    id === undefined
+                      ? onSaveNew(key, changed)
+                      : onUpdate(id, changed, base)
                   }
                   onCancel={() => {
                     if (id === undefined) onCancelNew(key);
                   }}
                   // Offered only for saved rules
-                  onRemove={() => onRemove(id!)}
+                  onRemove={() => onRemove(id!, rule)}
                 />
               </div>
             </CSSTransition>

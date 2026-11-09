@@ -1,6 +1,5 @@
 import { useRef } from "react";
 import {
-  Button,
   Container,
   Box,
   Switch,
@@ -25,11 +24,14 @@ import {
   ImportSucceededDialogHandle,
 } from "@/features/options/components/ruleset/ImportSucceededDialog";
 import { RuleSetsEdit } from "@/features/options/components/ruleset/RuleSetsEdit";
-import { SaveRuleSets } from "@/features/options/hooks/useRuleSetsEdit";
-import { useEditingTab } from "@/hooks/useEditingTab";
+import {
+  SaveConflictError,
+  SaveRuleSets,
+} from "@/features/options/hooks/useRuleSetsEdit";
 import { useRequestBlockClient } from "@/hooks/useRequestBlockClient";
 import { useTitleFontAdjuster } from "@/hooks/useTitleFontAdjuster";
 import { RuleSetsValidationError } from "@/modules/rules/validation/RuleSets";
+import { STALE_RULE_SETS_ERROR } from "@/modules/services/RequestBlockService";
 import { download } from "@/modules/utils/download";
 import { useI18n } from "../hooks/useI18n";
 
@@ -52,7 +54,6 @@ const Options: React.FC = () => {
   } = useRequestBlockClient();
 
   const { titleFontAdjuster } = useTitleFontAdjuster(language);
-  const { editing, editHere } = useEditingTab();
 
   const importSuccessDialog = useRef<ImportSucceededDialogHandle>(null);
   const importFailedDialog = useRef<FailedDialogHandle>(null);
@@ -62,8 +63,17 @@ const Options: React.FC = () => {
     try {
       return await updateRuleSets(change, onSaved);
     } catch (e) {
+      const conflicted =
+        e instanceof SaveConflictError ||
+        (e instanceof Error && e.message === STALE_RULE_SETS_ERROR);
       await saveFailedDialog.current?.open([
-        { message: e instanceof Error ? e.message : String(e) },
+        {
+          message: conflicted
+            ? i18n["save_conflict"]
+            : e instanceof Error
+              ? e.message
+              : String(e),
+        },
       ]);
       return false;
     }
@@ -167,13 +177,6 @@ const Options: React.FC = () => {
           <Text role="alert" marginTop={10}>
             {i18n["load_failed"]}
           </Text>
-        ) : !editing ? (
-          <HStack marginTop={10} gap={6}>
-            <Text role="status">{i18n["opened_in_another_tab"]}</Text>
-            <Button size="sm" variant="outline" onClick={editHere}>
-              {i18n["edit_here"]}
-            </Button>
-          </HStack>
         ) : (
           <>
             <HStack marginY={10}>

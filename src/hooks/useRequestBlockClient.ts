@@ -10,6 +10,16 @@ import { updateI18nLanguage } from "./useI18n";
 
 const log = logging.getLogger("client");
 
+// Other pages saving in between make a save retry; this many failures in a row give up
+const MAX_SAVE_ATTEMPTS = 3;
+
+function isStale(error: unknown) {
+  return (
+    error instanceof Error &&
+    error.message === RequestBlock.STALE_RULE_SETS_ERROR
+  );
+}
+
 export function useRequestBlockClient() {
   const [loaded, setLoaded] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -113,24 +123,33 @@ export function useRequestBlockClient() {
     onSaved?: (saved: StoredRuleSets) => void
   ): Promise<StoredRuleSets> => {
     const run = queue.current.then(async () => {
-      const current = latestRuleSets.current;
-      const updated = change(current);
-      if (isEqual(updated, current)) {
-        onSaved?.(current);
-        return current;
-      }
-      saving.current = true;
-      try {
-        const saved = await service.updateRuleSets(updated);
-        receiveRuleSets(saved);
-        onSaved?.(saved.ruleSets);
-        return saved.ruleSets;
-      } finally {
-        saving.current = false;
-        if (held.current) {
-          receiveRuleSets(held.current);
-          held.current = undefined;
+      for (let attempt = 1; ; attempt++) {
+        const current = latestRuleSets.current;
+        const updated = change(current);
+        if (isEqual(updated, current)) {
+          onSaved?.(current);
+          return current;
         }
+        saving.current = true;
+        try {
+          const saved = await service.updateRuleSets(
+            updated,
+            appliedRevision.current
+          );
+          receiveRuleSets(saved);
+          onSaved?.(saved.ruleSets);
+          return saved.ruleSets;
+        } catch (error) {
+          if (!isStale(error) || attempt >= MAX_SAVE_ATTEMPTS) throw error;
+        } finally {
+          saving.current = false;
+          if (held.current) {
+            receiveRuleSets(held.current);
+            held.current = undefined;
+          }
+        }
+        // Another page saved first: apply the change again to what it stored
+        receiveRuleSets(await service.getRuleSets());
       }
     });
     queue.current = run.catch(() => undefined);
