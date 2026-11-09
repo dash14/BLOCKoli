@@ -168,7 +168,7 @@ describe("useI18n", () => {
 
   describe("getErrorText", () => {
     const tooMany = new ServiceError(
-      "Too many rules: 501, but at most 500 can be defined",
+      "There would be 501 rules, but at most 500 can be defined.",
       ErrorCode.TOO_MANY_RULES,
       { count: 501, max: 500 }
     );
@@ -190,9 +190,17 @@ describe("useI18n", () => {
       expect(getErrorText(error, useI18n())).toBe(text);
     });
 
+    it.each(["en", "ja"])("has a %s text for every error code", (language) => {
+      updateI18nLanguage(language);
+      const i18n = useI18n();
+      for (const code of Object.values(ErrorCode)) {
+        expect(i18n[`error_${code}`]).not.toBe("");
+      }
+    });
+
     it("keeps the message of a ServiceError without a text", () => {
-      const error = new ServiceError("Changed elsewhere", ErrorCode.STALE_RULE_SETS);
-      expect(getErrorText(error, useI18n())).toBe("Changed elsewhere");
+      const error = new ServiceError("Unknown", "unknown");
+      expect(getErrorText(error, useI18n())).toBe("Unknown");
     });
 
     it("keeps the message of any other error", () => {

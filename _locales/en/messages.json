@@ -254,6 +254,9 @@
   "save_conflict": {
     "message": "It was changed in another tab, so your change was not saved. Check the latest content and try again."
   },
+  "error_stale_rule_sets": {
+    "message": "It was changed in another tab. Check the latest content and try again."
+  },
   "error_too_many_rules": {
     "message": "There would be {count} rules, but at most {max} can be defined."
   },

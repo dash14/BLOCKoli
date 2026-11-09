@@ -475,7 +475,7 @@ describe("useRequestBlockClient", () => {
     const stale = {
       type: "response",
       success: false,
-      error: "The rule sets were changed on another page",
+      error: "The rule sets were changed in another tab",
       code: ErrorCode.STALE_RULE_SETS,
     };
 
@@ -567,7 +567,7 @@ describe("useRequestBlockClient", () => {
           ? {
               type: "response",
               success: false,
-              error: "Too many rules: 501, but at most 500 can be defined",
+              error: "There would be 501 rules, but at most 500 can be defined.",
               code: ErrorCode.TOO_MANY_RULES,
               params: { count: 501, max: 500 },
             }

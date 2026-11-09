@@ -981,7 +981,7 @@ describe("RequestBlockServiceImpl", () => {
 
       await expect(createService().updateRuleSets(ruleSets)).rejects.toMatchObject({
         name: "ServiceError",
-        message: "Too many rules: 3, but Chrome allows at most 2",
+        message: "There would be 3 rules, but Chrome allows at most 2.",
         code: ErrorCode.TOO_MANY_CHROME_RULES,
         params: { count: 3, max: 2 },
       });
@@ -994,7 +994,7 @@ describe("RequestBlockServiceImpl", () => {
 
       await expect(createService().updateRuleSets(ruleSets)).rejects.toMatchObject({
         name: "ServiceError",
-        message: "Too many regex rules: 2, but Chrome allows at most 1",
+        message: "There would be 2 regex rules, but Chrome allows at most 1.",
         code: ErrorCode.TOO_MANY_REGEX_RULES,
         params: { count: 2, max: 1 },
       });
@@ -1045,7 +1045,7 @@ describe("RequestBlockServiceImpl", () => {
 
         await expect(createService().updateRuleSets(ruleSets)).rejects.toMatchObject({
           name: "ServiceError",
-          message: `Too many rules: ${MAX_RULES + 1}, but at most ${MAX_RULES} can be defined`,
+          message: `There would be ${MAX_RULES + 1} rules, but at most ${MAX_RULES} can be defined.`,
           code: ErrorCode.TOO_MANY_RULES,
           params: { count: MAX_RULES + 1, max: MAX_RULES },
         });
@@ -1073,7 +1073,7 @@ describe("RequestBlockServiceImpl", () => {
         ];
 
         await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
-          `Too many rules: ${MAX_RULES + 2}, but at most ${MAX_RULES} can be defined`
+          `There would be ${MAX_RULES + 2} rules, but at most ${MAX_RULES} can be defined.`
         );
         expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
       });
@@ -1098,7 +1098,7 @@ describe("RequestBlockServiceImpl", () => {
       ]);
 
       await expect(createService().enable()).rejects.toThrow(
-        "Too many rules: 3, but Chrome allows at most 2"
+        "There would be 3 rules, but Chrome allows at most 2."
       );
       expect(mockDeclarativeNetRequest.updateDynamicRules).not.toHaveBeenCalled();
       expect(mockStore.saveState).not.toHaveBeenCalled();

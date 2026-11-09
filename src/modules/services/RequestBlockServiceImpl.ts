@@ -178,7 +178,7 @@ export class RequestBlockServiceImpl
     }
     if (baseRevision !== undefined && baseRevision !== prevRevision) {
       throw new ServiceError(
-        "The rule sets were changed on another page",
+        "The rule sets were changed in another tab",
         RequestBlock.ErrorCode.STALE_RULE_SETS
       );
     }
@@ -222,7 +222,7 @@ export class RequestBlockServiceImpl
     const rules = ruleSets.flatMap((ruleSet) => ruleSet.rules);
     if (rules.length > maxRules) {
       throw new ServiceError(
-        `Too many rules: ${rules.length}, but Chrome allows at most ${maxRules}`,
+        `There would be ${rules.length} rules, but Chrome allows at most ${maxRules}.`,
         RequestBlock.ErrorCode.TOO_MANY_CHROME_RULES,
         { count: rules.length, max: maxRules }
       );
@@ -233,7 +233,7 @@ export class RequestBlockServiceImpl
     );
     if (regexRules.length > maxRegexRules) {
       throw new ServiceError(
-        `Too many regex rules: ${regexRules.length}, but Chrome allows at most ${maxRegexRules}`,
+        `There would be ${regexRules.length} regex rules, but Chrome allows at most ${maxRegexRules}.`,
         RequestBlock.ErrorCode.TOO_MANY_REGEX_RULES,
         { count: regexRules.length, max: maxRegexRules }
       );
@@ -396,7 +396,7 @@ function checkRuleCount(ruleSets: StoredRuleSets, prevRuleSets: StoredRuleSets) 
   const count = countRules(ruleSets);
   if (count > MAX_RULES && count > countRules(prevRuleSets)) {
     throw new ServiceError(
-      `Too many rules: ${count}, but at most ${MAX_RULES} can be defined`,
+      `There would be ${count} rules, but at most ${MAX_RULES} can be defined.`,
       RequestBlock.ErrorCode.TOO_MANY_RULES,
       { count, max: MAX_RULES }
     );
