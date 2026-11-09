@@ -190,10 +190,14 @@ describe("useI18n", () => {
       expect(getErrorText(error, useI18n())).toBe(text);
     });
 
-    it.each(["en", "ja"])("has a %s text for every error code", (language) => {
+    it.each(["en", "ja"])("has a %s text for every error code the page shows", (language) => {
       updateI18nLanguage(language);
       const i18n = useI18n();
-      for (const code of Object.values(ErrorCode)) {
+      // The client turns a stale save into a SaveConflictError
+      const shown = Object.values(ErrorCode).filter(
+        (code) => code !== ErrorCode.STALE_RULE_SETS
+      );
+      for (const code of shown) {
         expect(i18n[`error_${code}`]).not.toBe("");
       }
     });

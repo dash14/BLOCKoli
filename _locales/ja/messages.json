@@ -254,9 +254,6 @@
   "save_conflict": {
     "message": "別のタブで変更されていたため、保存しませんでした。最新の内容を確認して、もう一度操作してください。"
   },
-  "error_stale_rule_sets": {
-    "message": "別のタブで変更されています。最新の内容を確認して、もう一度操作してください。"
-  },
   "error_too_many_rules": {
     "message": "ルールが {count} 件になります。定義できるのは {max} 件までです。"
   },
