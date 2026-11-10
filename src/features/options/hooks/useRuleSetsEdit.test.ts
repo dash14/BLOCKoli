@@ -397,16 +397,18 @@ describe("useRuleSetsEdit", () => {
       expectConflict(page, elsewhere);
     });
 
-    test("removes a rule only while it is as shown", async () => {
+    test("removes a rule changed on another page", async () => {
       const page = setup([{ id: "rs-1", name: "Two", rules: [savedRule, { ...savedRule, id: 2 }] }]);
-      const elsewhere = [{ id: "rs-1", name: "Two", rules: [{ ...changedRule, id: 1 }, { ...savedRule, id: 2 }] }];
-      page.storeElsewhere(elsewhere);
+      page.storeElsewhere([{ id: "rs-1", name: "Two", rules: [{ ...changedRule, id: 1 }, { ...savedRule, id: 2 }] }]);
 
+      let saved: SaveResult | undefined;
       await act(async () => {
-        await page.result.current.removeRule("rs-1", 1, savedRule);
+        saved = await page.result.current.removeRule("rs-1", 1);
       });
 
-      expectConflict(page, elsewhere);
+      expect(saved).toBe(true);
+      expect(page.conflicts).toEqual([]);
+      expect(page.stored()).toStrictEqual([{ id: "rs-1", name: "Two", rules: [{ ...savedRule, id: 2 }] }]);
     });
 
     test("leaves a rule removed on another page as it is", async () => {
@@ -416,7 +418,7 @@ describe("useRuleSetsEdit", () => {
 
       let saved: SaveResult | undefined;
       await act(async () => {
-        saved = await page.result.current.removeRule("rs-1", 1, savedRule);
+        saved = await page.result.current.removeRule("rs-1", 1);
       });
 
       expect(saved).toBe(true);
@@ -431,7 +433,7 @@ describe("useRuleSetsEdit", () => {
 
       let saved: SaveResult | undefined;
       await act(async () => {
-        saved = await page.result.current.removeRule("rs-1", 1, savedRule);
+        saved = await page.result.current.removeRule("rs-1", 1);
       });
 
       expect(saved).toBe(true);
@@ -494,17 +496,22 @@ describe("useRuleSetsEdit", () => {
       expect(page.stored()).toStrictEqual([sampleRuleSets[1]]);
     });
 
-    test("does not remove a rule set whose rules changed on another page since it was shown", async () => {
+    test("removes a rule set whose rules changed on another page", async () => {
       const page = setup(sampleRuleSets);
       const remove = page.result.current.removeRuleSet;
-      const elsewhere = [{ ...sampleRuleSets[0], rules: [changedRule] }, sampleRuleSets[1]];
-      act(() => page.storeElsewhere(elsewhere));
+      act(() =>
+        page.storeElsewhere([
+          { ...sampleRuleSets[0], rules: [changedRule, { ...typedRule, id: 100 }] },
+          sampleRuleSets[1],
+        ])
+      );
 
       await act(async () => {
         await remove("rs-1");
       });
 
-      expectConflict(page, elsewhere);
+      expect(page.conflicts).toEqual([]);
+      expect(page.stored()).toStrictEqual([sampleRuleSets[1]]);
     });
 
     test("does not rename a rule set renamed on another page since it was shown", async () => {
@@ -624,7 +631,7 @@ describe("useRuleSetsEdit", () => {
       const { result, stored } = setup(twoRules);
 
       await act(async () => {
-        await result.current.removeRule("rs-1", 1, savedRule);
+        await result.current.removeRule("rs-1", 1);
       });
 
       expect(stored()).toStrictEqual([
@@ -636,18 +643,36 @@ describe("useRuleSetsEdit", () => {
       const { result, stored } = setup(sampleRuleSets);
 
       await act(async () => {
-        await result.current.removeRule("rs-1", 1, savedRule);
+        await result.current.removeRule("rs-1", 1);
       });
 
       expect(stored()).toStrictEqual([sampleRuleSets[1]]);
     });
+    test("removes a rule whose update is still saving", async () => {
+      const twoRules: StoredRuleSets = [
+        { id: "rs-1", name: "Two", rules: [savedRule, { ...savedRule, id: 2 }] },
+      ];
+      const { result, stored, conflicts } = setup(twoRules);
+      // Both from the render that started the update
+      const { updateRule, removeRule } = result.current;
+
+      await act(async () => {
+        await Promise.all([updateRule("rs-1", 1, typedRule, savedRule), removeRule("rs-1", 1)]);
+      });
+
+      expect(conflicts).toEqual([]);
+      expect(stored()).toStrictEqual([
+        { id: "rs-1", name: "Two", rules: [{ ...savedRule, id: 2 }] },
+      ]);
+    });
+
     test("keeps the rule when the save is rejected", async () => {
       const { result, rejectNext, stored } = setup(sampleRuleSets);
 
       rejectNext();
       let saved: SaveResult | undefined;
       await act(async () => {
-        saved = await result.current.removeRule("rs-1", 1, savedRule);
+        saved = await result.current.removeRule("rs-1", 1);
       });
 
       expect(saved).toBe(false);
@@ -664,7 +689,7 @@ describe("useRuleSetsEdit", () => {
       const before = stored();
 
       await act(async () => {
-        await result.current.removeRule("rs-1", 100, { ...typedRule, id: 100 });
+        await result.current.removeRule("rs-1", 100);
       });
       act(() => storeElsewhere(before));
 
@@ -739,6 +764,19 @@ describe("useRuleSetsEdit", () => {
       act(() => storeElsewhere(before));
 
       expect(result.current.entries[0].rules[1].key).toBe("rule-100");
+    });
+
+    test("removes a rule set while a rule in it is still saving", async () => {
+      const { result, stored, conflicts } = setup(sampleRuleSets);
+      // Both from the render that started the update
+      const { updateRule, removeRuleSet } = result.current;
+
+      await act(async () => {
+        await Promise.all([updateRule("rs-1", 1, typedRule, savedRule), removeRuleSet("rs-1")]);
+      });
+
+      expect(conflicts).toEqual([]);
+      expect(stored()).toStrictEqual([sampleRuleSets[1]]);
     });
 
     test("keeps showing a rule set whose removal is rejected", async () => {

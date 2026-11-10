@@ -4,11 +4,11 @@
     "RuleActionType": {
       "description": "Describes the kind of action to take if a given RuleCondition matches.",
       "title": "RuleActionType",
+      "type": "string",
       "enum": [
-        "allow",
-        "block"
-      ],
-      "type": "string"
+        "block",
+        "allow"
+      ]
     },
     "RuleAction": {
       "title": "RuleAction",
@@ -28,6 +28,7 @@
     "RequestMethod": {
       "description": "This describes the HTTP request method of a network request.",
       "title": "RequestMethod",
+      "type": "string",
       "enum": [
         "connect",
         "delete",
@@ -37,28 +38,27 @@
         "patch",
         "post",
         "put"
-      ],
-      "type": "string"
+      ]
     },
     "ResourceType": {
       "description": "This describes the resource type of the network request.",
       "title": "ResourceType",
+      "type": "string",
       "enum": [
-        "csp_report",
-        "font",
-        "image",
         "main_frame",
-        "media",
-        "object",
-        "other",
-        "ping",
-        "script",
-        "stylesheet",
         "sub_frame",
+        "stylesheet",
+        "script",
+        "image",
+        "font",
+        "object",
+        "xmlhttprequest",
+        "ping",
+        "csp_report",
+        "media",
         "websocket",
-        "xmlhttprequest"
-      ],
-      "type": "string"
+        "other"
+      ]
     },
     "Domain": {
       "type": "string",

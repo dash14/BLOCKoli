@@ -260,8 +260,8 @@ describe("RulesEdit component", () => {
         .getByRole("button", { name: /remove/i });
       await dialogRemoveButton.click();
 
-      // 1番目のルールのIDと、表示していたルールで呼ばれる
-      await expect.poll(() => props.onRemove.mock.calls).toEqual([[1, twoRules[0]]]);
+      // 1番目のルールのIDで呼ばれる
+      await expect.poll(() => props.onRemove.mock.calls).toEqual([[1]]);
     });
   });
 

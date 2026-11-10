@@ -115,7 +115,7 @@ export const RuleSetsEdit: React.FC<Props> = ({
                           updateRule(id, ruleId, rule, base)
                         }
                         onCancelNew={(key) => cancelNewRule(id, key)}
-                        onRemove={(ruleId, rule) => removeRule(id, ruleId, rule)}
+                        onRemove={(ruleId) => removeRule(id, ruleId)}
                       />
                     </Accordion.ItemContent>
                   </Accordion.Item>

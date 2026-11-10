@@ -166,17 +166,12 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
     });
   }
 
-  // base is the rule as shown when it was removed
-  async function removeRule(ruleSetId: string, ruleId: number, base: Rule) {
+  // Removes the rule by its ID, whatever it has become since it was shown
+  async function removeRule(ruleSetId: string, ruleId: number) {
     const saved = await saveRules(
       ruleSetId,
-      (rules) => {
-        const stored = rules.find(({ id }) => id === ruleId);
-        // Already removed on another page
-        if (!stored) return rules;
-        if (!isSameRule(stored, base)) throw new SaveConflictError();
-        return rules.filter((stored) => stored.id !== ruleId);
-      },
+      // Leaves the rules as they are if it was already removed on another page
+      (rules) => rules.filter((stored) => stored.id !== ruleId),
       // Removed on another page with its rule set
       (current) => current
     );
@@ -219,18 +214,18 @@ export function useRuleSetsEdit(stored: StoredRuleSets, save: SaveRuleSets) {
       dropNewRuleSet(id);
       return;
     }
-    // The rules shown; a rename does not stop the removal
-    const { rules } = stored.find((ruleSet) => ruleSet.id === id)!;
+    // Removed by its ID, with whatever rules it has by then
+    let removed: StoredRuleSet["rules"] = [];
     const saved = await save((current) => {
       const target = current.find((ruleSet) => ruleSet.id === id);
       // Already removed on another page
       if (!target) return current;
-      if (!isEqual(target.rules, rules)) throw new SaveConflictError();
+      removed = target.rules;
       return current.filter((ruleSet) => ruleSet !== target);
     });
     if (!Array.isArray(saved)) return;
     dropNewRuleSet(id);
-    rules.forEach((rule) => savedKeys.current.delete(rule.id));
+    removed.forEach((rule) => savedKeys.current.delete(rule.id));
   }
 
   async function renameRuleSet(id: string, name: string) {
