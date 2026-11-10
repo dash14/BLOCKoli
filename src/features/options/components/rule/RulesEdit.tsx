@@ -18,7 +18,7 @@ type Props = {
   onSaveNew: (key: string, rule: Rule) => Promise<SaveResult>;
   onUpdate: (id: number, rule: Rule, base: Rule) => Promise<SaveResult>;
   onCancelNew: (key: string) => void;
-  onRemove: (id: number, rule: Rule) => void;
+  onRemove: (id: number) => void;
 };
 
 export const RulesEdit: React.FC<Props> = ({
@@ -87,7 +87,7 @@ export const RulesEdit: React.FC<Props> = ({
                     if (id === undefined) onCancelNew(key);
                   }}
                   // Offered only for saved rules
-                  onRemove={() => onRemove(id!, rule)}
+                  onRemove={() => onRemove(id!)}
                 />
               </div>
             </CSSTransition>
