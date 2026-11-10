@@ -10,7 +10,7 @@ import {
 } from "@/modules/rules/stored";
 import { newRuleSetName, newRuleTemplate } from "@/modules/rules/template";
 
-// Throws SaveConflictError when what it changes is no longer as this page showed it
+// May throw SaveConflictError when what it changes is no longer as this page showed it
 export type RuleSetsChange = (stored: StoredRuleSets) => StoredRuleSets;
 
 // Called with the stored rule sets in the same step that shows them

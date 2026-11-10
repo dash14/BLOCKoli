@@ -648,6 +648,7 @@ describe("useRuleSetsEdit", () => {
 
       expect(stored()).toStrictEqual([sampleRuleSets[1]]);
     });
+
     test("removes a rule whose update is still saving", async () => {
       const twoRules: StoredRuleSets = [
         { id: "rs-1", name: "Two", rules: [savedRule, { ...savedRule, id: 2 }] },
@@ -777,6 +778,24 @@ describe("useRuleSetsEdit", () => {
 
       expect(conflicts).toEqual([]);
       expect(stored()).toStrictEqual([sampleRuleSets[1]]);
+    });
+
+    test("forgets the key of a rule added on this page while the removal waited", async () => {
+      const { result, stored, storeElsewhere } = setup(sampleRuleSets);
+      act(() => result.current.addRule("rs-1"));
+      // Both from the render that started saving the new rule
+      const { saveNewRule, removeRuleSet } = result.current;
+      const { key } = result.current.entries[0].rules[1];
+      let before: StoredRuleSets = [];
+
+      await act(async () => {
+        const saving = saveNewRule("rs-1", key, typedRule);
+        before = stored();
+        await Promise.all([saving, removeRuleSet("rs-1")]);
+      });
+      act(() => storeElsewhere(before));
+
+      expect(result.current.entries[0].rules[1].key).toBe("rule-100");
     });
 
     test("keeps showing a rule set whose removal is rejected", async () => {
