@@ -177,7 +177,12 @@ export async function importRules(
   page: Page,
   file: Parameters<Locator["setInputFiles"]>[0]
 ) {
-  await page.getByRole("button", { name: "Import and Export Rules" }).click();
+  const openButton = page.getByRole("button", { name: "Import and Export Rules" });
+  await openButton.click();
+  // The dialog hides the rest of the page with aria-hidden one frame after it
+  // opens. Wait for that, or it also hides the confirmation dialog the file
+  // opens, and its buttons can no longer be found by role.
+  await expect(openButton).toHaveCount(0);
   await page.getByLabel("Import rules").setInputFiles(file);
   await page.getByRole("button", { name: "Import", exact: true }).click();
   const result = page
