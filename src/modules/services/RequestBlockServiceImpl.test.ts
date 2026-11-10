@@ -1,3 +1,4 @@
+import en from "@locales/en/messages.json";
 import {
   beforeEach,
   describe,
@@ -6,6 +7,7 @@ import {
   onTestFinished,
   vi,
 } from "vitest";
+import { formatMessage } from "@/hooks/useI18n";
 import type {
   ChromeActionApi,
   ChromeDeclarativeNetRequestApi,
@@ -22,10 +24,21 @@ import type { StoredRuleSets } from "@/modules/rules/stored";
 import { RULE_ID_UNSAVED } from "@/modules/rules/stored";
 import { UNSUPPORTED_REGEX_SYNTAX_MESSAGE } from "@/modules/rules/validation/edit";
 import type * as RequestBlock from "@/modules/services/RequestBlockService";
-import { STALE_RULE_SETS_ERROR } from "@/modules/services/RequestBlockService";
+import { ErrorCode } from "@/modules/services/RequestBlockService";
 import type { ServiceConfigurationStore } from "@/modules/store/ServiceConfigurationStore";
 import logging from "@/modules/utils/logging";
 import { RequestBlockServiceImpl } from "./RequestBlockServiceImpl";
+
+// A rejection the page cannot translate shows its own message, so it reads the same as in English
+function rejection(code: string, params: Record<string, number>) {
+  const { message } = en[`error_${code}` as keyof typeof en];
+  return {
+    name: "ServiceError",
+    message: formatMessage(message, params),
+    code,
+    params,
+  };
+}
 
 describe("RequestBlockServiceImpl", () => {
   // Mock dependencies
@@ -594,9 +607,12 @@ describe("RequestBlockServiceImpl", () => {
     });
 
     it("refuses to save when another page saved since", async () => {
-      await expect(createService().updateRuleSets(ruleSets, 6)).rejects.toThrow(
-        STALE_RULE_SETS_ERROR
-      );
+      await expect(
+        createService().updateRuleSets(ruleSets, 6)
+      ).rejects.toMatchObject({
+        name: "ServiceError",
+        code: ErrorCode.STALE_RULE_SETS,
+      });
 
       expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
       expect(mockStore.saveNextRuleId).not.toHaveBeenCalled();
@@ -976,8 +992,8 @@ describe("RequestBlockServiceImpl", () => {
         { name: "a", rules: [rule(11), rule(12), rule(RULE_ID_UNSAVED)] },
       ];
 
-      await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
-        "Too many rules: 3, but Chrome allows at most 2"
+      await expect(createService().updateRuleSets(ruleSets)).rejects.toMatchObject(
+        rejection(ErrorCode.TOO_MANY_CHROME_RULES, { count: 3, max: 2 })
       );
       expect(mockStore.saveNextRuleId).not.toHaveBeenCalled();
       expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
@@ -986,8 +1002,8 @@ describe("RequestBlockServiceImpl", () => {
     it("refuses to save more regex rules than Chrome allows", async () => {
       const ruleSets = [{ name: "a", rules: [rule(11, regex), rule(12, regex)] }];
 
-      await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
-        "Too many regex rules: 2, but Chrome allows at most 1"
+      await expect(createService().updateRuleSets(ruleSets)).rejects.toMatchObject(
+        rejection(ErrorCode.TOO_MANY_REGEX_RULES, { count: 2, max: 1 })
       );
       expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
     });
@@ -1034,8 +1050,8 @@ describe("RequestBlockServiceImpl", () => {
           { name: "b", rules: [rule(RULE_ID_UNSAVED)] },
         ];
 
-        await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
-          `Too many rules: ${MAX_RULES + 1}, but at most ${MAX_RULES} can be defined`
+        await expect(createService().updateRuleSets(ruleSets)).rejects.toMatchObject(
+          rejection(ErrorCode.TOO_MANY_RULES, { count: MAX_RULES + 1, max: MAX_RULES })
         );
         expect(mockStore.saveNextRuleId).not.toHaveBeenCalled();
         expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
@@ -1061,7 +1077,7 @@ describe("RequestBlockServiceImpl", () => {
         ];
 
         await expect(createService().updateRuleSets(ruleSets)).rejects.toThrow(
-          `Too many rules: ${MAX_RULES + 2}, but at most ${MAX_RULES} can be defined`
+          `There would be ${MAX_RULES + 2} rules, but at most ${MAX_RULES} can be defined.`
         );
         expect(mockStore.saveRuleSets).not.toHaveBeenCalled();
       });
@@ -1086,7 +1102,7 @@ describe("RequestBlockServiceImpl", () => {
       ]);
 
       await expect(createService().enable()).rejects.toThrow(
-        "Too many rules: 3, but Chrome allows at most 2"
+        "There would be 3 rules, but Chrome allows at most 2."
       );
       expect(mockDeclarativeNetRequest.updateDynamicRules).not.toHaveBeenCalled();
       expect(mockStore.saveState).not.toHaveBeenCalled();

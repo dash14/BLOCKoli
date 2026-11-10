@@ -40,7 +40,7 @@ test("imports rules up to the limit, and refuses one more", async ({
   const refused = await importRules(page, exportedFile({ name: "Over", rules: blockRules("over", 1) }));
   await expect(refused).toContainText("Import failed");
   await expect(refused).toContainText(
-    `Too many rules: ${maxRules + 1}, but at most ${maxRules} can be defined`
+    `There would be ${maxRules + 1} rules, but at most ${maxRules} can be defined.`
   );
   await closeDialog(page, refused);
   // Read the rule sets from storage again, rather than what the page holds
@@ -75,7 +75,7 @@ test("tells why a rule was not saved when the rules filled up while it was edite
   const refused = page.getByRole("alertdialog");
   await expect(refused).toContainText("Save failed");
   await expect(
-    refused.getByText(`Too many rules: ${maxRules + 1}, but at most ${maxRules} can be defined`, {
+    refused.getByText(`There would be ${maxRules + 1} rules, but at most ${maxRules} can be defined.`, {
       exact: true,
     })
   ).toBeVisible();

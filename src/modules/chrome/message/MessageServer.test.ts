@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { ServiceError } from "@/modules/core/ServiceError";
 import type { EventEmitter, Events } from "@/modules/core/service";
 import { ServiceBase } from "@/modules/core/service";
 import { MessageServer } from "./MessageServer";
@@ -49,6 +50,10 @@ class TestService extends ServiceBase<TestEvents> {
 
   throwString(): void {
     throw "Thrown text";
+  }
+
+  async throwServiceError(): Promise<void> {
+    throw new ServiceError("Too many", "too_many", { count: 3, max: 2 });
   }
 }
 
@@ -370,6 +375,30 @@ describe("MessageServer", () => {
         success: false,
         error: "Async test error",
       });
+    });
+
+    it("sends the code and params of a ServiceError", async () => {
+      const sendResponse = vi.fn();
+      messageListeners[0](
+        {
+          type: "request",
+          service: "testService",
+          method: "throwServiceError",
+          args: [],
+        },
+        {} as chrome.runtime.MessageSender,
+        sendResponse
+      );
+
+      await vi.waitFor(() =>
+        expect(sendResponse).toHaveBeenCalledWith({
+          type: "response",
+          success: false,
+          error: "Too many",
+          code: "too_many",
+          params: { count: 3, max: 2 },
+        })
+      );
     });
 
     it("sends a thrown value that is not an Error as text", () => {

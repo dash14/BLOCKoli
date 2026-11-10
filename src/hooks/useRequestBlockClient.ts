@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import isEqual from "lodash-es/isEqual";
 import { MessageProxyFactory } from "@/modules/chrome/message/MessageProxy";
+import { ServiceError } from "@/modules/core/ServiceError";
 import { SaveConflictError } from "@/modules/rules/conflict";
 import { ExportedRuleSets } from "@/modules/rules/export";
 import { StoredRuleSets, VersionedRuleSets } from "@/modules/rules/stored";
@@ -16,8 +17,8 @@ const MAX_SAVE_ATTEMPTS = 3;
 
 function isStale(error: unknown) {
   return (
-    error instanceof Error &&
-    error.message === RequestBlock.STALE_RULE_SETS_ERROR
+    error instanceof ServiceError &&
+    error.code === RequestBlock.ErrorCode.STALE_RULE_SETS
   );
 }
 

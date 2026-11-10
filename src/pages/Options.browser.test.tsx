@@ -1,9 +1,11 @@
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { RuleSetsChange } from "@/features/options/hooks/useRuleSetsEdit";
+import { ServiceError } from "@/modules/core/ServiceError";
 import { RuleActionType } from "@/modules/core/rules";
 import { SaveConflictError } from "@/modules/rules/conflict";
 import { StoredRuleSets } from "@/modules/rules/stored";
+import { ErrorCode } from "@/modules/services/RequestBlockService";
 import { renderWithChakra } from "@/test/utils/render";
 
 // Mock useRequestBlockClient before importing Options
@@ -230,7 +232,11 @@ describe("Options page", () => {
   const conflictMessage =
     "It was changed in another tab, so your change was not saved. Check the latest content and try again.";
   for (const [rejection, shown] of [
-    [new Error("Too many rules: 501, but at most 500 can be defined"), "Too many rules: 501, but at most 500 can be defined"],
+    [
+      new ServiceError("Too many rules: 501", ErrorCode.TOO_MANY_RULES, { count: 501, max: 500 }),
+      "There would be 501 rules, but at most 500 can be defined.",
+    ],
+    [new Error("Chrome failed"), "Chrome failed"],
     ["Rejected", "Rejected"],
     [new SaveConflictError(), conflictMessage],
   ] as const) {
@@ -467,10 +473,15 @@ describe("Options page", () => {
 
   test.each([
     // The service worker sends errors back as strings
-    ["a string", "Error: Failed to update dynamic rules"],
+    ["a string", "Error: Failed to update dynamic rules", /Failed to update dynamic rules/],
     // Raised in the page itself, e.g. when the service worker does not answer
-    ["an Error", new Error("Failed to update dynamic rules")],
-  ])("shows error dialog when import throws %s", async (_, error) => {
+    ["an Error", new Error("Failed to update dynamic rules"), /Failed to update dynamic rules/],
+    [
+      "a ServiceError",
+      new ServiceError("Too many rules: 501", ErrorCode.TOO_MANY_RULES, { count: 501, max: 500 }),
+      "There would be 501 rules, but at most 500 can be defined.",
+    ],
+  ])("shows error dialog when import throws %s", async (_, error, shown) => {
     const performImport = vi.fn().mockRejectedValue(error);
     mockUseRequestBlockClient.mockReturnValue(
       createMockReturnValue({ ruleSets: sampleRuleSets, performImport }),
@@ -515,9 +526,7 @@ describe("Options page", () => {
 
     // Error dialog should appear with the thrown message
     await expect.element(page.getByText(/import failed/i)).toBeInTheDocument();
-    await expect
-      .element(page.getByText(/Failed to update dynamic rules/))
-      .toBeInTheDocument();
+    await expect.element(page.getByText(shown)).toBeInTheDocument();
   });
 
   test("passes JSON holding null to the import and shows its errors", async () => {

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { ServiceError } from "@/modules/core/ServiceError";
 import type { EventEmitter, Events } from "@/modules/core/service";
 import { ServiceBase } from "@/modules/core/service";
 import { MessageProxyFactory } from "./MessageProxy";
@@ -170,6 +171,27 @@ describe("MessageProxyFactory", () => {
       const proxy = factory.create<TestService>("testService");
 
       await expect(proxy.getData()).rejects.toThrow(new Error("Test error message"));
+    });
+
+    it("throws a ServiceError when the response has a code", async () => {
+      mockSendMessage.mockResolvedValue({
+        type: "response",
+        success: false,
+        error: "Too many",
+        code: "too_many",
+        params: { count: 3, max: 2 },
+      });
+
+      const factory = new MessageProxyFactory();
+      const proxy = factory.create<TestService>("testService");
+
+      const error = await proxy.getData().catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(ServiceError);
+      expect(error).toMatchObject({
+        message: "Too many",
+        code: "too_many",
+        params: { count: 3, max: 2 },
+      });
     });
   });
 

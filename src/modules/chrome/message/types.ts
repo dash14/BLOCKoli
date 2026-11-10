@@ -17,10 +17,13 @@ interface SuccessResponseMessage extends Message {
   result: unknown;
 }
 
-interface ErrorResponseMessage extends Message {
+export interface ErrorResponseMessage extends Message {
   type: "response";
   success: false;
   error: string;
+  // Set for a ServiceError
+  code?: string;
+  params?: Record<string, number>;
 }
 
 export type ResponseMessage = SuccessResponseMessage | ErrorResponseMessage;

@@ -1,3 +1,4 @@
+import { ServiceError } from "@/modules/core/ServiceError";
 import {
   EventDispatchable,
   Events,
@@ -137,6 +138,8 @@ export class MessageProxyFactory {
           }
           if (response.success) {
             return response.result;
+          } else if (response.code) {
+            throw new ServiceError(response.error, response.code, response.params);
           } else {
             throw new Error(response.error);
           }

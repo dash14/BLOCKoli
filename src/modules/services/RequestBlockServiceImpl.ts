@@ -6,6 +6,7 @@ import {
   ChromeRuntimeApi,
 } from "@/modules/chrome/api";
 import { Rule as ApiRule } from "@/modules/chrome/api";
+import { ServiceError } from "@/modules/core/ServiceError";
 import { RegexValidator } from "@/modules/core/regex";
 import { RuleActionType } from "@/modules/core/rules";
 import { EventEmitter, ServiceBase } from "@/modules/core/service";
@@ -176,7 +177,10 @@ export class RequestBlockServiceImpl
       return { revision: prevRevision, ruleSets: prevRuleSets };
     }
     if (baseRevision !== undefined && baseRevision !== prevRevision) {
-      throw new Error(RequestBlock.STALE_RULE_SETS_ERROR);
+      throw new ServiceError(
+        "The rule sets were changed in another tab",
+        RequestBlock.ErrorCode.STALE_RULE_SETS
+      );
     }
 
     checkRuleCount(ruleSets, prevRuleSets);
@@ -217,8 +221,10 @@ export class RequestBlockServiceImpl
 
     const rules = ruleSets.flatMap((ruleSet) => ruleSet.rules);
     if (rules.length > maxRules) {
-      throw new Error(
-        `Too many rules: ${rules.length}, but Chrome allows at most ${maxRules}`
+      throw new ServiceError(
+        `There would be ${rules.length} rules, but Chrome allows at most ${maxRules}.`,
+        RequestBlock.ErrorCode.TOO_MANY_CHROME_RULES,
+        { count: rules.length, max: maxRules }
       );
     }
 
@@ -226,8 +232,10 @@ export class RequestBlockServiceImpl
       ({ condition }) => condition.isRegexFilter && condition.urlFilter
     );
     if (regexRules.length > maxRegexRules) {
-      throw new Error(
-        `Too many regex rules: ${regexRules.length}, but Chrome allows at most ${maxRegexRules}`
+      throw new ServiceError(
+        `There would be ${regexRules.length} regex rules, but Chrome allows at most ${maxRegexRules}.`,
+        RequestBlock.ErrorCode.TOO_MANY_REGEX_RULES,
+        { count: regexRules.length, max: maxRegexRules }
       );
     }
   }
@@ -387,7 +395,11 @@ export class RequestBlockServiceImpl
 function checkRuleCount(ruleSets: StoredRuleSets, prevRuleSets: StoredRuleSets) {
   const count = countRules(ruleSets);
   if (count > MAX_RULES && count > countRules(prevRuleSets)) {
-    throw new Error(`Too many rules: ${count}, but at most ${MAX_RULES} can be defined`);
+    throw new ServiceError(
+      `There would be ${count} rules, but at most ${MAX_RULES} can be defined.`,
+      RequestBlock.ErrorCode.TOO_MANY_RULES,
+      { count, max: MAX_RULES }
+    );
   }
 }
 

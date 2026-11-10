@@ -4,7 +4,7 @@ import { describe, expect, it, vi, beforeEach, onTestFinished } from "vitest";
 import { Rule, RuleActionType } from "@/modules/core/rules";
 import { SaveConflictError } from "@/modules/rules/conflict";
 import { StoredRuleSets } from "@/modules/rules/stored";
-import { STALE_RULE_SETS_ERROR } from "@/modules/services/RequestBlockService";
+import { ErrorCode } from "@/modules/services/RequestBlockService";
 import logging from "@/modules/utils/logging";
 import { updateI18nLanguage } from "./useI18n";
 import { useRequestBlockClient } from "./useRequestBlockClient";
@@ -472,7 +472,12 @@ describe("useRequestBlockClient", () => {
     const named = (name: string): StoredRuleSets => [
       { id: "rs-3", name, rules: [{ id: 1, ...rule }] },
     ];
-    const stale = { type: "response", success: false, error: STALE_RULE_SETS_ERROR };
+    const stale = {
+      type: "response",
+      success: false,
+      error: "The rule sets were changed in another tab",
+      code: ErrorCode.STALE_RULE_SETS,
+    };
 
     // The service holds rule sets saved by another page that this one has not received yet
     const storedElsewhere = (staleSaves: number) => {
@@ -552,6 +557,35 @@ describe("useRequestBlockClient", () => {
       await expect(failed).rejects.toBeInstanceOf(SaveConflictError);
       expect(sentRevisions()).toEqual([0, 5, 5]);
       expect(result.current.ruleSets).toStrictEqual(named("elsewhere"));
+    });
+
+    it("passes on any other rejection without trying again", async () => {
+      const result = await render();
+      const defaultImpl = mockSendMessage.getMockImplementation()!;
+      mockSendMessage.mockImplementation(async (request) =>
+        request.method === "updateRuleSets"
+          ? {
+              type: "response",
+              success: false,
+              error: "There would be 501 rules, but at most 500 can be defined.",
+              code: ErrorCode.TOO_MANY_RULES,
+              params: { count: 501, max: 500 },
+            }
+          : defaultImpl(request)
+      );
+
+      let failed!: Promise<StoredRuleSets>;
+      await act(async () => {
+        failed = result.current.updateRuleSets(() => named("mine"));
+        await failed.catch(() => {});
+      });
+
+      await expect(failed).rejects.toMatchObject({
+        name: "ServiceError",
+        code: ErrorCode.TOO_MANY_RULES,
+        params: { count: 501, max: 500 },
+      });
+      expect(sentRevisions()).toEqual([0]);
     });
 
     it("rejects without saving when the change finds a conflict", async () => {
