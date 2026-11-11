@@ -6,6 +6,8 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "emitDeclarationOnly": true,
     "types": ["node"]
   },
   "include": ["vite.config.ts", "manifest.config.ts", "package.json"]
