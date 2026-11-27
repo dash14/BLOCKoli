@@ -16,7 +16,7 @@
       "minimumReleaseAge": "0 days"
     },
     {
-      "description": "The browser and E2E tests run in the mcr.microsoft.com/playwright image, which only carries the browsers of its own Playwright version, so playwright, @playwright/test and the image must move together.",
+      "description": "The browser and E2E tests run in the mcr.microsoft.com/playwright image, which only carries the browsers of its own Playwright version, so playwright, @playwright/test and the image must move together. Both packages are pinned in package.json so that lock file maintenance cannot move them alone. mcr.microsoft.com gives no release timestamps, so Renovate never treats an image tag as past minimumReleaseAge and leaves the image out of the group PR: add the matching image tag to that PR by hand.",
       "groupName": "playwright",
       "matchPackageNames": [
         "playwright",
