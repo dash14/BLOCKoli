@@ -1,0 +1,8 @@
+{
+  "name": "blockoli-docker-corepack",
+  "private": true,
+  "description": "Corepack for the test image. Node.js 25 and later no longer ship it, and its own lockfile pins the version and integrity.",
+  "dependencies": {
+    "corepack": "0.36.0"
+  }
+}
